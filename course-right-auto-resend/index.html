@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>原型 · 课程权益自动补发</title>
+<style>
+  :root{
+    --bg:#f5f7fa; --card:#fff; --line:#e5e8ef; --txt:#1f2937; --sub:#6b7280;
+    --pri:#2563eb; --pri-bg:#eff6ff; --ok:#16a34a; --ok-bg:#dcfce7;
+    --warn:#ca8a04; --warn-bg:#fef9c3; --err:#dc2626; --err-bg:#fee2e2;
+    --purple:#7c3aed; --purple-bg:#ede9fe;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif}
+  body{background:var(--bg);color:var(--txt);font-size:14px}
+  .topbar{height:52px;background:#0f172a;color:#fff;display:flex;align-items:center;padding:0 16px;gap:14px;position:sticky;top:0;z-index:50}
+  .topbar h1{font-size:15px;font-weight:600}
+  .topbar .tag{font-size:11px;background:#334155;padding:2px 8px;border-radius:10px;color:#cbd5e1}
+  .topbar .sp{flex:1}
+  .tb-btn{background:#1e293b;border:1px solid #334155;color:#e2e8f0;border-radius:6px;padding:5px 10px;font-size:12px;cursor:pointer}
+  .tb-btn.on{background:var(--pri);border-color:var(--pri)}
+  .layout{display:flex;min-height:calc(100vh - 52px)}
+  .nav{width:200px;background:#fff;border-right:1px solid var(--line);padding:12px 0;flex-shrink:0}
+  .nav .grp{font-size:11px;color:var(--sub);padding:10px 16px 4px}
+  .nav a{display:block;padding:9px 16px;color:var(--txt);text-decoration:none;cursor:pointer;border-left:3px solid transparent}
+  .nav a.on{background:var(--pri-bg);border-left-color:var(--pri);color:var(--pri);font-weight:600}
+  .main{flex:1;padding:20px;max-width:1200px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:16px;margin-bottom:16px}
+  .h2{font-size:16px;font-weight:600;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+  .badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;white-space:nowrap}
+  .b-auto{background:var(--ok-bg);color:var(--ok)} .b-man{background:#f1f5f9;color:var(--sub)}
+  .b-active{background:var(--pri-bg);color:var(--pri)} .b-stopped{background:var(--warn-bg);color:var(--warn)}
+  .b-recalled{background:var(--err-bg);color:var(--err)} .b-failed{background:var(--err-bg);color:var(--err)}
+  .b-received{background:var(--warn-bg);color:var(--warn)} .b-p0{background:var(--purple-bg);color:var(--purple)}
+  table{width:100%;border-collapse:collapse}
+  th{font-size:12px;color:var(--sub);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);white-space:nowrap;background:#fafbfc}
+  td{padding:10px;border-bottom:1px solid var(--line);vertical-align:middle}
+  tr.row:hover{background:#f8fafc;cursor:pointer}
+  .filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;align-items:center}
+  select,input[type=text],textarea{border:1px solid var(--line);border-radius:6px;padding:7px 10px;font-size:13px;background:#fff;color:var(--txt)}
+  input[type=text]{min-width:180px} textarea{width:100%;resize:vertical}
+  .btn{border:none;border-radius:6px;padding:8px 14px;font-size:13px;cursor:pointer;background:var(--pri);color:#fff}
+  .btn.ghost{background:#fff;color:var(--txt);border:1px solid var(--line)}
+  .btn.danger{background:var(--err)} .btn.warn{background:var(--warn)}
+  .btn:disabled{background:#cbd5e1;color:#fff;cursor:not-allowed;border:none}
+  .pill-sw{display:flex;gap:6px;margin-left:auto}
+  .pill{font-size:11px;border:1px solid var(--line);background:#fff;border-radius:12px;padding:3px 10px;cursor:pointer;color:var(--sub)}
+  .pill.on{background:var(--pri);color:#fff;border-color:var(--pri)}
+  .state-box{padding:48px;text-align:center;color:var(--sub)}
+  .spinner{width:28px;height:28px;border:3px solid var(--line);border-top-color:var(--pri);border-radius:50%;margin:0 auto 12px;animation:sp 1s linear infinite}
+  @keyframes sp{to{transform:rotate(360deg)}}
+  .kv{display:grid;grid-template-columns:130px 1fr;gap:6px 12px;font-size:13px}
+  .kv .k{color:var(--sub)} .kv .v{word-break:break-all}
+  .modal-mask{position:fixed;inset:0;background:rgba(15,23,42,.45);display:none;align-items:center;justify-content:center;z-index:100}
+  .modal-mask.show{display:flex}
+  .modal{background:#fff;border-radius:12px;width:480px;max-width:92vw;padding:20px}
+  .modal h3{font-size:15px;margin-bottom:10px}
+  .modal .impact{background:var(--err-bg);border:1px solid #fecaca;border-radius:8px;padding:12px;margin:10px 0;font-size:13px;color:#991b1b}
+  .modal .foot{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+  .form-row{margin-bottom:14px}
+  .form-row label{display:block;font-size:13px;font-weight:600;margin-bottom:5px}
+  .form-row label .req{color:var(--err)} .form-row .hint{font-size:12px;color:var(--sub);margin-top:4px}
+  .form-row .fe{font-size:12px;color:var(--err);margin-top:4px;display:none}
+  .form-row.err input,.form-row.err textarea{border-color:var(--err)}
+  .form-row.err .fe{display:block}
+  .est{background:var(--pri-bg);border:1px solid #bfdbfe;border-radius:8px;padding:12px;font-size:13px;color:#1e40af;margin:12px 0;display:none}
+  .anno{position:fixed;right:16px;bottom:16px;width:300px;background:#0f172a;color:#e2e8f0;border-radius:10px;padding:14px;font-size:12px;line-height:1.7;display:none;z-index:90;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+  .anno.show{display:block}
+  .anno b{color:#93c5fd}
+  .toast{position:fixed;top:64px;left:50%;transform:translateX(-50%);background:#0f172a;color:#fff;border-radius:8px;padding:10px 18px;font-size:13px;display:none;z-index:120}
+  .steps{display:flex;gap:0;margin:10px 0}
+  .step{flex:1;text-align:center;font-size:12px;color:var(--sub);position:relative;padding-top:22px}
+  .step::before{content:"";width:14px;height:14px;border-radius:50%;background:#cbd5e1;position:absolute;top:0;left:50%;transform:translateX(-50%)}
+  .step.done::before{background:var(--ok)} .step.cur::before{background:var(--pri)}
+  .step.done{color:var(--ok)} .step.cur{color:var(--pri);font-weight:600}
+  .page{display:none} .page.show{display:block}
+  .muted{color:var(--sub);font-size:12px}
+  .stat{display:flex;gap:14px;margin-bottom:14px}
+  .stat .s{flex:1;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:14px}
+  .stat .n{font-size:22px;font-weight:700} .stat .l{font-size:12px;color:var(--sub);margin-top:2px}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <h1>权益运营后台 · 课程权益自动补发</h1><span class="tag">原型 v1.0 · 对应 PRD v1.0</span>
+  <span class="sp"></span>
+  <button class="tb-btn" id="annoBtn" onclick="toggleAnno()">标注模式</button>
+  <span class="tag">当前角色:权益运营 · 张三</span>
+</div>
+<div class="layout">
+  <nav class="nav">
+    <div class="grp">页面地图</div>
+    <a data-p="list" class="on" onclick="go('list')">补发规则列表(F3)</a>
+    <a data-p="detail" onclick="go('detail')">规则详情 · 自动(F3)</a>
+    <a data-p="manual" onclick="go('manual')">手工触发表单(F4)</a>
+    <a data-p="dead" onclick="go('dead')">上新事件 / 死信(F1)</a>
+    <div class="grp">流程演示</div>
+    <a onclick="go('detail');setTimeout(openRecall,200)">▶ 召回双人复核</a>
+    <a onclick="go('manual');setTimeout(fillDemo,200)">▶ 表单校验演示</a>
+  </nav>
+  <main class="main">
+
+    <!-- ============ 列表页 ============ -->
+    <section class="page show" id="p-list">
+      <div class="stat">
+        <div class="s"><div class="n">12</div><div class="l">生效中规则(自动 8 / 人工 4)</div></div>
+        <div class="s"><div class="n">99.94%</div><div class="l">近 30 天补发覆盖率(目标 ≥99.9%)</div></div>
+        <div class="s"><div class="n">2.1 min</div><div class="l">补发时效 P95(目标 ≤5 min)</div></div>
+        <div class="s"><div class="n" style="color:var(--ok)">0</div><div class="l">本月研发人工补发工单</div></div>
+      </div>
+      <div class="card">
+        <div class="h2">补发规则列表 <span class="badge b-p0">PRD 4.3</span>
+          <div class="pill-sw">
+            <span class="muted">页面状态:</span>
+            <span class="pill on" onclick="setState('list','normal',this)">正常</span>
+            <span class="pill" onclick="setState('list','loading',this)">加载</span>
+            <span class="pill" onclick="setState('list','empty',this)">空态</span>
+            <span class="pill" onclick="setState('list','error',this)">错误</span>
+          </div>
+        </div>
+        <div class="filters">
+          <select><option>来源:全部</option><option>自动(autoEvent)</option><option>人工(manual)</option></select>
+          <select><option>状态:全部</option><option>active</option><option>stopped</option><option>recalled</option></select>
+          <input type="text" placeholder="规则名称模糊搜索">
+          <input type="text" placeholder="coursePackageId 精确">
+          <button class="btn ghost">查询</button>
+          <span class="sp" style="flex:1"></span>
+          <button class="btn ghost" onclick="toast('已选 0 条,批量停用上限 20 条/次(PRD 4.3)')">批量停用</button>
+          <button class="btn" onclick="go('manual')">+ 手工触发补发</button>
+        </div>
+        <div id="list-normal">
+          <table>
+            <tr><th><input type="checkbox"></th><th>规则名称</th><th>来源</th><th>关联课程包</th><th>目标数</th><th>发放用户</th><th>发放授权</th><th>状态</th><th>创建时间</th></tr>
+            <tr class="row" onclick="go('detail')"><td><input type="checkbox" onclick="event.stopPropagation()"></td><td>[自动] pkg_8f31c2 上新补发-20260706</td><td><span class="badge b-auto">自动</span></td><td>初中物理·力学专项 v3</td><td>2</td><td>48,210</td><td>96,420</td><td><span class="badge b-active">active</span></td><td>2026-07-06 20:01</td></tr>
+            <tr class="row" onclick="go('detail')"><td><input type="checkbox" onclick="event.stopPropagation()"></td><td>[自动] pkg_2ab9e0 上新补发-20260701</td><td><span class="badge b-auto">自动</span></td><td>小学数学·计算训练营</td><td>1</td><td>112,930</td><td>112,930</td><td><span class="badge b-active">active</span></td><td>2026-07-01 10:22</td></tr>
+            <tr class="row" onclick="toast('原型仅详情页示例一份,见「规则详情」')"><td><input type="checkbox" onclick="event.stopPropagation()"></td><td>[自动] pkg_77d1aa 上新补发-20260620</td><td><span class="badge b-auto">自动</span></td><td>初中英语·语法进阶</td><td>3</td><td>8,850</td><td>26,550</td><td><span class="badge b-stopped">stopped</span></td><td>2026-06-20 14:40</td></tr>
+            <tr class="row" onclick="toast('recalled 为终态,详情页全部操作置灰(PRD 2.3/4.3)')"><td><input type="checkbox" onclick="event.stopPropagation()"></td><td>[自动] pkg_5c02f7 上新补发-20260612</td><td><span class="badge b-auto">自动</span></td><td>高中化学·实验专题</td><td>1</td><td>3,204</td><td>3,204</td><td><span class="badge b-recalled">recalled</span></td><td>2026-06-12 09:15</td></tr>
+            <tr class="row" onclick="toast('人工规则维持存量编辑能力(PRD 4.3)')"><td><input type="checkbox" onclick="event.stopPropagation()"></td><td>2024 老用户答谢补发</td><td><span class="badge b-man">人工</span></td><td>—</td><td>4</td><td>52,001</td><td>208,004</td><td><span class="badge b-active">active</span></td><td>2026-05-30 16:08</td></tr>
+          </table>
+          <div class="muted" style="margin-top:10px;display:flex;justify-content:space-between"><span>共 12 条</span><span>第 1/1 页 · 每页 20 条</span></div>
+        </div>
+        <div id="list-loading" style="display:none"><div class="state-box"><div class="spinner"></div>规则加载中…</div></div>
+        <div id="list-empty" style="display:none"><div class="state-box">📭 暂无符合条件的规则<br><span class="muted">调整筛选条件,或等待课程后台上新事件自动生成</span></div></div>
+        <div id="list-error" style="display:none"><div class="state-box" style="color:var(--err)">⚠️ 规则列表加载失败(ERR_RULE_LIST_500)<br><button class="btn ghost" style="margin-top:10px" onclick="setState('list','normal',document.querySelector('#p-list .pill'))">重试</button></div></div>
+      </div>
+    </section>
+
+    <!-- ============ 详情页 ============ -->
+    <section class="page" id="p-detail">
+      <div class="card">
+        <div class="h2">[自动] pkg_8f31c2 上新补发-20260706
+          <span class="badge b-auto">自动</span><span class="badge b-active" id="d-status">active</span>
+          <div class="pill-sw">
+            <span class="pill on" onclick="setState('detail','normal',this)">正常</span>
+            <span class="pill" onclick="setState('detail','loading',this)">加载</span>
+            <span class="pill" onclick="setState('detail','error',this)">错误</span>
+          </div>
+        </div>
+        <div id="detail-normal">
+        <div style="display:flex;gap:8px;margin-bottom:14px" id="d-btns">
+          <button class="btn warn" onclick="toast('已停用:引擎不再对新用户判定,已发授权不受影响(PRD 2.3)');document.getElementById('d-status').textContent='stopped';document.getElementById('d-status').className='badge b-stopped'">停用</button>
+          <button class="btn danger" onclick="openRecall()">发起召回</button>
+          <button class="btn ghost" onclick="toast('自动规则仅允许修改 name/content,判定条件与 targets 创建后锁定(PRD 4.3 / SDD-ADT-006)')">编辑备注</button>
+          <button class="btn ghost" onclick="toast('导出为异步任务,CSV 含水印,userId 默认脱敏(PRD 6)')">导出发放记录</button>
+        </div>
+        <div class="card" style="background:#fafbfc">
+          <div class="h2" style="font-size:14px">规则快照(创建后锁定)</div>
+          <div class="kv">
+            <span class="k">判定条件</span><span class="v">场景1: 拥有授权 specialCourse#pkg_8f31c2(dependAuths);场景2: 买过商品 good_a1b2c3(skuGroupGoodId) — 任一命中即发</span>
+            <span class="k">补发目标</span><span class="v">specialCourse#crs_new01(力学专项 v3·新增篇章)、specialCourse#crs_new02(力学实验室)</span>
+            <span class="k">时长计算</span><span class="v">rangeMethod=auto / rangeDepend=batch(继承原购买批次:在期按最长 endTime,未用按最长 duration)</span>
+            <span class="k">创建方式</span><span class="v">system:course-content-added(sourceKind=autoEvent)</span>
+          </div>
+        </div>
+        <div class="card" style="background:#fafbfc">
+          <div class="h2" style="font-size:14px">来源上新事件</div>
+          <div class="kv">
+            <span class="k">eventId</span><span class="v">evt-9c81f3aa-…-77e0 <span class="badge b-auto">ruleCreated</span></span>
+            <span class="k">coursePackageId</span><span class="v">pkg_8f31c2(初中物理·力学专项 v3)</span>
+            <span class="k">操作人 / 备注</span><span class="v">课程后台·李四 / "力学 v3 新增 2 个关联课程"</span>
+            <span class="k">原始报文</span><span class="v"><a href="#" onclick="toast('展开原始 JSON 报文(略)');return false">查看 JSON ▸</a></span>
+          </div>
+        </div>
+        <div class="card" style="background:#fafbfc">
+          <div class="h2" style="font-size:14px">发放统计与记录抽样(最近 100 条)</div>
+          <div class="stat" style="margin-bottom:10px">
+            <div class="s"><div class="n">48,210</div><div class="l">累计发放用户</div></div>
+            <div class="s"><div class="n">96,420</div><div class="l">累计发放授权</div></div>
+            <div class="s"><div class="n">193</div><div class="l">退款联动撤销</div></div>
+            <div class="s"><div class="n">99.96%</div><div class="l">该规则覆盖率</div></div>
+          </div>
+          <table>
+            <tr><th>用户</th><th>发放授权</th><th>时长来源</th><th>发放时间</th><th>状态</th></tr>
+            <tr><td>u_58**…**c2</td><td>crs_new01 / crs_new02</td><td>继承批次 order_7f…(至 2027-03-01)</td><td>2026-07-07 08:12</td><td><span class="badge b-active">using</span></td></tr>
+            <tr><td>u_a1**…**9d</td><td>crs_new01 / crs_new02</td><td>继承批次 order_33…(未用 365 天)</td><td>2026-07-07 08:09</td><td><span class="badge b-active">unused</span></td></tr>
+            <tr><td>u_77**…**e8</td><td>crs_new01 / crs_new02</td><td>—(原权益已退款撤销)</td><td>2026-07-06 22:31</td><td><span class="badge b-recalled">canceled·退款联动</span></td></tr>
+          </table>
+        </div>
+        </div>
+        <div id="detail-loading" style="display:none"><div class="state-box"><div class="spinner"></div>详情加载中…</div></div>
+        <div id="detail-error" style="display:none"><div class="state-box" style="color:var(--err)">⚠️ 详情加载失败(ERR_RULE_404):规则不存在或已被归档</div></div>
+      </div>
+    </section>
+
+    <!-- ============ 手工表单 ============ -->
+    <section class="page" id="p-manual">
+      <div class="card" style="max-width:720px">
+        <div class="h2">手工触发补发(降级路径) <span class="badge b-p0">PRD 4.4</span></div>
+        <div class="muted" style="margin-bottom:14px">课程后台事件不可用时的兜底入口;提交后生成 eventId=manual-{uuid} 的事件,复用同一校验与规则生成链路。</div>
+        <div class="form-row" id="f-pkg">
+          <label>原课程包 coursePackageId <span class="req">*</span></label>
+          <input type="text" id="i-pkg" placeholder="如 pkg_8f31c2" style="width:100%" onblur="vPkg()">
+          <div class="hint">失焦校验课程存在(调 courseBusiness 查询)</div>
+          <div class="fe">课程包不存在,请检查 ID</div>
+        </div>
+        <div class="form-row" id="f-targets">
+          <label>新增课程 targets <span class="req">*</span>(每行一个 targetId)</label>
+          <textarea id="i-targets" rows="3" placeholder="crs_new01&#10;crs_new02" onblur="vTargets()"></textarea>
+          <div class="hint">逐行校验 targetId 格式(IsValidTargetID)并去重</div>
+          <div class="fe" id="e-targets">第 2 行 targetId 格式非法</div>
+        </div>
+        <div class="form-row">
+          <label>关联在售商品 relatedGoodsIds(选填)</label>
+          <input type="text" placeholder="good_a1b2c3,多个逗号分隔" style="width:100%">
+        </div>
+        <div class="form-row" id="f-remark">
+          <label>上新说明 remark <span class="req">*</span>(≤200 字)</label>
+          <textarea id="i-remark" rows="2" placeholder="将写入规则 content,用于审计"></textarea>
+          <div class="fe">说明必填</div>
+        </div>
+        <div class="est" id="est">预估命中用户:<b id="est-n">48,210</b> 人(拥有原课程权益 46,102 + 买过关联商品增量 2,108)<span id="est-warn" style="display:none;color:var(--err)"> — 超过 10 万,提交需二次确认(PRD 3.2)</span></div>
+        <div style="display:flex;gap:8px">
+          <button class="btn ghost" onclick="estimate()">预估命中用户数</button>
+          <button class="btn" onclick="submitManual()">提交</button>
+          <button class="btn ghost" onclick="fillDemo()">▶ 填入演示数据</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ 事件/死信 ============ -->
+    <section class="page" id="p-dead">
+      <div class="card">
+        <div class="h2">上新事件监控 / 死信恢复 <span class="badge b-p0">PRD 4.1 / 8</span>
+          <div class="pill-sw">
+            <span class="pill on" onclick="setState('dead','normal',this)">正常</span>
+            <span class="pill" onclick="setState('dead','empty',this)">空态</span>
+          </div>
+        </div>
+        <div id="dead-normal">
+        <table>
+          <tr><th>eventId</th><th>课程包</th><th>来源</th><th>状态</th><th>失败原因</th><th>时间</th><th>操作</th></tr>
+          <tr><td>evt-9c81…77e0</td><td>pkg_8f31c2</td><td>Kafka</td><td><span class="badge b-auto">ruleCreated</span></td><td>—</td><td>07-06 20:01</td><td><a href="#" onclick="go('detail');return false">查看规则</a></td></tr>
+          <tr><td>evt-1f02…a3b9</td><td>pkg_9d44e1</td><td>Kafka</td><td><span class="badge b-failed">failed</span></td><td>addedTargets[1] 未通过 IsValidTargetID</td><td>07-05 11:32</td><td><a href="#" onclick="toast('请课程后台修正后重发事件;本条不可直接重放(数据非法)');return false">详情</a></td></tr>
+          <tr><td>evt-6a77…c1d0</td><td>pkg_2ab9e0</td><td>Kafka</td><td><span class="badge b-received">死信</span></td><td>规则生成事务失败,重试 3 次(1/5/30min)未成功</td><td>07-04 03:18</td><td><a href="#" onclick="this.outerHTML='<span class=muted>已重新消费 ✓</span>';toast('按 eventId 幂等重新消费,成功后状态置 ruleCreated(SDD-ADT-009)')">重新消费</a></td></tr>
+          <tr><td>manual-88f2…09aa</td><td>pkg_77d1aa</td><td>手工表单·张三</td><td><span class="badge b-auto">ruleCreated</span></td><td>—</td><td>06-20 14:40</td><td><a href="#" onclick="toast('跳转对应规则(略)');return false">查看规则</a></td></tr>
+        </table>
+        <div class="muted" style="margin-top:10px">消费成功率(近 7 天):99.4% · 阈值 99% 告警(SDD-REL-004)</div>
+        </div>
+        <div id="dead-empty" style="display:none"><div class="state-box">✅ 无死信事件,链路健康</div></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- 召回弹窗:影响范围预告 → 双人复核 -->
+<div class="modal-mask" id="recallMask">
+  <div class="modal">
+    <h3>发起规则召回(危险操作)</h3>
+    <div class="steps">
+      <div class="step done" id="st1">影响范围预告</div>
+      <div class="step cur" id="st2">发起人确认</div>
+      <div class="step" id="st3">复核人审批</div>
+      <div class="step" id="st4">引擎撤销授权</div>
+    </div>
+    <div class="impact">⚠️ 该规则已为 <b>48,210</b> 名用户发放 <b>96,420</b> 条授权。<br>召回后引擎将<b>全部自动撤销</b>,发放记录保留(active=false)供审计。</div>
+    <div class="form-row"><label>召回原因 <span class="req">*</span></label><textarea rows="2" id="i-reason" placeholder="将写入操作日志(who/when/what/before-after)"></textarea></div>
+    <div class="muted">双人复核(maker-checker):提交后需另一名权益运营审批,发起人不得自审;审批中规则锁定;72h 未处理自动关闭(PRD 3.2/3.3)。</div>
+    <div class="foot">
+      <button class="btn ghost" onclick="closeRecall()">取消</button>
+      <button class="btn danger" id="recallGo" onclick="doRecall()">提交召回申请</button>
+    </div>
+  </div>
+</div>
+
+<div class="anno" id="anno">
+  <b>标注模式 · PRD 映射</b><br>
+  · 列表/详情/表单/批量 → PRD 4.3(F3 审计视图)<br>
+  · 召回弹窗影响范围+双人复核 → PRD 3.2/3.3<br>
+  · 手工表单校验+预估命中 → PRD 4.4(F4)<br>
+  · 死信重新消费(eventId 幂等) → PRD 8 / SDD-ADT-009<br>
+  · 顶部指标卡 → PRD 1.3 / 10(覆盖率、时效、工单归零)<br>
+  · 状态与按钮显隐 → PRD 2.3 状态机
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+function go(p){
+  document.querySelectorAll('.page').forEach(e=>e.classList.remove('show'));
+  document.getElementById('p-'+p).classList.add('show');
+  document.querySelectorAll('.nav a[data-p]').forEach(a=>a.classList.toggle('on',a.dataset.p===p));
+  window.scrollTo(0,0);
+}
+function setState(page,st,pill){
+  ['normal','loading','empty','error'].forEach(s=>{
+    const el=document.getElementById(page+'-'+s); if(el) el.style.display=(s===st?'':'none');
+  });
+  pill.parentElement.querySelectorAll('.pill').forEach(x=>x.classList.remove('on')); pill.classList.add('on');
+}
+function toast(m){const t=document.getElementById('toast');t.textContent=m;t.style.display='block';clearTimeout(t._h);t._h=setTimeout(()=>t.style.display='none',2600)}
+function toggleAnno(){document.getElementById('anno').classList.toggle('show');document.getElementById('annoBtn').classList.toggle('on')}
+function openRecall(){document.getElementById('recallMask').classList.add('show')}
+function closeRecall(){document.getElementById('recallMask').classList.remove('show')}
+function doRecall(){
+  const r=document.getElementById('i-reason');
+  if(!r.value.trim()){toast('召回原因必填');return}
+  document.getElementById('st2').className='step done';document.getElementById('st3').className='step cur';
+  document.getElementById('recallGo').disabled=true;document.getElementById('recallGo').textContent='待复核人审批…';
+  toast('已提交,等待另一名权益运营审批;规则已锁定');
+  setTimeout(()=>{ // 模拟复核通过
+    document.getElementById('st3').className='step done';document.getElementById('st4').className='step done';
+    closeRecall();
+    const s=document.getElementById('d-status');s.textContent='recalled';s.className='badge b-recalled';
+    document.querySelectorAll('#d-btns .btn').forEach(b=>b.disabled=true);
+    toast('复核通过 → 规则 recalled(终态),引擎自动撤销全部已发授权');
+  },2200);
+}
+function vPkg(){const v=document.getElementById('i-pkg').value.trim();document.getElementById('f-pkg').classList.toggle('err',v!==''&&!v.startsWith('pkg_'))}
+function vTargets(){
+  const lines=document.getElementById('i-targets').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  const bad=lines.findIndex(l=>!/^crs_[a-z0-9]+$/i.test(l));
+  const dup=new Set(lines).size!==lines.length;
+  const err=lines.length===0?false:(bad>=0||dup);
+  document.getElementById('f-targets').classList.toggle('err',err);
+  document.getElementById('e-targets').textContent=dup?'存在重复 targetId,已自动标红':(bad>=0?`第 ${bad+1} 行 targetId 格式非法(IsValidTargetID)`:'');
+  return lines.length>0&&!err;
+}
+function estimate(){
+  if(!document.getElementById('i-pkg').value.trim()){toast('请先填写 coursePackageId');return}
+  const big=Math.random()<0.3, n=big?126483:48210;
+  document.getElementById('est').style.display='block';
+  document.getElementById('est-n').textContent=n.toLocaleString();
+  document.getElementById('est-warn').style.display=big?'':'none';
+}
+function submitManual(){
+  const okP=document.getElementById('i-pkg').value.trim().startsWith('pkg_');
+  const okT=vTargets(); const okR=document.getElementById('i-remark').value.trim()!=='';
+  document.getElementById('f-pkg').classList.toggle('err',!okP);
+  document.getElementById('f-remark').classList.toggle('err',!okR);
+  if(!(okP&&okT&&okR)){toast('请修正标红字段(前后端双份校验)');return}
+  if(document.getElementById('est').style.display!=='block'){toast('请先预估命中用户数');return}
+  if(document.getElementById('est-warn').style.display!=='none'&&!confirm('预估命中超过 10 万用户,确认继续提交?(二次确认·PRD 3.2)'))return;
+  toast('已生成事件 manual-'+Math.random().toString(16).slice(2,10)+',进入规则生成链路;可在「上新事件/死信」页跟踪');
+  setTimeout(()=>go('dead'),1500);
+}
+function fillDemo(){
+  go('manual');
+  document.getElementById('i-pkg').value='pkg_8f31c2';
+  document.getElementById('i-targets').value='crs_new01\ncrs_XX!!非法\ncrs_new01';
+  document.getElementById('i-remark').value='力学 v3 新增 2 个关联课程';
+  vTargets();toast('演示:第 2 行格式非法 + 重复行,已标红(PRD 4.4)');
+}
+</script>
+</body>
+</html>
