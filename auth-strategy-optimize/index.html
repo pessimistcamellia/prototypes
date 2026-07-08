@@ -1,0 +1,863 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>权益更新策略 · 运营后台原型</title>
+<style>
+:root{
+  --primary:#2B5CE6; --primary-dark:#1e42a8; --primary-light:#EAF0FE;
+  --navy:#2B4C7E; --success:#18a058; --warning:#f0a020; --danger:#d03050;
+  --text:#1f2329; --text2:#646a73; --text3:#8f959e;
+  --border:#dee0e3; --bg:#f5f6f7; --card:#fff;
+  --radius:8px;
+  font-size:14px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif;background:var(--bg);color:var(--text);font-size:14px;overflow:hidden}
+#app{display:flex;height:100vh}
+/* ------- left nav ------- */
+.sidenav{width:200px;background:#1f2d3d;color:#bfcbd9;flex-shrink:0;display:flex;flex-direction:column}
+.sidenav .logo{height:52px;display:flex;align-items:center;padding:0 16px;font-weight:600;color:#fff;font-size:15px;background:#182533}
+.sidenav .logo span{color:#5b8ff9;margin-right:6px}
+.sidenav .group{padding:12px 16px 4px;font-size:12px;color:#5c6b7f}
+.sidenav a{display:block;padding:10px 16px 10px 28px;color:#bfcbd9;text-decoration:none;font-size:13px;cursor:pointer}
+.sidenav a:hover{color:#fff}
+.sidenav a.active{color:#fff;background:var(--primary);border-radius:0}
+/* ------- main ------- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0}
+.topbar{height:52px;background:#fff;border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;gap:12px;flex-shrink:0}
+.topbar .crumb{color:var(--text2);font-size:13px}
+.topbar .crumb b{color:var(--text);font-weight:600}
+.topbar .spacer{flex:1}
+.content{flex:1;overflow:auto;padding:20px}
+/* ------- debug corner ------- */
+.debugbar{position:fixed;right:16px;bottom:16px;z-index:900;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.debugbar .pill{background:#1f2d3d;color:#fff;border-radius:20px;padding:8px 14px;font-size:12px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.25);user-select:none}
+.debugbar .panel{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;box-shadow:0 8px 24px rgba(0,0,0,.15);display:none;width:220px}
+.debugbar .panel.open{display:block}
+.debugbar .panel h4{font-size:12px;color:var(--text3);margin-bottom:8px}
+.debugbar .panel .opt{display:inline-block;border:1px solid var(--border);border-radius:6px;padding:4px 10px;margin:0 6px 6px 0;font-size:12px;cursor:pointer}
+.debugbar .panel .opt.on{background:var(--primary);color:#fff;border-color:var(--primary)}
+/* ------- annotations ------- */
+.anno{display:none;background:#fff7e6;border:1px dashed #f0a020;color:#8a5a00;font-size:12px;padding:6px 10px;border-radius:6px;margin:8px 0}
+body.anno-on .anno{display:block}
+/* ------- page map drawer ------- */
+.mapdrawer{position:fixed;left:0;top:0;bottom:0;width:260px;background:#fff;z-index:1000;box-shadow:4px 0 24px rgba(0,0,0,.18);transform:translateX(-100%);transition:.25s;padding:16px}
+.mapdrawer.open{transform:none}
+.mapdrawer h3{font-size:14px;margin-bottom:12px}
+.mapdrawer a{display:block;padding:9px 10px;border-radius:6px;color:var(--text);text-decoration:none;font-size:13px;cursor:pointer}
+.mapdrawer a:hover{background:var(--primary-light);color:var(--primary)}
+.mapmask{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:999;display:none}
+.mapmask.open{display:block}
+/* ------- components ------- */
+.card{background:var(--card);border-radius:var(--radius);border:1px solid var(--border);padding:16px 20px;margin-bottom:16px}
+.btn{display:inline-flex;align-items:center;gap:4px;border:1px solid var(--border);background:#fff;color:var(--text);border-radius:6px;padding:7px 14px;font-size:13px;cursor:pointer;white-space:nowrap}
+.btn:hover{border-color:var(--primary);color:var(--primary)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}
+.btn.primary:hover{background:var(--primary-dark);color:#fff}
+.btn.danger{color:var(--danger);border-color:#f1bcc8}
+.btn.danger:hover{border-color:var(--danger)}
+.btn.sm{padding:3px 10px;font-size:12px}
+.btn.link{border:none;background:none;color:var(--primary);padding:3px 6px}
+.btn:disabled{opacity:.45;cursor:not-allowed;pointer-events:none}
+.tag{display:inline-block;padding:2px 10px;border-radius:10px;font-size:12px;line-height:18px}
+.tag.scheduled{background:#e8f1ff;color:#1456f0}
+.tag.active{background:#e5f7ed;color:var(--success)}
+.tag.stopped{background:#f2f3f5;color:var(--text2)}
+.tag.recalled{background:#fdebef;color:var(--danger)}
+.tag.running{background:#fff4e0;color:#b26a00}
+.tag.success{background:#e5f7ed;color:var(--success)}
+.tag.partial{background:#fdebef;color:var(--danger)}
+table{width:100%;border-collapse:collapse}
+th{font-size:12px;color:var(--text2);text-align:left;padding:10px 12px;background:#fafbfc;border-bottom:1px solid var(--border);white-space:nowrap}
+td{padding:11px 12px;border-bottom:1px solid #f0f1f2;font-size:13px;vertical-align:middle}
+tr:hover td{background:#fafcff}
+.filters{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.filters input,.filters select,input[type=text],input[type=number],input[type=datetime-local],textarea,select{
+  border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-size:13px;background:#fff;color:var(--text);outline:none;font-family:inherit}
+.filters input:focus,input:focus,textarea:focus,select:focus{border-color:var(--primary)}
+.pagehead{display:flex;align-items:center;margin-bottom:16px;gap:12px}
+.pagehead h2{font-size:17px;font-weight:600}
+.pagehead .spacer{flex:1}
+/* tooltip */
+.tip{position:relative;display:inline-flex;align-items:center;justify-content:center;width:15px;height:15px;border-radius:50%;background:#d0d3d6;color:#fff;font-size:10px;cursor:help;margin-left:4px;vertical-align:1px}
+.tip .tiptext{visibility:hidden;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);background:#1f2329;color:#fff;font-size:12px;line-height:1.6;padding:8px 12px;border-radius:6px;width:280px;z-index:500;font-weight:400;text-align:left}
+.tip:hover .tiptext{visibility:visible}
+/* form */
+.fsection{border:1px solid var(--border);border-radius:8px;margin-bottom:16px;overflow:hidden}
+.fsection>.fhead{background:#fafbfc;padding:10px 16px;font-weight:600;font-size:13px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.fsection>.fhead .stepnum{width:20px;height:20px;border-radius:50%;background:var(--primary);color:#fff;font-size:12px;display:inline-flex;align-items:center;justify-content:center}
+.fsection>.fhead .subnote{font-weight:400;color:var(--warning);font-size:12px;margin-left:8px}
+.fsection>.fbody{padding:16px}
+.frow{display:flex;margin-bottom:14px;align-items:flex-start}
+.frow:last-child{margin-bottom:0}
+.frow>label{width:130px;flex-shrink:0;padding-top:8px;font-size:13px;color:var(--text);text-align:right;padding-right:14px}
+.frow>label .req{color:var(--danger);margin-right:2px}
+.frow .fctl{flex:1;min-width:0}
+.fhint{font-size:12px;color:var(--text3);margin-top:5px;line-height:1.6}
+.ferr{font-size:12px;color:var(--danger);margin-top:5px;display:none}
+.frow.error input,.frow.error textarea,.frow.error select{border-color:var(--danger)}
+.frow.error .ferr{display:block}
+.radio-group{display:flex;gap:18px;flex-wrap:wrap;padding-top:8px}
+.radio-group label{display:inline-flex;gap:6px;align-items:center;font-size:13px;cursor:pointer}
+.condgroup{border:1px solid #d8e3fb;background:#f8faff;border-radius:8px;padding:14px;margin-bottom:12px;position:relative}
+.condgroup .cghead{font-weight:600;font-size:13px;margin-bottom:12px;color:var(--navy)}
+.condgroup .del{position:absolute;right:12px;top:10px;color:var(--danger);cursor:pointer;font-size:13px}
+.charcount{font-size:12px;color:var(--text3);text-align:right;margin-top:2px}
+/* modal */
+.mask{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:1100;display:none;align-items:center;justify-content:center}
+.mask.open{display:flex}
+.modal{background:#fff;border-radius:10px;width:560px;max-width:92vw;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 12px 40px rgba(0,0,0,.25)}
+.modal.wide{width:760px}
+.modal .mhead{padding:16px 20px;font-weight:600;font-size:15px;border-bottom:1px solid var(--border);display:flex;align-items:center}
+.modal .mhead .x{margin-left:auto;cursor:pointer;color:var(--text3);font-size:18px}
+.modal .mbody{padding:20px;overflow:auto}
+.modal .mfoot{padding:12px 20px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:10px}
+.impactbox{background:#fff8e6;border:1px solid #ffe1a0;border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8}
+.impactbox b{color:#b26a00}
+.dangerbox{background:#fdebef;border:1px solid #f5c0cd;border-radius:8px;padding:14px;margin-bottom:14px;font-size:13px;line-height:1.8}
+.dangerbox b{color:var(--danger)}
+/* detail */
+.dgrid{display:grid;grid-template-columns:130px 1fr 130px 1fr;gap:10px 8px;font-size:13px}
+.dgrid .k{color:var(--text2);text-align:right}
+.statrow{display:flex;gap:14px;margin-bottom:16px}
+.statcard{flex:1;background:linear-gradient(135deg,#f8faff,#eef3fd);border:1px solid #dfe8fa;border-radius:8px;padding:14px 16px}
+.statcard .n{font-size:22px;font-weight:700;color:var(--navy)}
+.statcard .l{font-size:12px;color:var(--text2);margin-top:2px}
+.progress{height:8px;background:#eef0f2;border-radius:4px;overflow:hidden;width:120px;display:inline-block;vertical-align:middle}
+.progress i{display:block;height:100%;background:var(--primary);border-radius:4px}
+/* states */
+.stateview{display:none;padding:60px 0;text-align:center;color:var(--text3)}
+.stateview .ico{font-size:44px;margin-bottom:12px}
+.spin{width:34px;height:34px;border:3px solid #dde3ee;border-top-color:var(--primary);border-radius:50%;margin:0 auto 12px;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+/* agent */
+.agent-wrap{display:flex;gap:16px;height:calc(100vh - 160px);min-height:520px}
+.agent-left{width:340px;flex-shrink:0;display:flex;flex-direction:column;gap:12px}
+.agent-chat{flex:1;background:#fff;border:1px solid var(--border);border-radius:10px;display:flex;flex-direction:column;min-width:0}
+.chatlog{flex:1;overflow:auto;padding:20px;display:flex;flex-direction:column;gap:14px}
+.msg{max-width:88%;line-height:1.7;font-size:13px}
+.msg.user{align-self:flex-end;background:var(--primary);color:#fff;padding:10px 14px;border-radius:12px 12px 2px 12px}
+.msg.agent{align-self:flex-start;width:88%}
+.msg.agent .bubble{background:#f7f8fa;border:1px solid var(--border);border-radius:2px 12px 12px 12px;padding:12px 16px}
+.toolstep{border-left:3px solid #c9d6f5;padding:6px 12px;margin:8px 0;font-size:12.5px;color:var(--text2);background:#fbfcfe;border-radius:0 6px 6px 0}
+.toolstep b{color:var(--navy)}
+.toolstep .st{float:right;font-size:11px}
+.toolstep .st.done{color:var(--success)}
+.toolstep .st.doing{color:var(--warning)}
+.planbox{background:#eef3fd;border:1px solid #d3e0fa;border-radius:8px;padding:10px 14px;font-size:12.5px;margin-bottom:8px;line-height:1.9}
+.planbox b{color:var(--navy)}
+.answer-card{background:#fff;border:1px solid #cfe0d8;border-radius:8px;overflow:hidden;margin-top:10px}
+.answer-card .ah{background:#e5f7ed;color:#0f7a43;font-weight:600;padding:8px 14px;font-size:13px}
+.answer-card .ab{padding:12px 16px;font-size:13px;line-height:1.9}
+.timelinemini{margin:10px 0;padding-left:6px}
+.timelinemini .ti{display:flex;gap:10px;font-size:12.5px;position:relative;padding-bottom:14px}
+.timelinemini .ti:before{content:"";position:absolute;left:5px;top:14px;bottom:0;width:2px;background:#dfe5ee}
+.timelinemini .ti:last-child:before{display:none}
+.timelinemini .dot{width:12px;height:12px;border-radius:50%;background:var(--primary);flex-shrink:0;margin-top:3px;border:2px solid #fff;box-shadow:0 0 0 2px var(--primary)}
+.timelinemini .dot.gray{background:#c2c8d1;box-shadow:0 0 0 2px #c2c8d1}
+.chatinput{border-top:1px solid var(--border);padding:12px;display:flex;gap:10px}
+.chatinput input{flex:1}
+.presetcase{border:1px solid var(--border);border-radius:8px;padding:10px 12px;font-size:12.5px;cursor:pointer;line-height:1.6;background:#fff}
+.presetcase:hover{border-color:var(--primary);color:var(--primary)}
+.readybox{background:#fff;border:1px solid var(--border);border-radius:10px;padding:14px}
+.readybox h4{font-size:13px;margin-bottom:10px}
+.readybox .ri{display:flex;justify-content:space-between;font-size:12.5px;padding:5px 0;color:var(--text2)}
+.readybox .ok{color:var(--success)}
+.badge-beta{background:linear-gradient(90deg,#7b5cf0,#2b5ce6);color:#fff;font-size:10px;padding:2px 8px;border-radius:8px;margin-left:6px;vertical-align:2px}
+.view{display:none}
+.view.show{display:block}
+.muted{color:var(--text3);font-size:12px}
+.kbd{background:#f2f3f5;border-radius:4px;padding:1px 6px;font-size:12px;color:var(--text2)}
+.toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1f2329;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:2000;display:none}
+</style>
+</head>
+<body>
+<div id="toast" class="toast"></div>
+
+<!-- page map -->
+<div class="mapmask" id="mapmask" onclick="toggleMap(false)"></div>
+<div class="mapdrawer" id="mapdrawer">
+  <h3>页面地图</h3>
+  <a onclick="nav('list');toggleMap(false)">① 策略列表页</a>
+  <a onclick="nav('form');toggleMap(false)">② 新增策略表单（文案改造）</a>
+  <a onclick="openDetail('r2');toggleMap(false)">③ 策略详情页（任务/统计/日志）</a>
+  <a onclick="openDetail('r2');setTimeout(()=>document.getElementById('taskblock').scrollIntoView({behavior:'smooth'}),100);toggleMap(false)">④ 执行任务（部分失败）</a>
+  <a onclick="nav('form');setTimeout(()=>demoImpact(),200);toggleMap(false)">⑤ 影响面预估确认弹窗</a>
+  <a onclick="openDetail('r2');setTimeout(()=>openDryrun(),150);toggleMap(false)">⑥ 单用户预演 dry-run</a>
+  <a onclick="openDetail('r2');setTimeout(()=>openRecall('r2'),150);toggleMap(false)">⑦ 召回二次确认</a>
+  <a onclick="nav('agent');toggleMap(false)">⑧ 场景预演 Agent（二期 Demo）</a>
+</div>
+
+<div id="app">
+  <div class="sidenav">
+    <div class="logo"><span>◈</span>Shadow 运营后台</div>
+    <div class="group">权益中心</div>
+    <a>权益查询</a>
+    <a class="active">权益更新策略</a>
+    <a>发放记录</a>
+    <div class="group">订单中心</div>
+    <a>订单查询</a>
+    <a>售后处理</a>
+  </div>
+
+  <div class="main">
+    <div class="topbar">
+      <button class="btn sm" onclick="toggleMap(true)">☰ 页面地图</button>
+      <div class="crumb">权益中心 / <b id="crumbnow">权益更新策略</b></div>
+      <div class="spacer"></div>
+      <span class="muted">当前角色：权益运营（张运营）</span>
+    </div>
+
+    <div class="content">
+
+      <!-- ================= LIST VIEW ================= -->
+      <div class="view show" id="view-list">
+        <div class="anno">PRD §4.1 列表页：新增「待生效」状态、生效时间列、最近任务列；操作按钮显隐与 §2.5 状态机一一对应。</div>
+        <div class="pagehead">
+          <h2>权益更新策略</h2>
+          <div class="spacer"></div>
+          <button class="btn" onclick="nav('agent')">✨ 场景预演 Agent<span class="badge-beta">二期DEMO</span></button>
+          <button class="btn primary" onclick="nav('form')">+ 新增策略</button>
+        </div>
+        <div class="card">
+          <div class="filters">
+            <select><option>状态：全部</option><option>待生效</option><option>生效中</option><option>已停用</option><option>已召回</option></select>
+            <input type="text" placeholder="策略名称（模糊）" style="width:160px">
+            <input type="text" placeholder="策略 ID（精确）" style="width:180px">
+            <input type="text" placeholder="更新人" style="width:110px">
+            <button class="btn sm">查询</button>
+            <button class="btn sm">重置</button>
+          </div>
+          <div id="list-normal">
+            <table>
+              <thead><tr>
+                <th>策略名称</th><th>状态</th><th>生效时间</th><th>补发内容</th><th>最近执行任务</th><th>更新人</th><th>更新时间</th><th style="width:230px">操作</th>
+              </tr></thead>
+              <tbody id="listbody"></tbody>
+            </table>
+            <div style="display:flex;justify-content:flex-end;padding:12px 0 0;color:var(--text2);font-size:12px">共 4 条 · 每页 20 条 · <a style="color:var(--primary)">1</a></div>
+          </div>
+          <div class="stateview" id="list-loading"><div class="spin"></div>加载中…</div>
+          <div class="stateview" id="list-empty"><div class="ico">🗂</div>暂无策略，点击右上角「新增策略」创建<br><br><button class="btn primary sm" onclick="nav('form')">+ 新增策略</button></div>
+          <div class="stateview" id="list-error"><div class="ico">⚠️</div>加载失败：网络异常（ERR_TIMEOUT）<br><br><button class="btn sm" onclick="setListState('normal')">重试</button></div>
+        </div>
+      </div>
+
+      <!-- ================= FORM VIEW ================= -->
+      <div class="view" id="view-form">
+        <div class="anno">PRD §4.2 表单文案改造 + §5 定时生效 + §7.1 时间基准。四区块分组；全部字段带 tooltip；提交走影响面预估确认（§7.2）。</div>
+        <div class="pagehead">
+          <h2 id="formtitle">新增策略</h2>
+          <div class="spacer"></div>
+          <button class="btn" onclick="nav('list')">返回列表</button>
+        </div>
+
+        <div class="card" style="max-width:920px">
+          <!-- 区块1 基本信息 -->
+          <div class="fsection">
+            <div class="fhead"><span class="stepnum">1</span>基本信息</div>
+            <div class="fbody">
+              <div class="frow" id="fr-name">
+                <label><span class="req">*</span>策略名称</label>
+                <div class="fctl">
+                  <input type="text" id="f-name" maxlength="64" style="width:420px" placeholder="请输入（64 字以内）" value="7月数学新课补发">
+                  <div class="ferr">请输入策略名称</div>
+                </div>
+              </div>
+              <div class="frow" id="fr-desc">
+                <label><span class="req">*</span>策略描述<span class="tip">?<span class="tiptext">建议写明：补发原因、关联活动/工单编号、预期影响范围。将展示在审计日志与详情页。</span></span></label>
+                <div class="fctl">
+                  <textarea id="f-desc" maxlength="500" rows="3" style="width:100%" placeholder="请输入补发原因、关联活动/工单、预期影响范围（500 字以内）">7月初中数学上新「函数专题 v2」，2025年9月至2026年6月期间购买过初中数学系统课（或兑换过0625批次兑换码）的在期用户，补齐新专题课程权益。关联工单 OP-20260707-118。</textarea>
+                  <div class="charcount"><span id="desccount">0</span>/500（原上限 24 字 → 现 500 字）</div>
+                  <div class="ferr">请输入策略描述</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 区块2 补发内容 -->
+          <div class="fsection">
+            <div class="fhead"><span class="stepnum">2</span>补发内容<span class="subnote">满足条件后，将给用户补发以下权益（原名「补发策略」）</span></div>
+            <div class="fbody">
+              <div class="frow" id="fr-target">
+                <label><span class="req">*</span>补发权益<span class="tip">?<span class="tiptext">你希望补发给用户的权益，可多选。（原名「权益名称」）</span></span></label>
+                <div class="fctl">
+                  <select id="f-target" style="width:420px">
+                    <option value="">请选择</option>
+                    <option selected>初中数学 · 函数专题 v2（specialCourse #MA-FN-V2）</option>
+                    <option>初中物理 · 力学进阶（specialCourse #PH-LX-01）</option>
+                    <option>大会员 · 月卡（vip #1-1）</option>
+                  </select>
+                  <div class="ferr">请选择补发权益</div>
+                </div>
+              </div>
+              <div class="frow">
+                <label><span class="req">*</span>补发时长</label>
+                <div class="fctl">
+                  <div class="radio-group">
+                    <label><input type="radio" name="rangeMethod" value="custom" onchange="onRangeMethod()">自定义</label>
+                    <label><input type="radio" name="rangeMethod" value="auto" checked onchange="onRangeMethod()">跟随依赖权益
+                      <span class="tip">?<span class="tiptext">跟随「补发条件」中依赖权益的剩余时长：在期权益取最晚到期时间；未激活权益取最长时长。多个条件组同时命中时，同一权益仅补发一条，时长取所有命中批次中最长。（原名「系统自动计算」）</span></span>
+                    </label>
+                  </div>
+                  <div class="fhint" id="autohint">✓ 已选择跟随依赖权益：补发权益的到期时间/时长将与用户所持依赖权益保持一致，无需填写时长。</div>
+                </div>
+              </div>
+              <div class="frow" id="fr-rangetype" style="display:none">
+                <label><span class="req">*</span>时长类型</label>
+                <div class="fctl">
+                  <div class="radio-group">
+                    <label><input type="radio" name="rangeType" value="fixed" checked>固定时长<span class="tip">?<span class="tiptext">自补发权益被激活起计时 N 天。</span></span></label>
+                    <label><input type="radio" name="rangeType" value="range">有效期<span class="tip">?<span class="tiptext">指定起止日期，到期即失效。</span></span></label>
+                  </div>
+                  <div style="margin-top:8px"><input type="number" placeholder="天数" style="width:120px"> 天</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 区块3 补发条件 -->
+          <div class="fsection">
+            <div class="fhead"><span class="stepnum">3</span>补发条件<span class="subnote">什么情况下给用户补发上述内容（原名「补发场景」）。多个条件组之间为「或」的关系，满足任一条件组即补发</span></div>
+            <div class="fbody">
+              <div class="condgroup">
+                <div class="cghead">条件组 1 <span class="muted" style="font-weight:400">用户同时满足本组内所有条件时补发</span></div>
+                <div class="frow">
+                  <label><span class="req">*</span>权益来源<span class="tip">?<span class="tiptext">用户通过什么方式获得下方「依赖权益」。（原名「权益类型：指定来源/不指定来源」）</span></span></label>
+                  <div class="fctl">
+                    <div class="radio-group">
+                      <label><input type="radio" name="src1" value="good" checked onchange="onSrc(1,'good')">通过商品购买获得</label>
+                      <label><input type="radio" name="src1" value="redeem" onchange="onSrc(1,'redeem')">通过兑换码获得</label>
+                      <label><input type="radio" name="src1" value="any" onchange="onSrc(1,'any')">不限来源（仅看是否持有权益）</label>
+                    </div>
+                  </div>
+                </div>
+                <div class="frow" id="fr-good1">
+                  <label><span class="req">*</span>指定商品</label>
+                  <div class="fctl">
+                    <select style="width:420px"><option selected>初中数学系统课·三年畅学（skuGroupGood #SKG-8821）</option><option>初中数学系统课·一年（#SKG-8802）</option></select>
+                    <div class="fhint">提交时校验商品存在性；仅统计支付成功订单。</div>
+                  </div>
+                </div>
+                <div class="frow" id="fr-redeem1" style="display:none">
+                  <label><span class="req">*</span>兑换码批次</label>
+                  <div class="fctl"><input type="text" style="width:420px" placeholder="批次 ID，可多个，回车分隔" value="RB-0625-MATH"></div>
+                </div>
+                <div class="frow">
+                  <label><span class="req">*</span>依赖权益<span class="tip">?<span class="tiptext">用户必须持有的权益。选择了商品/兑换码来源时，只统计来自该来源的权益。</span></span></label>
+                  <div class="fctl">
+                    <select style="width:420px"><option selected>初中数学 · 函数专题 v1（specialCourse #MA-FN-V1）</option></select>
+                  </div>
+                </div>
+                <div class="frow">
+                  <label><span class="req">*</span>时间条件<span class="tip">?<span class="tiptext">在所选时间范围内获得依赖权益的用户，才会收到补发。"获得时间"以什么为准，见下方「时间基准」。</span></span></label>
+                  <div class="fctl">
+                    <div class="radio-group">
+                      <label><input type="radio" name="tc1" checked>时间区间</label>
+                      <label><input type="radio" name="tc1">时间点之前</label>
+                      <label><input type="radio" name="tc1">时间点之后</label>
+                      <label><input type="radio" name="tc1">无时间要求</label>
+                    </div>
+                    <div style="margin-top:8px;display:flex;gap:8px;align-items:center">
+                      <input type="datetime-local" value="2025-09-01T00:00"> <span>–</span> <input type="datetime-local" value="2026-06-30T23:59">
+                    </div>
+                  </div>
+                </div>
+                <div class="frow" style="background:#eef7f1;border-radius:8px;padding:10px 0 10px 0;margin:0 -2px">
+                  <label style="padding-top:8px"><span class="req">*</span>时间基准<span class="tip">?<span class="tiptext">【本期新增】判断"获得时间"以什么为准。修复前系统只看权益到账时间，即便指定了商品/兑换码来源；修复后按来源自动推荐正确基准。</span></span></label>
+                  <div class="fctl">
+                    <div class="radio-group" id="basis1">
+                      <label><input type="radio" name="basis1" value="orderPaid" checked>订单支付时间（推荐）</label>
+                      <label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>
+                    </div>
+                    <div class="fhint">已按「商品购买」来源默认选中订单支付时间；延迟发放、无主订单后补绑定用户将按真实购买时间判定。</div>
+                  </div>
+                </div>
+              </div>
+              <div class="condgroup" style="border-style:dashed;background:#fff;text-align:center;padding:12px;cursor:pointer;color:var(--primary)" onclick="toast('演示原型：可添加条件组 2（或关系）')">+ 添加条件组（满足任一条件组即补发）</div>
+              <div class="frow">
+                <label>已持有同款权益<span class="tip">?<span class="tiptext">【本期新增】用户已从其他来源（购买、兑换、其他策略）持有同款在期权益时是否仍补发。默认跳过，避免超发。</span></span></label>
+                <div class="fctl">
+                  <div class="radio-group">
+                    <label><input type="radio" name="dedup" checked>跳过不补发（默认）</label>
+                    <label><input type="radio" name="dedup">仍然补发（时长独立叠加）</label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 区块4 生效设置 -->
+          <div class="fsection">
+            <div class="fhead"><span class="stepnum">4</span>生效设置<span class="subnote">【本期新增】一旦生效不可再编辑，仅可停用/召回/复制</span></div>
+            <div class="fbody">
+              <div class="frow">
+                <label><span class="req">*</span>生效方式</label>
+                <div class="fctl">
+                  <div class="radio-group">
+                    <label><input type="radio" name="eff" value="now" onchange="onEff()">立即生效</label>
+                    <label><input type="radio" name="eff" value="sched" checked onchange="onEff()">定时生效</label>
+                  </div>
+                </div>
+              </div>
+              <div class="frow" id="fr-efftime">
+                <label><span class="req">*</span>生效时间</label>
+                <div class="fctl">
+                  <input type="datetime-local" id="f-effat" value="2026-07-10T00:00">
+                  <div class="fhint">须晚于当前时间 5 分钟以上；不得晚于任一条件组时间条件的结束点（当前条件组 1 结束点：2026-06-30 23:59 —— <b style="color:var(--danger)">校验将拦截此冲突，点击提交查看效果</b>）。到点前可编辑、可删除。</div>
+                  <div class="ferr" id="efferr">生效时间（2026-07-10 00:00）晚于条件组 1 时间条件的结束点（2026-06-30 23:59）：策略生效时其时间窗口已结束，请检查时间条件或生效时间</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex;gap:12px;justify-content:center;padding:8px 0">
+            <button class="btn" onclick="nav('list')">取消</button>
+            <button class="btn" onclick="openDryrun()">🔍 单用户预演</button>
+            <button class="btn primary" onclick="submitForm()">提交并预估影响面</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ================= DETAIL VIEW ================= -->
+      <div class="view" id="view-detail">
+        <div class="anno">PRD §4.3 详情页：基本信息 / 补发内容 / 补发条件 / 生效信息 / 执行任务（§4.4 部分成功）/ 发放统计 / 操作日志（§3 审计）。</div>
+        <div class="pagehead">
+          <h2 id="dtitle">策略详情</h2>
+          <span class="tag active" id="dstatus">生效中</span>
+          <div class="spacer"></div>
+          <button class="btn" onclick="openDryrun()">🔍 单用户预演</button>
+          <button class="btn" onclick="toast('已复制为新策略草稿，进入编辑')">⧉ 复制为新策略</button>
+          <button class="btn" onclick="toast('已停用：停止新增补发，已发放权益不受影响')">停用</button>
+          <button class="btn danger" onclick="openRecall('r2')">召回</button>
+          <button class="btn" onclick="nav('list')">返回</button>
+        </div>
+
+        <div class="statrow">
+          <div class="statcard"><div class="n">12,480</div><div class="l">候选用户数</div></div>
+          <div class="statcard"><div class="n" style="color:var(--success)">11,942</div><div class="l">补发成功</div></div>
+          <div class="statcard"><div class="n" style="color:var(--danger)">218</div><div class="l">失败（可重试）</div></div>
+          <div class="statcard"><div class="n">320</div><div class="l">判定未命中</div></div>
+          <div class="statcard"><div class="n">0</div><div class="l">已撤销</div></div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:14px;margin-bottom:14px">基本信息</h3>
+          <div class="dgrid">
+            <div class="k">策略名称</div><div>6月英语课包权益补齐</div>
+            <div class="k">策略 ID</div><div>c9cc692c-71b6-4cb2-ae50-0b301347c72c</div>
+            <div class="k">生效方式</div><div>定时生效 · 2026-06-20 00:00（实际激活 00:00:12）</div>
+            <div class="k">编辑锁定</div><div><span class="tag recalled" style="background:#f2f3f5;color:var(--text2)">已锁定（生效后不可编辑）</span></div>
+            <div class="k">策略描述</div><div style="grid-column:span 3">6月英语自然拼读课包升级 v3，2025-06-01 至 2026-05-31 期间购买过英语系统课的在期用户补齐 v3 权益。工单 OP-20260618-072。</div>
+            <div class="k">补发内容</div><div style="grid-column:span 3">英语 · 自然拼读 v3（specialCourse #EN-PH-V3）· 时长跟随依赖权益</div>
+            <div class="k">补发条件</div><div style="grid-column:span 3">条件组 1：商品购买来源（#SKG-7710 英语系统课）＋ 依赖权益（自然拼读 v2）＋ 时间区间 2025-06-01 ~ 2026-05-31 ＋ <b>时间基准：订单支付时间</b></div>
+          </div>
+        </div>
+
+        <div class="card" id="taskblock">
+          <h3 style="font-size:14px;margin-bottom:14px">执行任务</h3>
+          <table>
+            <thead><tr><th>任务</th><th>类型</th><th>状态</th><th>进度</th><th>成功/失败</th><th>发起人</th><th>时间</th><th>操作</th></tr></thead>
+            <tbody>
+              <tr>
+                <td>T-20260620-001</td><td>存量补发</td>
+                <td><span class="tag partial">部分失败</span></td>
+                <td><span class="progress"><i style="width:100%"></i></span> 12,480/12,480</td>
+                <td><span style="color:var(--success)">11,942</span> / <span style="color:var(--danger)">218</span></td>
+                <td>系统（定时生效）</td><td>06-20 00:00 ~ 00:19</td>
+                <td>
+                  <button class="btn sm link" onclick="openFailDetail()">失败明细</button>
+                  <button class="btn sm link" onclick="toast('已创建重试任务 T-20260709-004，仅重跑 218 个失败用户（幂等）')">重试失败部分</button>
+                </td>
+              </tr>
+              <tr>
+                <td>T-20260624-002</td><td>存量补发（重试）</td>
+                <td><span class="tag running">执行中</span></td>
+                <td><span class="progress"><i style="width:62%"></i></span> 135/218</td>
+                <td><span style="color:var(--success)">131</span> / <span style="color:var(--danger)">4</span></td>
+                <td>张运营</td><td>07-08 21:02 ~</td>
+                <td><button class="btn sm link" onclick="toast('任务将在当前批次（500 用户）结束后暂停')">暂停</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="fhint" style="margin-top:8px">限流：每批 500 用户；失败率 &gt; 5% 自动飞书告警发起人与值班群。</div>
+        </div>
+
+        <div class="card">
+          <h3 style="font-size:14px;margin-bottom:14px">操作日志</h3>
+          <table>
+            <thead><tr><th>时间</th><th>操作人</th><th>操作</th><th>变更快照</th></tr></thead>
+            <tbody>
+              <tr><td>2026-06-20 00:00:12</td><td>系统（调度器）</td><td>定时激活 scheduled→active</td><td><a style="color:var(--primary);cursor:pointer" onclick="toast('展示 before/after 字段级 diff')">查看 diff</a></td></tr>
+              <tr><td>2026-06-19 15:21:03</td><td>张运营（10.2.33.41）</td><td>编辑（待生效期间）</td><td><a style="color:var(--primary);cursor:pointer" onclick="toast('时间基准: authAcquired → orderPaid')">查看 diff</a></td></tr>
+              <tr><td>2026-06-18 11:02:44</td><td>张运营（10.2.33.41）</td><td>创建（定时生效 06-20 00:00）</td><td>—</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ================= AGENT VIEW ================= -->
+      <div class="view" id="view-agent">
+        <div class="anno">二期规划（PRD §11.2，本期不实施）：场景预演 Agent —— 自然语言用例 → 解析为预演参数 → 调用本期 dry-run 接口与订单/兑换服务只读模拟 → 给出到账时间结论。演示为脚本化假轨迹。</div>
+        <div class="pagehead">
+          <h2>场景预演 Agent <span class="badge-beta">二期 DEMO</span></h2>
+          <div class="spacer"></div>
+          <button class="btn" onclick="nav('list')">返回列表</button>
+        </div>
+        <div class="agent-wrap">
+          <div class="agent-left">
+            <div class="readybox">
+              <h4>预演前置检查（配置就绪度）</h4>
+              <div class="ri"><span>补发内容已配置</span><span class="ok">✓ 就绪</span></div>
+              <div class="ri"><span>补发条件 ≥ 1 组</span><span class="ok">✓ 就绪</span></div>
+              <div class="ri"><span>时间基准已指定</span><span class="ok">✓ 订单支付时间</span></div>
+              <div class="ri"><span>生效设置</span><span class="ok">✓ 定时 07-10 00:00</span></div>
+              <div class="ri"><span>dry-run 接口连通</span><span class="ok">✓ userauth 可用</span></div>
+              <div class="fhint" style="margin-top:8px">必要配置项未就绪时，Agent 将拒绝预演并指出缺失项。</div>
+            </div>
+            <div class="readybox">
+              <h4>示例用例（点击发送）</h4>
+              <div class="presetcase" onclick="runAgent(0)">用户于 2026 年 7 月购买了初中数学系统课，策略生效后，用户会在什么时候得到补发的权益？</div>
+              <div class="presetcase" style="margin-top:8px" onclick="runAgent(1)">用户 2025 年 5 月买的课、权益 2025 年 10 月才到账（延迟发放），能命中时间区间 2025-09-01~2026-06-30 吗？</div>
+              <div class="presetcase" style="margin-top:8px" onclick="runAgent(2)">如果用户已经从别的活动拿到过「函数专题 v2」，这个策略还会再发一次吗？</div>
+            </div>
+          </div>
+          <div class="agent-chat">
+            <div class="chatlog" id="chatlog">
+              <div class="msg agent"><div class="bubble">你好，我是<b>场景预演 Agent</b>。用自然语言描述一个用户用例（购买/兑换情况 + 时间），我会基于当前策略「7月数学新课补发」的配置，联动订单、兑换与权益服务做<b>只读模拟</b>，回答该用户何时、以何种方式得到补发权益。左侧有示例用例可直接点击。</div></div>
+            </div>
+            <div class="chatinput">
+              <input type="text" id="agentinput" placeholder="描述用例，如：用户于2026年7月购买了XX课程，策略生效后何时得到补发权益？" onkeydown="if(event.key==='Enter')runAgent(-1)">
+              <button class="btn primary" onclick="runAgent(-1)">发送</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ============ modals ============ -->
+<!-- impact confirm -->
+<div class="mask" id="m-impact">
+  <div class="modal">
+    <div class="mhead">生效确认 · 影响面预估<span class="x" onclick="closeM('m-impact')">✕</span></div>
+    <div class="mbody">
+      <div class="anno" style="display:block">PRD §7.2 影响面预估 + §3 危险操作防护：候选收集 + 抽样判定外推；超阈值需第二人复核。</div>
+      <div id="impact-loading" style="text-align:center;padding:30px"><div class="spin"></div>正在收集候选用户并抽样判定…<div class="muted" style="margin-top:6px">按商品 #SKG-8821 反查支付成功买家 → 抽样 1,000 人跑完整判定</div></div>
+      <div id="impact-result" style="display:none">
+        <div class="impactbox">
+          预计命中约 <b style="font-size:18px">8,632</b> 名用户（候选 9,410 人 × 抽样命中率 91.7%）<br>
+          将补发权益：<b>初中数学 · 函数专题 v2</b> × 1 / 人 · 时长跟随依赖权益<br>
+          <span class="muted">候选量 ≤ 1,000 时展示精确值；本次为抽样外推值（约）。</span>
+        </div>
+        <div class="dangerbox" style="background:#fff8e6;border-color:#ffe1a0">
+          <b style="color:#b26a00">⚠ 命中人数未超过复核阈值（10,000）</b>，确认后策略将于 <b>2026-07-10 00:00</b> 生效并自动创建存量补发任务；<b>生效后策略不可再编辑</b>。若超过阈值，需第二名权益运营复核通过后才执行。
+        </div>
+        <label style="font-size:13px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="impact-ck">我已确认补发内容、条件与影响面无误</label>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('m-impact')">再检查一下</button>
+      <button class="btn primary" id="impact-ok" disabled onclick="confirmSubmit()">确认，定时生效</button>
+    </div>
+  </div>
+</div>
+
+<!-- recall confirm -->
+<div class="mask" id="m-recall">
+  <div class="modal">
+    <div class="mhead">召回策略 · 二次确认<span class="x" onclick="closeM('m-recall')">✕</span></div>
+    <div class="mbody">
+      <div class="anno" style="display:block">PRD §3 / §6.4：展示影响范围 + 必填召回原因；确认后创建主动召回任务，不再等待用户活跃。</div>
+      <div class="dangerbox">
+        <b>该操作将撤销基于本策略发放的 11,942 条权益，影响 11,942 名用户</b><br>
+        召回任务将立即执行（预计 19 分钟完成），撤销后同步清理用户缓存并广播权益变更，用户无需重新登录即失去该权益。召回为终态，不可恢复。
+      </div>
+      <div class="frow" style="margin:0">
+        <label style="width:90px"><span class="req">*</span>召回原因</label>
+        <div class="fctl">
+          <textarea id="recall-reason" rows="2" style="width:100%" placeholder="必填，将写入审计日志"></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('m-recall')">取消</button>
+      <button class="btn danger" onclick="doRecall()">确认召回</button>
+    </div>
+  </div>
+</div>
+
+<!-- dryrun -->
+<div class="mask" id="m-dryrun">
+  <div class="modal wide">
+    <div class="mhead">单用户预演（dry-run）<span class="x" onclick="closeM('m-dryrun')">✕</span></div>
+    <div class="mbody">
+      <div class="anno" style="display:block">PRD §7.2：只读执行完整判定引擎，不落库、不发权益。该接口同时是二期「场景预演 Agent」的基础能力。</div>
+      <div style="display:flex;gap:10px;margin-bottom:14px">
+        <input type="text" id="dryrun-uid" placeholder="输入 userId" value="u_5f8a3c21" style="flex:1">
+        <button class="btn primary" onclick="doDryrun()">执行预演</button>
+      </div>
+      <div id="dryrun-result" style="display:none">
+        <table>
+          <thead><tr><th>判定项</th><th>取值</th><th>结果</th></tr></thead>
+          <tbody>
+            <tr><td>条件组 1 · 商品购买（#SKG-8821）</td><td>订单 OD-2026030112 · 支付成功</td><td><span class="tag success">命中</span></td></tr>
+            <tr><td>条件组 1 · 依赖权益（函数专题 v1）</td><td>持有中 · 2027-03-01 到期</td><td><span class="tag success">命中</span></td></tr>
+            <tr><td>条件组 1 · 时间条件（2025-09-01 ~ 2026-06-30）</td><td><b>时间基准：订单支付时间</b> = 2026-03-01 14:22</td><td><span class="tag success">命中</span></td></tr>
+            <tr><td>已持有同款权益检查</td><td>未持有「函数专题 v2」</td><td><span class="tag success">通过</span></td></tr>
+          </tbody>
+        </table>
+        <div class="answer-card">
+          <div class="ah">✓ 预演结论：将补发</div>
+          <div class="ab">
+            将补发 <b>初中数学 · 函数专题 v2</b> × 1；时长跟随依赖权益 → 与「函数专题 v1」同批次对齐，<b>到期时间 2027-03-01</b>。<br>
+            <span class="muted">对照修复前行为：若按旧口径（权益到账时间 2026-03-01 14:25）本例结论相同；但延迟发放用户（见 Agent 示例 2）新旧口径结论不同。</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mfoot"><button class="btn" onclick="closeM('m-dryrun')">关闭</button></div>
+  </div>
+</div>
+
+<!-- fail detail -->
+<div class="mask" id="m-fail">
+  <div class="modal wide">
+    <div class="mhead">失败明细 · T-20260620-001（218 条）<span class="x" onclick="closeM('m-fail')">✕</span></div>
+    <div class="mbody">
+      <div class="anno" style="display:block">PRD §4.4 部分成功处理：失败明细可下载 CSV、可仅重试失败部分（幂等）。</div>
+      <table>
+        <thead><tr><th>userId</th><th>失败环节</th><th>失败原因</th></tr></thead>
+        <tbody>
+          <tr><td>u_88ac02e1</td><td>判定引擎</td><td>该来源下未找到依赖权益（订单已支付但权益未发，需先补发依赖权益）</td></tr>
+          <tr><td>u_9f31bb08</td><td>创建授权</td><td>userauth 写入超时（可重试）</td></tr>
+          <tr><td>u_1c77d3aa</td><td>候选校验</td><td>用户已注销</td></tr>
+          <tr><td colspan="3" class="muted">… 其余 215 条见 CSV</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="toast('已下载 fail-detail-T-20260620-001.csv')">⬇ 下载 CSV</button>
+      <button class="btn primary" onclick="closeM('m-fail');toast('已创建重试任务，仅重跑 218 个失败用户（幂等键：策略+用户+权益）')">重试失败部分</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------- data ---------- */
+const rules=[
+ {id:'r1',name:'7月数学新课补发',status:'scheduled',eff:'2026-07-12 00:00（定时）',target:'函数专题 v2 · 跟随依赖权益',task:'—',by:'张运营',at:'2026-07-08 21:14'},
+ {id:'r2',name:'6月英语课包权益补齐',status:'active',eff:'2026-06-20 00:00（定时）',target:'自然拼读 v3 · 跟随依赖权益',task:'partial',by:'张运营',at:'2026-06-24 10:02'},
+ {id:'r3',name:'522活动兑换码补偿',status:'stopped',eff:'2026-05-22 14:00（立即）',target:'大会员月卡 · 固定30天',task:'success',by:'李运营',at:'2026-06-01 09:40'},
+ {id:'r4',name:'419错发权益回收',status:'recalled',eff:'2026-04-19 10:00（立即）',target:'力学进阶 · 有效期',task:'recall',by:'张运营',at:'2026-04-20 16:22'},
+];
+const stag={scheduled:['scheduled','待生效'],active:['active','生效中'],stopped:['stopped','已停用'],recalled:['recalled','已召回']};
+const ttag={partial:'<span class="tag partial">补发·部分失败</span> <a style="color:var(--primary);cursor:pointer" onclick="openDetail(\'r2\')">查看</a>',
+  success:'<span class="tag success">补发·成功</span>',recall:'<span class="tag success">召回·完成</span>','—':'<span class="muted">未执行</span>'};
+function ops(r){
+  const b=[];
+  b.push(`<button class="btn sm link" onclick="openDetail('${r.id}')">详情</button>`);
+  if(r.status==='scheduled'){b.push(`<button class="btn sm link" onclick="nav('form');document.getElementById('formtitle').textContent='编辑策略（待生效可编辑）'">编辑</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="toast('二次确认后逻辑删除（仅待生效可删）')">删除</button>`)}
+  if(r.status==='active'){b.push(`<button class="btn sm link" onclick="toast('已停用')">停用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
+  if(r.status==='stopped'){b.push(`<button class="btn sm link" onclick="toast('重新启用需重新确认影响面')">启用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
+  b.push(`<button class="btn sm link" onclick="toast('已复制为新策略草稿')">复制</button>`);
+  return b.join('');
+}
+function renderList(){
+  document.getElementById('listbody').innerHTML=rules.map(r=>`<tr>
+    <td><a style="color:var(--primary);cursor:pointer" onclick="openDetail('${r.id}')">${r.name}</a></td>
+    <td><span class="tag ${stag[r.status][0]}">${stag[r.status][1]}</span>${r.status==='scheduled'?'<div class="muted">3天后生效</div>':''}</td>
+    <td>${r.eff}</td><td>${r.target}</td><td>${ttag[r.task]}</td><td>${r.by}</td><td>${r.at}</td><td>${ops(r)}</td></tr>`).join('');
+}
+renderList();
+
+/* ---------- nav ---------- */
+const crumbs={list:'权益更新策略',form:'权益更新策略 / 新增策略',detail:'权益更新策略 / 策略详情',agent:'权益更新策略 / 场景预演 Agent'};
+function nav(v){
+  document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));
+  document.getElementById('view-'+v).classList.add('show');
+  document.getElementById('crumbnow').textContent=crumbs[v];
+  if(v==='form'){document.getElementById('formtitle').textContent='新增策略';updDesc()}
+}
+function openDetail(id){nav('detail')}
+function toggleMap(open){
+  document.getElementById('mapdrawer').classList.toggle('open',open);
+  document.getElementById('mapmask').classList.toggle('open',open);
+}
+/* ---------- states ---------- */
+function setListState(s){
+  ['normal','loading','empty','error'].forEach(k=>{
+    const el=document.getElementById('list-'+k);
+    el.style.display=(k===s)?(k==='normal'?'block':'block'):'none';
+  });
+  document.querySelectorAll('#statepanel .opt').forEach(o=>o.classList.toggle('on',o.dataset.s===s));
+}
+/* ---------- debug ---------- */
+function toggleDebug(){document.getElementById('statepanel').classList.toggle('open')}
+function toggleAnno(el){document.body.classList.toggle('anno-on');el.classList.toggle('on')}
+/* ---------- form ---------- */
+function updDesc(){const t=document.getElementById('f-desc');document.getElementById('desccount').textContent=t.value.length}
+document.getElementById('f-desc').addEventListener('input',updDesc);
+function onRangeMethod(){
+  const auto=document.querySelector('input[name=rangeMethod]:checked').value==='auto';
+  document.getElementById('fr-rangetype').style.display=auto?'none':'flex';
+  document.getElementById('autohint').style.display=auto?'block':'none';
+}
+function onSrc(n,v){
+  document.getElementById('fr-good'+n).style.display=v==='good'?'flex':'none';
+  document.getElementById('fr-redeem'+n).style.display=v==='redeem'?'flex':'none';
+  const basis=document.getElementById('basis'+n);
+  if(v==='good')basis.innerHTML='<label><input type="radio" name="basis1" value="orderPaid" checked>订单支付时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>';
+  if(v==='redeem')basis.innerHTML='<label><input type="radio" name="basis1" value="redeemAt" checked>兑换码兑换时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>';
+  if(v==='any')basis.innerHTML='<label><input type="radio" name="basis1" value="authAcquired" checked>权益到账时间（不限来源仅支持此项）</label>';
+}
+function onEff(){
+  document.getElementById('fr-efftime').style.display=document.querySelector('input[name=eff]:checked').value==='sched'?'flex':'none';
+}
+let effFixed=false;
+function submitForm(){
+  // demo validation: effectiveAt vs time-condition end
+  const fr=document.getElementById('fr-efftime');
+  const sched=document.querySelector('input[name=eff]:checked').value==='sched';
+  const at=document.getElementById('f-effat').value;
+  if(sched&&!effFixed&&at>'2026-06-30T23:59'){
+    fr.classList.add('error');
+    fr.scrollIntoView({behavior:'smooth',block:'center'});
+    toast('校验未通过：生效时间晚于条件组时间窗口结束点（PRD §5.2）');
+    // demo: auto-fix affordance
+    setTimeout(()=>{ if(confirm('【原型演示】是否将条件组 1 时间区间右端点调整为 2026-07-31，以便继续演示影响面预估？')){effFixed=true;fr.classList.remove('error');document.querySelector('#fr-efftime .fhint').innerHTML='须晚于当前时间 5 分钟以上；已通过时间条件冲突校验（条件组 1 结束点 2026-07-31）。';submitForm();}},400);
+    return;
+  }
+  demoImpact();
+}
+function demoImpact(){
+  openM('m-impact');
+  document.getElementById('impact-loading').style.display='block';
+  document.getElementById('impact-result').style.display='none';
+  document.getElementById('impact-ok').disabled=true;
+  document.getElementById('impact-ck').checked=false;
+  setTimeout(()=>{
+    document.getElementById('impact-loading').style.display='none';
+    document.getElementById('impact-result').style.display='block';
+  },1400);
+}
+document.getElementById('impact-ck').addEventListener('change',e=>{
+  document.getElementById('impact-ok').disabled=!e.target.checked;
+});
+function confirmSubmit(){
+  closeM('m-impact');
+  toast('已创建：状态「待生效」，2026-07-10 00:00 自动激活并触发存量补发任务');
+  setTimeout(()=>nav('list'),900);
+}
+/* ---------- modals ---------- */
+function openM(id){document.getElementById(id).classList.add('open')}
+function closeM(id){document.getElementById(id).classList.remove('open')}
+function openRecall(id){openM('m-recall')}
+function doRecall(){
+  const r=document.getElementById('recall-reason').value.trim();
+  if(!r){toast('召回原因必填（写入审计日志）');return}
+  closeM('m-recall');
+  toast('召回任务已创建并立即执行：批量撤销 → 清缓存 → 广播权益变更');
+}
+function openDryrun(){openM('m-dryrun');document.getElementById('dryrun-result').style.display='none'}
+function doDryrun(){
+  document.getElementById('dryrun-result').style.display='none';
+  toast('执行只读判定…');
+  setTimeout(()=>{document.getElementById('dryrun-result').style.display='block'},700);
+}
+function openFailDetail(){openM('m-fail')}
+/* ---------- toast ---------- */
+let toastTimer;
+function toast(t){
+  const el=document.getElementById('toast');el.textContent=t;el.style.display='block';
+  clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.style.display='none',2600);
+}
+/* ---------- agent ---------- */
+const cases=[
+ {q:'用户于 2026 年 7 月购买了初中数学系统课，策略生效后，用户会在什么时候得到补发的权益？',
+  plan:['解析用例 → 用户画像：2026-07 购买 #SKG-8821，无兑换记录','检查策略配置就绪度（补发内容/条件/时间基准/生效时间）','调用订单服务：构造虚拟订单 支付时间=2026-07-15 10:00','调用 dry-run 判定引擎（只读）','推演触达链路，生成到账时间结论'],
+  tools:[['order-service.queryVirtual','按用例构造订单：OD-SIM-001，支付成功 2026-07-15 10:00','done'],
+         ['userauth.dryRun','条件组1判定：商品命中 ✓ / 依赖权益 ✓ / 时间条件（基准=订单支付时间 2026-07-15）→ 不在 2025-09-01~2026-06-30 区间 ✗','done'],
+         ['userauth.dryRun','兜底检查：无其他条件组','done']],
+  verdict:'miss',
+  answer:'<b>该用户不会收到补发。</b><div class="timelinemini" style="margin-top:8px"><div class="ti"><div class="dot gray"></div><div>2026-07-10 00:00 策略生效，存量补发任务执行 —— 用户此时尚未购买，不在候选内</div></div><div class="ti"><div class="dot gray"></div><div>2026-07-15 10:00 用户购买 → 活跃事件触发增量判定</div></div><div class="ti"><div class="dot gray"></div><div>时间条件判定：订单支付时间 2026-07-15 <b>晚于区间右端点 2026-06-30</b> → 未命中</div></div></div>原因：条件组 1 的时间区间为 2025-09-01 ~ 2026-06-30，本策略面向<b>历史购课用户</b>补齐；2026 年 7 月新购用户会在购买时直接获得新版课程权益（商品配置内已含 v2），无需补发。<br><span class="muted">如果预期 7 月新购用户也走补发，请把时间区间右端点后移，或增加「无时间要求」条件组。</span>'},
+ {q:'用户 2025 年 5 月买的课、权益 2025 年 10 月才到账（延迟发放），能命中时间区间 2025-09-01~2026-06-30 吗？',
+  plan:['解析用例 → 订单支付 2025-05-20，权益到账 2025-10-01（延迟发放）','读取条件组 1 时间基准配置','分别按新旧口径执行 dry-run，对比结论'],
+  tools:[['userauth.dryRun','新口径（时间基准=订单支付时间 2025-05-20）→ 早于区间左端点 2025-09-01 → <b>未命中</b>','done'],
+         ['userauth.dryRun','旧口径对照（权益到账时间 2025-10-01）→ 落入区间 → 命中（修复前行为）','done']],
+  verdict:'miss',
+  answer:'<b>按当前配置（时间基准=订单支付时间）：不命中。</b><br>该用户实际购买发生在 2025-05-20，早于区间起点 2025-09-01；虽然权益 10 月才到账，但本次修复后判定跟随<b>真实购买时间</b>，不再被延迟发放时间误导。<br><br>⚠ 注意：<b>修复前的旧系统会按权益到账时间（2025-10-01）误判为命中</b>——这正是 PRD §7.1 要修复的问题。若运营意图就是按到账时间圈人，可将该条件组时间基准显式改为「权益到账时间」。'},
+ {q:'如果用户已经从别的活动拿到过「函数专题 v2」，这个策略还会再发一次吗？',
+  plan:['解析用例 → 用户已持有目标权益（来源：618活动，在期）','读取策略「已持有同款权益」开关配置','执行 dry-run 验证去重行为'],
+  tools:[['userauth.dryRun','条件组1判定：全部命中 ✓','done'],
+         ['userauth.dryRun','已持有同款权益检查：持有「函数专题 v2」（618活动来源，在期至 2026-12-01）；策略开关=「跳过不补发」→ <b>跳过</b>','done']],
+  verdict:'skip',
+  answer:'<b>不会重复发放。</b>当前策略「已持有同款权益」开关为默认值<b>「跳过不补发」</b>：用户已从 618 活动持有在期的「函数专题 v2」，本策略判定命中后会在发放前跳过，发放记录中标记「已持有」。<br><br>若业务预期是叠加时长（如补偿场景），可在策略配置中将开关改为「仍然补发（时长独立叠加）」。另：本期已将去重口径升级为「同策略 × 同用户 × 同权益仅一条有效补发」，多批次命中也只发一条、时长取最长（PRD §8.2）。'}
+];
+let agentBusy=false;
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
+function runAgent(idx){
+  if(agentBusy)return;
+  let c;
+  if(idx>=0){c=cases[idx]}
+  else{
+    const v=document.getElementById('agentinput').value.trim();
+    if(!v)return;
+    document.getElementById('agentinput').value='';
+    // free input demo: pick case 0 style generic reply
+    c={q:v,plan:['解析用例中的用户行为与时间','检查策略配置就绪度','调用订单/兑换服务构造虚拟数据','执行 dry-run 判定','生成结论'],
+       tools:[['userauth.dryRun','原型演示：自由输入将在真实版本中由 LLM 解析为预演参数后执行','done']],
+       verdict:'info',
+       answer:'【原型演示】自由输入的用例将在二期真实版本中由 Agent 解析为结构化预演参数（用户行为、时间、来源），再调用本期交付的 dry-run 接口模拟。请点击左侧预置示例查看完整推演轨迹。'};
+  }
+  agentBusy=true;
+  const log=document.getElementById('chatlog');
+  log.insertAdjacentHTML('beforeend',`<div class="msg user">${esc(c.q)}</div>`);
+  log.scrollTop=log.scrollHeight;
+  // plan
+  setTimeout(()=>{
+    const planHtml=`<div class="msg agent"><div class="bubble"><div class="planbox"><b>📋 预演计划</b><br>${c.plan.map((p,i)=>`${i+1}. ${p}`).join('<br>')}</div><div id="steps"></div><div id="ans"></div></div></div>`;
+    log.insertAdjacentHTML('beforeend',planHtml);
+    log.scrollTop=log.scrollHeight;
+    const steps=log.querySelectorAll('#steps');const stepEl=steps[steps.length-1];
+    const answ=log.querySelectorAll('#ans');const ansEl=answ[answ.length-1];
+    let i=0;
+    function nextTool(){
+      if(i<c.tools.length){
+        const t=c.tools[i];
+        stepEl.insertAdjacentHTML('beforeend',`<div class="toolstep"><span class="st doing">执行中…</span>🔧 <b>${t[0]}</b><br>${t[1]}</div>`);
+        log.scrollTop=log.scrollHeight;
+        const el=stepEl.lastElementChild.querySelector('.st');
+        setTimeout(()=>{el.textContent='✓ 完成';el.className='st done';i++;nextTool()},900);
+      }else{
+        const head=c.verdict==='miss'?['#fdebef;color:#d03050','✗ 预演结论：不会收到补发']:c.verdict==='skip'?['#fff4e0;color:#b26a00','⊘ 预演结论：命中但跳过（去重）']:['#e8f1ff;color:#1456f0','ℹ 说明'];
+        setTimeout(()=>{
+          ansEl.innerHTML=`<div class="answer-card"><div class="ah" style="background:${head[0].split(';')[0]};${head[0].split(';')[1]?'color:'+head[0].split(';')[1].replace('color:',''):''}">${head[1]}</div><div class="ab">${c.answer}</div></div>`;
+          log.scrollTop=log.scrollHeight;agentBusy=false;
+        },500);
+      }
+    }
+    setTimeout(nextTool,700);
+  },400);
+}
+</script>
+
+<!-- debug corner -->
+<div class="debugbar">
+  <div class="panel" id="statepanel">
+    <h4>列表页状态切换（PRD 五态）</h4>
+    <span class="opt on" data-s="normal" onclick="setListState('normal')">正常</span>
+    <span class="opt" data-s="loading" onclick="setListState('loading')">加载</span>
+    <span class="opt" data-s="empty" onclick="setListState('empty')">空态</span>
+    <span class="opt" data-s="error" onclick="setListState('error')">错误</span>
+    <h4 style="margin-top:8px">标注模式</h4>
+    <span class="opt" onclick="toggleAnno(this)">显示 PRD 章节标注</span>
+  </div>
+  <div class="pill" onclick="toggleDebug()">⚙ 原型调试</div>
+</div>
+</body>
+</html>
