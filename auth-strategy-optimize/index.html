@@ -269,8 +269,8 @@ tr:hover td{background:#fafcff}
               <div class="frow" id="fr-desc">
                 <label><span class="req">*</span>策略描述<span class="tip">?<span class="tiptext">建议写明：补发原因、关联活动/工单编号、预期影响范围。将展示在审计日志与详情页。</span></span></label>
                 <div class="fctl">
-                  <textarea id="f-desc" maxlength="500" rows="3" style="width:100%" placeholder="请输入补发原因、关联活动/工单、预期影响范围（500 字以内）">7月初中数学上新「函数专题 v2」，2025年9月至2026年6月期间购买过初中数学系统课（或兑换过0625批次兑换码）的在期用户，补齐新专题课程权益。关联工单 OP-20260707-118。</textarea>
-                  <div class="charcount"><span id="desccount">0</span>/500（原上限 24 字 → 现 500 字）</div>
+                  <textarea id="f-desc" maxlength="200" rows="3" style="width:100%" placeholder="请输入补发原因、关联活动/工单、预期影响范围（200 字以内）">7月初中数学上新「函数专题 v2」，2025年9月至2026年6月期间购买过初中数学系统课（或兑换过0625批次兑换码）的在期用户，补齐新专题课程权益。关联工单 OP-20260707-118。</textarea>
+                  <div class="charcount"><span id="desccount">0</span>/200（原上限 24 字 → 现 200 字）</div>
                   <div class="ferr">请输入策略描述</div>
                 </div>
               </div>
@@ -299,7 +299,7 @@ tr:hover td{background:#fafcff}
                   <div class="radio-group">
                     <label><input type="radio" name="rangeMethod" value="custom" onchange="onRangeMethod()">自定义</label>
                     <label><input type="radio" name="rangeMethod" value="auto" checked onchange="onRangeMethod()">跟随依赖权益
-                      <span class="tip">?<span class="tiptext">跟随「补发条件」中依赖权益的剩余时长：在期权益取最晚到期时间；未激活权益取最长时长。多个条件组同时命中时，同一权益仅补发一条，时长取所有命中批次中最长。（原名「系统自动计算」）</span></span>
+                      <span class="tip">?<span class="tiptext">跟随「补发条件」中依赖权益的剩余时长：在期权益取最晚到期时间；未激活权益取最长时长。多个条件组/多个来源批次同时命中时，每个命中批次各补发一次、权益累加（与购买多次权益累加语义一致），时长各自跟随其批次。（原名「系统自动计算」）</span></span>
                     </label>
                   </div>
                   <div class="fhint" id="autohint">✓ 已选择跟随依赖权益：补发权益的到期时间/时长将与用户所持依赖权益保持一致，无需填写时长。</div>
@@ -377,15 +377,7 @@ tr:hover td{background:#fafcff}
                 </div>
               </div>
               <div class="condgroup" style="border-style:dashed;background:#fff;text-align:center;padding:12px;cursor:pointer;color:var(--primary)" onclick="toast('演示原型：可添加条件组 2（或关系）')">+ 添加条件组（满足任一条件组即补发）</div>
-              <div class="frow">
-                <label>已持有同款权益<span class="tip">?<span class="tiptext">【本期新增】用户已从其他来源（购买、兑换、其他策略）持有同款在期权益时是否仍补发。默认跳过，避免超发。</span></span></label>
-                <div class="fctl">
-                  <div class="radio-group">
-                    <label><input type="radio" name="dedup" checked>跳过不补发（默认）</label>
-                    <label><input type="radio" name="dedup">仍然补发（时长独立叠加）</label>
-                  </div>
-                </div>
-              </div>
+              <div class="fhint" style="margin-top:4px">多个条件组/多个来源批次同时命中时，每个命中批次各补发一次、权益累加（与用户购买多次权益累加的语义一致）。</div>
             </div>
           </div>
 
@@ -608,7 +600,7 @@ tr:hover td{background:#fafcff}
             <tr><td>条件组 1 · 商品购买（#SKG-8821）</td><td>订单 OD-2026030112 · 支付成功</td><td><span class="tag success">命中</span></td></tr>
             <tr><td>条件组 1 · 依赖权益（函数专题 v1）</td><td>持有中 · 2027-03-01 到期</td><td><span class="tag success">命中</span></td></tr>
             <tr><td>条件组 1 · 时间条件（2025-09-01 ~ 2026-06-30）</td><td><b>时间基准：订单支付时间</b> = 2026-03-01 14:22</td><td><span class="tag success">命中</span></td></tr>
-            <tr><td>已持有同款权益检查</td><td>未持有「函数专题 v2」</td><td><span class="tag success">通过</span></td></tr>
+            <tr><td>批次内幂等检查（订单 OD-2026030112）</td><td>该批次下无已补发的「函数专题 v2」</td><td><span class="tag success">通过</span></td></tr>
           </tbody>
         </table>
         <div class="answer-card">
@@ -642,7 +634,7 @@ tr:hover td{background:#fafcff}
     </div>
     <div class="mfoot">
       <button class="btn" onclick="toast('已下载 fail-detail-T-20260620-001.csv')">⬇ 下载 CSV</button>
-      <button class="btn primary" onclick="closeM('m-fail');toast('已创建重试任务，仅重跑 218 个失败用户（幂等键：策略+用户+权益）')">重试失败部分</button>
+      <button class="btn primary" onclick="closeM('m-fail');toast('已创建重试任务，仅重跑 218 个失败用户（幂等键：策略+用户+批次+权益）')">重试失败部分</button>
     </div>
   </div>
 </div>
@@ -792,11 +784,11 @@ const cases=[
   verdict:'miss',
   answer:'<b>按当前配置（时间基准=订单支付时间）：不命中。</b><br>该用户实际购买发生在 2025-05-20，早于区间起点 2025-09-01；虽然权益 10 月才到账，但本次修复后判定跟随<b>真实购买时间</b>，不再被延迟发放时间误导。<br><br>⚠ 注意：<b>修复前的旧系统会按权益到账时间（2025-10-01）误判为命中</b>——这正是 PRD §7.1 要修复的问题。若运营意图就是按到账时间圈人，可将该条件组时间基准显式改为「权益到账时间」。'},
  {q:'如果用户已经从别的活动拿到过「函数专题 v2」，这个策略还会再发一次吗？',
-  plan:['解析用例 → 用户已持有目标权益（来源：618活动，在期）','读取策略「已持有同款权益」开关配置','执行 dry-run 验证去重行为'],
-  tools:[['userauth.dryRun','条件组1判定：全部命中 ✓','done'],
-         ['userauth.dryRun','已持有同款权益检查：持有「函数专题 v2」（618活动来源，在期至 2026-12-01）；策略开关=「跳过不补发」→ <b>跳过</b>','done']],
-  verdict:'skip',
-  answer:'<b>不会重复发放。</b>当前策略「已持有同款权益」开关为默认值<b>「跳过不补发」</b>：用户已从 618 活动持有在期的「函数专题 v2」，本策略判定命中后会在发放前跳过，发放记录中标记「已持有」。<br><br>若业务预期是叠加时长（如补偿场景），可在策略配置中将开关改为「仍然补发（时长独立叠加）」。另：本期已将去重口径升级为「同策略 × 同用户 × 同权益仅一条有效补发」，多批次命中也只发一条、时长取最长（PRD §8.2）。'}
+  plan:['解析用例 → 用户已持有目标权益（来源：618活动，在期）','读取补发条件与累加口径（PRD §8.2）','执行 dry-run 验证发放行为'],
+  tools:[['userauth.dryRun','条件组1判定：商品命中 ✓ / 依赖权益 ✓ / 时间条件 ✓（基准=订单支付时间）','done'],
+         ['userauth.dryRun','批次内幂等检查：命中批次（订单 OD-2026030112）下无本策略已补发的「函数专题 v2」→ <b>正常补发</b>；618 活动来源的同款权益属其他批次，不拦截','done']],
+  verdict:'hit',
+  answer:'<b>会再发一次，权益累加。</b><br>用户从 618 活动获得的「函数专题 v2」与本策略按购课批次补发的权益属于不同来源批次——与真实用户购买两次权益累加的语义一致，系统不做跨批次去重拦截（PRD §8.2 口径确认）。两条权益时长各自独立计算，用户实际可用时长为两者叠加后的结果（时间轴重排自动合并）。<br><br>唯一的拦截是<b>批次内幂等</b>：同一个命中批次下本策略只会补发一次，重复执行引擎（如任务重试、用户重复活跃）不会重复发放。'}
 ];
 let agentBusy=false;
 function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;')}
@@ -834,7 +826,7 @@ function runAgent(idx){
         const el=stepEl.lastElementChild.querySelector('.st');
         setTimeout(()=>{el.textContent='✓ 完成';el.className='st done';i++;nextTool()},900);
       }else{
-        const head=c.verdict==='miss'?['#fdebef;color:#d03050','✗ 预演结论：不会收到补发']:c.verdict==='skip'?['#fff4e0;color:#b26a00','⊘ 预演结论：命中但跳过（去重）']:['#e8f1ff;color:#1456f0','ℹ 说明'];
+        const head=c.verdict==='miss'?['#fdebef;color:#d03050','✗ 预演结论：不会收到补发']:c.verdict==='hit'?['#e5f7ed;color:#0f7a43','✓ 预演结论：将补发（累加）']:['#e8f1ff;color:#1456f0','ℹ 说明'];
         setTimeout(()=>{
           ansEl.innerHTML=`<div class="answer-card"><div class="ah" style="background:${head[0].split(';')[0]};${head[0].split(';')[1]?'color:'+head[0].split(';')[1].replace('color:',''):''}">${head[1]}</div><div class="ab">${c.answer}</div></div>`;
           log.scrollTop=log.scrollHeight;agentBusy=false;
