@@ -182,7 +182,7 @@ tr:hover td{background:#fafcff}
   <h3>页面地图</h3>
   <a onclick="nav('list');toggleMap(false)">① 策略列表页</a>
   <a onclick="nav('form');toggleMap(false)">② 新增策略表单（文案改造）</a>
-  <a onclick="openDetail('r2');toggleMap(false)">③ 策略详情页（任务/统计/日志）</a>
+  <a onclick="openDetail('r2');toggleMap(false)">③ 任务与操作日志（列表行展开）</a>
   <a onclick="openDetail('r2');setTimeout(()=>document.getElementById('taskblock').scrollIntoView({behavior:'smooth'}),100);toggleMap(false)">④ 执行任务（部分失败）</a>
   <a onclick="nav('form');setTimeout(()=>demoImpact(),200);toggleMap(false)">⑤ 影响面预估确认弹窗</a>
   <a onclick="openDetail('r2');setTimeout(()=>openDryrun(),150);toggleMap(false)">⑥ 单用户预演 dry-run</a>
@@ -279,10 +279,10 @@ tr:hover td{background:#fafcff}
 
           <!-- 区块2 补发内容 -->
           <div class="fsection">
-            <div class="fhead"><span class="stepnum">2</span>补发内容<span class="subnote">满足条件后，将给用户补发以下权益（原名「补发策略」）</span></div>
+            <div class="fhead"><span class="stepnum">2</span>补发内容<span class="subnote">满足条件后，将给用户补发以下权益</span></div>
             <div class="fbody">
               <div class="frow" id="fr-target">
-                <label><span class="req">*</span>补发权益<span class="tip">?<span class="tiptext">你希望补发给用户的权益，可多选。（原名「权益名称」）</span></span></label>
+                <label><span class="req">*</span>补发权益<span class="tip">?<span class="tiptext">你希望补发给用户的权益，可多选。</span></span></label>
                 <div class="fctl">
                   <select id="f-target" style="width:420px">
                     <option value="">请选择</option>
@@ -298,11 +298,20 @@ tr:hover td{background:#fafcff}
                 <div class="fctl">
                   <div class="radio-group">
                     <label><input type="radio" name="rangeMethod" value="custom" onchange="onRangeMethod()">自定义</label>
-                    <label><input type="radio" name="rangeMethod" value="auto" checked onchange="onRangeMethod()">跟随依赖权益
-                      <span class="tip">?<span class="tiptext">跟随「补发条件」中依赖权益的剩余时长：在期权益取最晚到期时间；未激活权益取最长时长。多个条件组/多个来源批次同时命中时，每个命中批次各补发一次、权益累加（与购买多次权益累加语义一致），时长各自跟随其批次。（原名「系统自动计算」）</span></span>
+                    <label><input type="radio" name="rangeMethod" value="auto" checked onchange="onRangeMethod()">跟随来源权益
+                      <span class="tip">?<span class="tiptext">补发权益的时长跟随命中来源（商品订单 / 兑换码 / 依赖权益）对应权益的剩余时长：在期权益取到期时间，未激活权益取剩余时长。多个来源批次同时命中（如同一商品购买多次、或商品与兑换码都命中）时，每个批次各补发一次、权益累加（与用户购买多次权益累加的语义一致）。</span></span>
                     </label>
                   </div>
-                  <div class="fhint" id="autohint">✓ 已选择跟随依赖权益：补发权益的到期时间/时长将与用户所持依赖权益保持一致，无需填写时长。</div>
+                  <div class="fhint" id="autohint">✓ 已选择跟随来源权益：补发权益的到期时间/时长将与该来源对应权益保持一致，无需填写时长。</div>
+                  <div class="frow" id="fr-aggr" style="margin-top:10px">
+                    <label style="width:130px;text-align:right;padding-right:14px;padding-top:8px"><span class="req">*</span>时长取值<span class="tip">?<span class="tiptext">当一次命中涉及多个学科 / 多条依赖权益 / 多个来源批次、剩余时长不一致时，补发时长按哪一个为准，由你选择。</span></span></label>
+                    <div class="fctl">
+                      <div class="radio-group">
+                        <label><input type="radio" name="aggr1" value="longest" checked>跟随最长剩余时长</label>
+                        <label><input type="radio" name="aggr1" value="shortest">跟随最短剩余时长</label>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
               <div class="frow" id="fr-rangetype" style="display:none">
@@ -320,12 +329,12 @@ tr:hover td{background:#fafcff}
 
           <!-- 区块3 补发条件 -->
           <div class="fsection">
-            <div class="fhead"><span class="stepnum">3</span>补发条件<span class="subnote">什么情况下给用户补发上述内容（原名「补发场景」）。多个条件组之间为「或」的关系，满足任一条件组即补发</span></div>
+            <div class="fhead"><span class="stepnum">3</span>补发条件<span class="subnote">什么情况下给用户补发上述内容。多个条件组之间为「或」的关系，满足任一条件组即补发</span></div>
             <div class="fbody">
               <div class="condgroup">
                 <div class="cghead">条件组 1 <span class="muted" style="font-weight:400">用户同时满足本组内所有条件时补发</span></div>
                 <div class="frow">
-                  <label><span class="req">*</span>权益来源<span class="tip">?<span class="tiptext">用户通过什么方式获得下方「依赖权益」。（原名「权益类型：指定来源/不指定来源」）</span></span></label>
+                  <label><span class="req">*</span>权益来源<span class="tip">?<span class="tiptext">用户通过什么方式命中本条件：通过商品购买 / 通过兑换码 / 不限来源（仅看是否持有指定权益）。</span></span></label>
                   <div class="fctl">
                     <div class="radio-group">
                       <label><input type="radio" name="src1" value="good" checked onchange="onSrc(1,'good')">通过商品购买获得</label>
@@ -345,14 +354,14 @@ tr:hover td{background:#fafcff}
                   <label><span class="req">*</span>兑换码批次</label>
                   <div class="fctl"><input type="text" style="width:420px" placeholder="批次 ID，可多个，回车分隔" value="RB-0625-MATH"></div>
                 </div>
-                <div class="frow">
-                  <label><span class="req">*</span>依赖权益<span class="tip">?<span class="tiptext">用户必须持有的权益。选择了商品/兑换码来源时，只统计来自该来源的权益。</span></span></label>
+                <div class="frow" id="fr-depend1" style="display:none">
+                  <label><span class="req">*</span>依赖权益<span class="tip">?<span class="tiptext">「不限来源」时，用户必须持有的权益。选择商品/兑换码来源时，命中依据就是该商品订单 / 兑换码本身，无需再指定依赖权益。</span></span></label>
                   <div class="fctl">
                     <select style="width:420px"><option selected>初中数学 · 函数专题 v1（specialCourse #MA-FN-V1）</option></select>
                   </div>
                 </div>
                 <div class="frow">
-                  <label><span class="req">*</span>时间条件<span class="tip">?<span class="tiptext">在所选时间范围内获得依赖权益的用户，才会收到补发。"获得时间"以什么为准，见下方「时间基准」。</span></span></label>
+                  <label><span class="req">*</span>时间条件<span class="tip">?<span class="tiptext">仅命中"在所选时间范围内获得该来源权益"的用户。「获得时间」以什么为准见下方「时间基准」：商品按订单支付时间、兑换码按兑换时间、不限来源按权益到账时间。</span></span></label>
                   <div class="fctl">
                     <div class="radio-group">
                       <label><input type="radio" name="tc1" checked>时间区间</label>
@@ -377,13 +386,12 @@ tr:hover td{background:#fafcff}
                 </div>
               </div>
               <div class="condgroup" style="border-style:dashed;background:#fff;text-align:center;padding:12px;cursor:pointer;color:var(--primary)" onclick="toast('演示原型：可添加条件组 2（或关系）')">+ 添加条件组（满足任一条件组即补发）</div>
-              <div class="fhint" style="margin-top:4px">多个条件组/多个来源批次同时命中时，每个命中批次各补发一次、权益累加（与用户购买多次权益累加的语义一致）。</div>
             </div>
           </div>
 
           <!-- 区块4 生效设置 -->
           <div class="fsection">
-            <div class="fhead"><span class="stepnum">4</span>生效设置<span class="subnote">【本期新增】一旦生效不可再编辑，仅可停用/召回/复制</span></div>
+            <div class="fhead"><span class="stepnum">4</span>生效设置<span class="subnote">【本期新增】策略提交后不提供编辑，如需调整请「复制为新策略」；待生效可删除，生效后仅可停用/召回/复制</span></div>
             <div class="fbody">
               <div class="frow">
                 <label><span class="req">*</span>生效方式</label>
@@ -413,39 +421,27 @@ tr:hover td{background:#fafcff}
         </div>
       </div>
 
-      <!-- ================= DETAIL VIEW ================= -->
+      <!-- ============ TASK & LOG DRAWER (从列表行展开，不做独立详情页) ============ -->
       <div class="view" id="view-detail">
-        <div class="anno">PRD §4.3 详情页：基本信息 / 补发内容 / 补发条件 / 生效信息 / 执行任务（§4.4 部分成功）/ 发放统计 / 操作日志（§3 审计）。</div>
+        <div class="anno">PRD §4.4 执行任务 + §3 策略操作留痕。不做独立详情页：策略基础信息在列表页可见，这里是从列表行展开的「任务与操作日志」面板。授权级审计（用户何时因何拿到/失去权益）由「授权全生命周期审计日志」需求承接。</div>
         <div class="pagehead">
-          <h2 id="dtitle">策略详情</h2>
+          <h2 id="dtitle">任务与操作日志</h2>
+          <span class="muted" style="margin-left:8px">6月英语课包权益补齐 ·</span>
           <span class="tag active" id="dstatus">生效中</span>
           <div class="spacer"></div>
           <button class="btn" onclick="openDryrun()">🔍 单用户预演</button>
-          <button class="btn" onclick="toast('已复制为新策略草稿，进入编辑')">⧉ 复制为新策略</button>
+          <button class="btn" onclick="toast('已复制为新策略草稿')">⧉ 复制为新策略</button>
           <button class="btn" onclick="toast('已停用：停止新增补发，已发放权益不受影响')">停用</button>
           <button class="btn danger" onclick="openRecall('r2')">召回</button>
-          <button class="btn" onclick="nav('list')">返回</button>
+          <button class="btn" onclick="nav('list')">返回列表</button>
         </div>
 
         <div class="statrow">
           <div class="statcard"><div class="n">12,480</div><div class="l">候选用户数</div></div>
           <div class="statcard"><div class="n" style="color:var(--success)">11,942</div><div class="l">补发成功</div></div>
-          <div class="statcard"><div class="n" style="color:var(--danger)">218</div><div class="l">失败（可重试）</div></div>
+          <div class="statcard"><div class="n" style="color:var(--danger)">218</div><div class="l">失败</div></div>
           <div class="statcard"><div class="n">320</div><div class="l">判定未命中</div></div>
           <div class="statcard"><div class="n">0</div><div class="l">已撤销</div></div>
-        </div>
-
-        <div class="card">
-          <h3 style="font-size:14px;margin-bottom:14px">基本信息</h3>
-          <div class="dgrid">
-            <div class="k">策略名称</div><div>6月英语课包权益补齐</div>
-            <div class="k">策略 ID</div><div>c9cc692c-71b6-4cb2-ae50-0b301347c72c</div>
-            <div class="k">生效方式</div><div>定时生效 · 2026-06-20 00:00（实际激活 00:00:12）</div>
-            <div class="k">编辑锁定</div><div><span class="tag recalled" style="background:#f2f3f5;color:var(--text2)">已锁定（生效后不可编辑）</span></div>
-            <div class="k">策略描述</div><div style="grid-column:span 3">6月英语自然拼读课包升级 v3，2025-06-01 至 2026-05-31 期间购买过英语系统课的在期用户补齐 v3 权益。工单 OP-20260618-072。</div>
-            <div class="k">补发内容</div><div style="grid-column:span 3">英语 · 自然拼读 v3（specialCourse #EN-PH-V3）· 时长跟随依赖权益</div>
-            <div class="k">补发条件</div><div style="grid-column:span 3">条件组 1：商品购买来源（#SKG-7710 英语系统课）＋ 依赖权益（自然拼读 v2）＋ 时间区间 2025-06-01 ~ 2026-05-31 ＋ <b>时间基准：订单支付时间</b></div>
-          </div>
         </div>
 
         <div class="card" id="taskblock">
@@ -459,31 +455,28 @@ tr:hover td{background:#fafcff}
                 <td><span class="progress"><i style="width:100%"></i></span> 12,480/12,480</td>
                 <td><span style="color:var(--success)">11,942</span> / <span style="color:var(--danger)">218</span></td>
                 <td>系统（定时生效）</td><td>06-20 00:00 ~ 00:19</td>
-                <td>
-                  <button class="btn sm link" onclick="openFailDetail()">失败明细</button>
-                  <button class="btn sm link" onclick="toast('已创建重试任务 T-20260709-004，仅重跑 218 个失败用户（幂等）')">重试失败部分</button>
-                </td>
+                <td><button class="btn sm link" onclick="openFailDetail()">失败明细</button></td>
               </tr>
               <tr>
-                <td>T-20260624-002</td><td>存量补发（重试）</td>
-                <td><span class="tag running">执行中</span></td>
-                <td><span class="progress"><i style="width:62%"></i></span> 135/218</td>
-                <td><span style="color:var(--success)">131</span> / <span style="color:var(--danger)">4</span></td>
-                <td>张运营</td><td>07-08 21:02 ~</td>
-                <td><button class="btn sm link" onclick="toast('任务将在当前批次（500 用户）结束后暂停')">暂停</button></td>
+                <td>T-20260620-002</td><td>存量补发</td>
+                <td><span class="tag success">成功</span></td>
+                <td><span class="progress"><i style="width:100%"></i></span> 4,102/4,102</td>
+                <td><span style="color:var(--success)">4,102</span> / 0</td>
+                <td>系统（定时生效）</td><td>06-20 00:00 ~ 00:07</td>
+                <td>—</td>
               </tr>
             </tbody>
           </table>
-          <div class="fhint" style="margin-top:8px">限流：每批 500 用户；失败率 &gt; 5% 自动飞书告警发起人与值班群。</div>
+          <div class="fhint" style="margin-top:8px">失败明细可下载 CSV 供人工核查。限流：每批 500 用户。</div>
         </div>
 
         <div class="card">
-          <h3 style="font-size:14px;margin-bottom:14px">操作日志</h3>
+          <h3 style="font-size:14px;margin-bottom:14px">操作日志（策略配置变更留痕）</h3>
           <table>
-            <thead><tr><th>时间</th><th>操作人</th><th>操作</th><th>变更快照</th></tr></thead>
+            <thead><tr><th>时间</th><th>操作人</th><th>操作</th><th>说明</th></tr></thead>
             <tbody>
-              <tr><td>2026-06-20 00:00:12</td><td>系统（调度器）</td><td>定时激活 scheduled→active</td><td><a style="color:var(--primary);cursor:pointer" onclick="toast('展示 before/after 字段级 diff')">查看 diff</a></td></tr>
-              <tr><td>2026-06-19 15:21:03</td><td>张运营（10.2.33.41）</td><td>编辑（待生效期间）</td><td><a style="color:var(--primary);cursor:pointer" onclick="toast('时间基准: authAcquired → orderPaid')">查看 diff</a></td></tr>
+              <tr><td>2026-06-20 00:00:12</td><td>系统（调度器）</td><td>定时激活 scheduled→active</td><td>触发存量补发任务</td></tr>
+              <tr><td>2026-06-19 15:21:03</td><td>李运营（10.2.33.42）</td><td>召回原因填写</td><td>—</td></tr>
               <tr><td>2026-06-18 11:02:44</td><td>张运营（10.2.33.41）</td><td>创建（定时生效 06-20 00:00）</td><td>—</td></tr>
             </tbody>
           </table>
@@ -543,7 +536,7 @@ tr:hover td{background:#fafcff}
       <div id="impact-result" style="display:none">
         <div class="impactbox">
           预计命中约 <b style="font-size:18px">8,632</b> 名用户（候选 9,410 人 × 抽样命中率 91.7%）<br>
-          将补发权益：<b>初中数学 · 函数专题 v2</b> × 1 / 人 · 时长跟随依赖权益<br>
+          将补发权益：<b>初中数学 · 函数专题 v2</b> × 1 / 人 · 时长跟随来源权益（取最长）<br>
           <span class="muted">候选量 ≤ 1,000 时展示精确值；本次为抽样外推值（约）。</span>
         </div>
         <div class="dangerbox" style="background:#fff8e6;border-color:#ffe1a0">
@@ -598,7 +591,6 @@ tr:hover td{background:#fafcff}
           <thead><tr><th>判定项</th><th>取值</th><th>结果</th></tr></thead>
           <tbody>
             <tr><td>条件组 1 · 商品购买（#SKG-8821）</td><td>订单 OD-2026030112 · 支付成功</td><td><span class="tag success">命中</span></td></tr>
-            <tr><td>条件组 1 · 依赖权益（函数专题 v1）</td><td>持有中 · 2027-03-01 到期</td><td><span class="tag success">命中</span></td></tr>
             <tr><td>条件组 1 · 时间条件（2025-09-01 ~ 2026-06-30）</td><td><b>时间基准：订单支付时间</b> = 2026-03-01 14:22</td><td><span class="tag success">命中</span></td></tr>
             <tr><td>批次内幂等检查（订单 OD-2026030112）</td><td>该批次下无已补发的「函数专题 v2」</td><td><span class="tag success">通过</span></td></tr>
           </tbody>
@@ -606,7 +598,7 @@ tr:hover td{background:#fafcff}
         <div class="answer-card">
           <div class="ah">✓ 预演结论：将补发</div>
           <div class="ab">
-            将补发 <b>初中数学 · 函数专题 v2</b> × 1；时长跟随依赖权益 → 与「函数专题 v1」同批次对齐，<b>到期时间 2027-03-01</b>。<br>
+            将补发 <b>初中数学 · 函数专题 v2</b> × 1；时长跟随该商品订单批次内权益（时长取值=最长）→ <b>到期时间 2027-03-01</b>。<br>
             <span class="muted">对照修复前行为：若按旧口径（权益到账时间 2026-03-01 14:25）本例结论相同；但延迟发放用户（见 Agent 示例 2）新旧口径结论不同。</span>
           </div>
         </div>
@@ -625,7 +617,7 @@ tr:hover td{background:#fafcff}
       <table>
         <thead><tr><th>userId</th><th>失败环节</th><th>失败原因</th></tr></thead>
         <tbody>
-          <tr><td>u_88ac02e1</td><td>判定引擎</td><td>该来源下未找到依赖权益（订单已支付但权益未发，需先补发依赖权益）</td></tr>
+          <tr><td>u_88ac02e1</td><td>判定引擎</td><td>该来源下未找到对应权益记录（订单已支付但权益未发，无法计算跟随时长）</td></tr>
           <tr><td>u_9f31bb08</td><td>创建授权</td><td>userauth 写入超时（可重试）</td></tr>
           <tr><td>u_1c77d3aa</td><td>候选校验</td><td>用户已注销</td></tr>
           <tr><td colspan="3" class="muted">… 其余 215 条见 CSV</td></tr>
@@ -642,8 +634,8 @@ tr:hover td{background:#fafcff}
 <script>
 /* ---------- data ---------- */
 const rules=[
- {id:'r1',name:'7月数学新课补发',status:'scheduled',eff:'2026-07-12 00:00（定时）',target:'函数专题 v2 · 跟随依赖权益',task:'—',by:'张运营',at:'2026-07-08 21:14'},
- {id:'r2',name:'6月英语课包权益补齐',status:'active',eff:'2026-06-20 00:00（定时）',target:'自然拼读 v3 · 跟随依赖权益',task:'partial',by:'张运营',at:'2026-06-24 10:02'},
+ {id:'r1',name:'7月数学新课补发',status:'scheduled',eff:'2026-07-12 00:00（定时）',target:'函数专题 v2 · 跟随来源权益',task:'—',by:'张运营',at:'2026-07-08 21:14'},
+ {id:'r2',name:'6月英语课包权益补齐',status:'active',eff:'2026-06-20 00:00（定时）',target:'自然拼读 v3 · 跟随来源权益',task:'partial',by:'张运营',at:'2026-06-24 10:02'},
  {id:'r3',name:'522活动兑换码补偿',status:'stopped',eff:'2026-05-22 14:00（立即）',target:'大会员月卡 · 固定30天',task:'success',by:'李运营',at:'2026-06-01 09:40'},
  {id:'r4',name:'419错发权益回收',status:'recalled',eff:'2026-04-19 10:00（立即）',target:'力学进阶 · 有效期',task:'recall',by:'张运营',at:'2026-04-20 16:22'},
 ];
@@ -652,8 +644,8 @@ const ttag={partial:'<span class="tag partial">补发·部分失败</span> <a st
   success:'<span class="tag success">补发·成功</span>',recall:'<span class="tag success">召回·完成</span>','—':'<span class="muted">未执行</span>'};
 function ops(r){
   const b=[];
-  b.push(`<button class="btn sm link" onclick="openDetail('${r.id}')">详情</button>`);
-  if(r.status==='scheduled'){b.push(`<button class="btn sm link" onclick="nav('form');document.getElementById('formtitle').textContent='编辑策略（待生效可编辑）'">编辑</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="toast('二次确认后逻辑删除（仅待生效可删）')">删除</button>`)}
+  b.push(`<button class="btn sm link" onclick="openDetail('${r.id}')">任务/日志</button>`);
+  if(r.status==='scheduled'){b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="toast('二次确认后逻辑删除（仅待生效可删）')">删除</button>`)}
   if(r.status==='active'){b.push(`<button class="btn sm link" onclick="toast('已停用')">停用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
   if(r.status==='stopped'){b.push(`<button class="btn sm link" onclick="toast('重新启用需重新确认影响面')">启用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
   b.push(`<button class="btn sm link" onclick="toast('已复制为新策略草稿')">复制</button>`);
@@ -668,7 +660,7 @@ function renderList(){
 renderList();
 
 /* ---------- nav ---------- */
-const crumbs={list:'权益更新策略',form:'权益更新策略 / 新增策略',detail:'权益更新策略 / 策略详情',agent:'权益更新策略 / 场景预演 Agent'};
+const crumbs={list:'权益更新策略',form:'权益更新策略 / 新增策略',detail:'权益更新策略 / 任务与操作日志',agent:'权益更新策略 / 场景预演 Agent'};
 function nav(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));
   document.getElementById('view-'+v).classList.add('show');
@@ -698,10 +690,13 @@ function onRangeMethod(){
   const auto=document.querySelector('input[name=rangeMethod]:checked').value==='auto';
   document.getElementById('fr-rangetype').style.display=auto?'none':'flex';
   document.getElementById('autohint').style.display=auto?'block':'none';
+  document.getElementById('fr-aggr').style.display=auto?'flex':'none';
 }
 function onSrc(n,v){
   document.getElementById('fr-good'+n).style.display=v==='good'?'flex':'none';
   document.getElementById('fr-redeem'+n).style.display=v==='redeem'?'flex':'none';
+  // 依赖权益仅「不限来源」时展示；选商品/兑换码时命中依据即为商品订单/兑换码本身
+  document.getElementById('fr-depend'+n).style.display=v==='any'?'flex':'none';
   const basis=document.getElementById('basis'+n);
   if(v==='good')basis.innerHTML='<label><input type="radio" name="basis1" value="orderPaid" checked>订单支付时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>';
   if(v==='redeem')basis.innerHTML='<label><input type="radio" name="basis1" value="redeemAt" checked>兑换码兑换时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>';
@@ -773,7 +768,7 @@ const cases=[
  {q:'用户于 2026 年 7 月购买了初中数学系统课，策略生效后，用户会在什么时候得到补发的权益？',
   plan:['解析用例 → 用户画像：2026-07 购买 #SKG-8821，无兑换记录','检查策略配置就绪度（补发内容/条件/时间基准/生效时间）','调用订单服务：构造虚拟订单 支付时间=2026-07-15 10:00','调用 dry-run 判定引擎（只读）','推演触达链路，生成到账时间结论'],
   tools:[['order-service.queryVirtual','按用例构造订单：OD-SIM-001，支付成功 2026-07-15 10:00','done'],
-         ['userauth.dryRun','条件组1判定：商品命中 ✓ / 依赖权益 ✓ / 时间条件（基准=订单支付时间 2026-07-15）→ 不在 2025-09-01~2026-06-30 区间 ✗','done'],
+         ['userauth.dryRun','条件组1判定：商品命中 ✓ / 时间条件（基准=订单支付时间 2026-07-15）→ 不在 2025-09-01~2026-06-30 区间 ✗','done'],
          ['userauth.dryRun','兜底检查：无其他条件组','done']],
   verdict:'miss',
   answer:'<b>该用户不会收到补发。</b><div class="timelinemini" style="margin-top:8px"><div class="ti"><div class="dot gray"></div><div>2026-07-10 00:00 策略生效，存量补发任务执行 —— 用户此时尚未购买，不在候选内</div></div><div class="ti"><div class="dot gray"></div><div>2026-07-15 10:00 用户购买 → 活跃事件触发增量判定</div></div><div class="ti"><div class="dot gray"></div><div>时间条件判定：订单支付时间 2026-07-15 <b>晚于区间右端点 2026-06-30</b> → 未命中</div></div></div>原因：条件组 1 的时间区间为 2025-09-01 ~ 2026-06-30，本策略面向<b>历史购课用户</b>补齐；2026 年 7 月新购用户会在购买时直接获得新版课程权益（商品配置内已含 v2），无需补发。<br><span class="muted">如果预期 7 月新购用户也走补发，请把时间区间右端点后移，或增加「无时间要求」条件组。</span>'},
@@ -785,7 +780,7 @@ const cases=[
   answer:'<b>按当前配置（时间基准=订单支付时间）：不命中。</b><br>该用户实际购买发生在 2025-05-20，早于区间起点 2025-09-01；虽然权益 10 月才到账，但本次修复后判定跟随<b>真实购买时间</b>，不再被延迟发放时间误导。<br><br>⚠ 注意：<b>修复前的旧系统会按权益到账时间（2025-10-01）误判为命中</b>——这正是 PRD §7.1 要修复的问题。若运营意图就是按到账时间圈人，可将该条件组时间基准显式改为「权益到账时间」。'},
  {q:'如果用户已经从别的活动拿到过「函数专题 v2」，这个策略还会再发一次吗？',
   plan:['解析用例 → 用户已持有目标权益（来源：618活动，在期）','读取补发条件与累加口径（PRD §8.2）','执行 dry-run 验证发放行为'],
-  tools:[['userauth.dryRun','条件组1判定：商品命中 ✓ / 依赖权益 ✓ / 时间条件 ✓（基准=订单支付时间）','done'],
+  tools:[['userauth.dryRun','条件组1判定：商品命中 ✓ / 时间条件 ✓（基准=订单支付时间）','done'],
          ['userauth.dryRun','批次内幂等检查：命中批次（订单 OD-2026030112）下无本策略已补发的「函数专题 v2」→ <b>正常补发</b>；618 活动来源的同款权益属其他批次，不拦截','done']],
   verdict:'hit',
   answer:'<b>会再发一次，权益累加。</b><br>用户从 618 活动获得的「函数专题 v2」与本策略按购课批次补发的权益属于不同来源批次——与真实用户购买两次权益累加的语义一致，系统不做跨批次去重拦截（PRD §8.2 口径确认）。两条权益时长各自独立计算，用户实际可用时长为两者叠加后的结果（时间轴重排自动合并）。<br><br>唯一的拦截是<b>批次内幂等</b>：同一个命中批次下本策略只会补发一次，重复执行引擎（如任务重试、用户重复活跃）不会重复发放。'}
