@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>原型｜运营后台 · 用户信息 · 内容权限（含生命周期审计抽屉）</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
+  body { background:#f0f2f5; color:#303133; font-size:13px; }
+  a { color:#409eff; text-decoration:none; cursor:pointer; }
+  /* 顶部 */
+  .topbar { background:#20222a; color:#fff; height:48px; display:flex; align-items:center; padding:0 16px; gap:16px; position:sticky; top:0; z-index:50; }
+  .topbar .logo { font-weight:700; font-size:15px; }
+  .topbar .crumb { color:#9aa0ab; font-size:12px; }
+  .topbar .spacer { flex:1; }
+  .tag-proto { background:#e6a23c; color:#fff; border-radius:3px; padding:2px 8px; font-size:11px; }
+  /* 布局 */
+  .layout { display:flex; min-height:calc(100vh - 48px); }
+  .sidebar { width:180px; background:#2b2f3a; color:#bfcbd9; padding:8px 0; flex-shrink:0; }
+  .sidebar .menu-item { padding:10px 20px; font-size:13px; cursor:pointer; }
+  .sidebar .menu-item.active { color:#409eff; background:#20222a; border-left:3px solid #409eff; }
+  .main { flex:1; padding:16px; min-width:0; }
+  .card { background:#fff; border-radius:6px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  /* 用户信息头 */
+  .userhead { display:flex; gap:24px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
+  .userhead .avatar { width:44px; height:44px; border-radius:50%; background:#409eff; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; }
+  .userhead .kv { font-size:12px; color:#606266; }
+  .userhead .kv b { color:#303133; font-size:13px; }
+  /* tabs */
+  .tabs { display:flex; gap:0; border-bottom:2px solid #e4e7ed; margin:8px 0 12px; }
+  .tab { padding:9px 18px; cursor:pointer; font-size:13px; color:#606266; border-bottom:2px solid transparent; margin-bottom:-2px; }
+  .tab.active { color:#409eff; border-bottom-color:#409eff; font-weight:600; }
+  .subtabs { display:flex; gap:8px; margin-bottom:12px; align-items:center; }
+  .subtab { padding:6px 14px; border:1px solid #dcdfe6; border-radius:4px; cursor:pointer; font-size:12px; background:#fff; }
+  .subtab.active { background:#ecf5ff; border-color:#409eff; color:#409eff; font-weight:600; }
+  .btn { display:inline-block; padding:6px 14px; border-radius:4px; border:1px solid #dcdfe6; background:#fff; cursor:pointer; font-size:12px; }
+  .btn.primary { background:#409eff; border-color:#409eff; color:#fff; }
+  .btn.mini { padding:3px 10px; font-size:12px; }
+  .btn:disabled { opacity:.5; cursor:not-allowed; }
+  /* 筛选 */
+  .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
+  .filters select,.filters input { padding:6px 8px; border:1px solid #dcdfe6; border-radius:4px; font-size:12px; background:#fff; }
+  /* 表格 */
+  table.grid { width:100%; border-collapse:collapse; font-size:12px; }
+  table.grid th { background:#f5f7fa; color:#606266; text-align:left; padding:8px; border-bottom:1px solid #ebeef5; white-space:nowrap; }
+  table.grid td { padding:8px; border-bottom:1px solid #ebeef5; vertical-align:top; }
+  table.grid tr:hover td { background:#f5f7fa; }
+  .st { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; }
+  .st.using { background:#f0f9eb; color:#67c23a; } .st.unused{ background:#ecf5ff; color:#409eff; }
+  .st.used { background:#f4f4f5; color:#909399; } .st.canceled{ background:#fef0f0; color:#f56c6c; }
+  .st.freeze { background:#fdf6ec; color:#e6a23c; }
+  .lc-btn { color:#409eff; cursor:pointer; white-space:nowrap; }
+  .lc-btn:before { content:"◷ "; }
+  /* 抽屉 */
+  .drawer-mask { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:98; display:none; }
+  .drawer { position:fixed; top:0; right:-620px; width:600px; max-width:92vw; height:100vh; background:#fff; z-index:99; box-shadow:-4px 0 16px rgba(0,0,0,.15); transition:right .25s; display:flex; flex-direction:column; }
+  .drawer.open { right:0; } .drawer-mask.open { display:block; }
+  .drawer-head { padding:14px 18px; border-bottom:1px solid #ebeef5; display:flex; align-items:center; gap:10px; }
+  .drawer-head h3 { font-size:15px; flex:1; }
+  .drawer-close { cursor:pointer; font-size:18px; color:#909399; }
+  .drawer-body { flex:1; overflow:auto; padding:16px 18px; }
+  /* 当前态卡 */
+  .nowcard { background:#f5f7fa; border:1px solid #ebeef5; border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:12px; display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; }
+  .nowcard .full { grid-column:1/3; color:#909399; }
+  /* 链路面包屑 */
+  .chain { background:#ecf5ff; border:1px solid #d9ecff; border-radius:6px; padding:8px 12px; margin-bottom:14px; font-size:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+  .chain .node { padding:2px 8px; border-radius:4px; background:#fff; border:1px solid #b3d8ff; cursor:pointer; }
+  .chain .node.cur { background:#409eff; color:#fff; border-color:#409eff; cursor:default; }
+  .chain .arr { color:#909399; }
+  /* 时间线 */
+  .tl { position:relative; padding-left:24px; }
+  .tl:before { content:""; position:absolute; left:7px; top:4px; bottom:4px; width:2px; background:#e4e7ed; }
+  .ev { position:relative; margin-bottom:16px; }
+  .ev:before { content:""; position:absolute; left:-22px; top:4px; width:10px; height:10px; border-radius:50%; background:#409eff; border:2px solid #fff; box-shadow:0 0 0 2px #409eff33; }
+  .ev.death:before { background:#f56c6c; box-shadow:0 0 0 2px #f56c6c33; }
+  .ev.birth:before { background:#67c23a; box-shadow:0 0 0 2px #67c23a33; }
+  .ev.post:before { background:#909399; box-shadow:0 0 0 2px #90939933; }
+  .ev .ev-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
+  .badge { display:inline-block; padding:1px 8px; border-radius:3px; font-size:11px; color:#fff; background:#409eff; }
+  .badge.birth{ background:#67c23a; } .badge.death{ background:#f56c6c; } .badge.post{ background:#909399; }
+  .ev .t { color:#909399; font-size:11px; }
+  .ev .who { font-size:12px; color:#606266; }
+  .ev .body { margin-top:4px; background:#fafafa; border:1px solid #f0f0f0; border-radius:4px; padding:8px 10px; font-size:12px; }
+  .diff { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:4px; }
+  .diff .old { background:#fef0f0; color:#f56c6c; padding:1px 6px; border-radius:3px; text-decoration:line-through; }
+  .diff .new { background:#f0f9eb; color:#67c23a; padding:1px 6px; border-radius:3px; }
+  .cred { color:#409eff; cursor:pointer; }
+  .meta { color:#909399; font-size:11px; margin-top:4px; }
+  /* 空态 */
+  .empty { text-align:center; color:#909399; padding:36px 12px; }
+  .empty .ic { font-size:34px; margin-bottom:8px; }
+  .hist { background:#fdf6ec; border:1px solid #faecd8; border-radius:6px; padding:10px 12px; margin-top:14px; font-size:12px; }
+  .hist h4 { font-size:12px; color:#e6a23c; margin-bottom:6px; }
+  .hist .r { color:#606266; padding:3px 0; border-bottom:1px dashed #f3e3c8; }
+  /* 汇总卡 */
+  .sumgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+  .sumcard { border:1px solid #ebeef5; border-radius:6px; padding:12px; }
+  .sumcard h4 { font-size:13px; margin-bottom:6px; }
+  .sumcard .big { font-size:20px; font-weight:700; color:#303133; }
+  .sumcard .sub { font-size:11px; color:#909399; margin-top:4px; }
+  /* 调试角标 + 标注 */
+  .debugbar { position:fixed; bottom:14px; right:14px; z-index:120; background:#20222a; color:#fff; border-radius:8px; padding:10px 12px; font-size:12px; box-shadow:0 4px 12px rgba(0,0,0,.3); width:230px; }
+  .debugbar h5 { font-size:12px; margin-bottom:6px; color:#e6a23c; }
+  .debugbar .row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
+  .debugbar button { background:#3a3f4d; border:none; color:#fff; padding:3px 8px; border-radius:4px; cursor:pointer; font-size:11px; }
+  .debugbar button.on { background:#409eff; }
+  .debug-min { position:fixed; bottom:14px; right:14px; z-index:120; background:#20222a; color:#fff; border-radius:50%; width:40px; height:40px; display:none; align-items:center; justify-content:center; cursor:pointer; font-size:16px; }
+  .anno { display:none; background:#fffbe6; border:1px dashed #e6a23c; color:#8a6d3b; font-size:11px; padding:6px 10px; border-radius:4px; margin:6px 0; }
+  body.anno-on .anno { display:block; }
+  /* 页面地图 */
+  .pagemap { position:fixed; top:60px; left:12px; z-index:110; }
+  .pagemap .pm-btn { background:#409eff; color:#fff; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+  .pm-panel { display:none; margin-top:6px; background:#fff; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,.2); padding:8px; width:220px; }
+  .pm-panel a { display:block; padding:6px 8px; border-radius:4px; font-size:12px; }
+  .pm-panel a:hover { background:#ecf5ff; }
+  /* 凭据弹层 */
+  .toast { position:fixed; top:64px; left:50%; transform:translateX(-50%); background:#303133; color:#fff; padding:8px 16px; border-radius:4px; font-size:12px; z-index:130; display:none; }
+  /* 加载/错误态 */
+  .loading-row td { text-align:center; color:#909399; padding:28px; }
+  .spinner { display:inline-block; width:14px; height:14px; border:2px solid #c0c4cc; border-top-color:#409eff; border-radius:50%; animation:spin 1s linear infinite; vertical-align:-2px; margin-right:6px;}
+  @keyframes spin { to { transform:rotate(360deg);} }
+  .err-banner { background:#fef0f0; border:1px solid #fde2e2; color:#f56c6c; border-radius:4px; padding:10px 12px; margin-bottom:12px; display:none; }
+  .err-banner .btn { margin-left:8px; }
+</style>
+</head>
+<body>
+<div class="topbar">
+  <span class="logo">运营平台</span>
+  <span class="crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
+  <span class="spacer"></span>
+  <span class="tag-proto">交互原型 · PRD-授权全生命周期审计日志 §4</span>
+</div>
+
+<div class="pagemap">
+  <div class="pm-btn" onclick="togglePM()">☰ 页面地图</div>
+  <div class="pm-panel" id="pmPanel">
+    <a onclick="gotoTab('personal');togglePM()">① 个人权益管理（列表+抽屉）</a>
+    <a onclick="gotoTab('summary');togglePM()">② 全部权益总时长</a>
+    <a onclick="gotoTab('archived');togglePM()">③ 归档权益管理</a>
+    <a onclick="openDrawer('A-002');togglePM()">④ 抽屉：退款冻结→撤销 case</a>
+    <a onclick="openDrawer('A-004');togglePM()">⑤ 抽屉：转换链面包屑 case</a>
+    <a onclick="openDrawer('A-005');togglePM()">⑥ 抽屉：审计起点空态 case</a>
+    <a onclick="openDrawer('A-101');togglePM()">⑦ 抽屉：归档授权 case</a>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="sidebar">
+    <div class="menu-item">封控管理</div>
+    <div class="menu-item active">用户管理</div>
+    <div class="menu-item" style="padding-left:34px;color:#409eff">· 用户信息</div>
+    <div class="menu-item" style="padding-left:34px">· 服务期管理</div>
+    <div class="menu-item">订单管理</div>
+    <div class="menu-item">退款管理</div>
+    <div class="menu-item">营销工具</div>
+  </div>
+
+  <div class="main">
+    <div class="card">
+      <div class="userhead">
+        <div class="avatar">王</div>
+        <div><b style="font-size:15px">老王家的娃</b><div class="kv">用户ID：u_58f2…91ab ｜ 洋葱ID：8823 1027</div></div>
+        <div class="kv">绑定手机：138****1234</div>
+        <div class="kv">角色：<b>学生</b></div>
+        <div class="kv">注册：2023-09-01</div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab">基本信息</div>
+        <div class="tab active">内容权限</div>
+        <div class="tab">功能权限</div>
+        <div class="tab">订单记录</div>
+        <div class="tab">体验券记录</div>
+        <div class="tab">兑换码记录</div>
+        <div class="tab">服务期归属</div>
+      </div>
+
+      <div class="anno">📌 PRD §4：保留「内容权限」三个子 tab 现有交互不动（§4.6）；本原型新增的只有行级「生命周期」按钮与右侧抽屉。</div>
+
+      <div class="subtabs">
+        <div class="subtab active" id="stab-personal" onclick="gotoTab('personal')">个人权益管理</div>
+        <div class="subtab" id="stab-summary" onclick="gotoTab('summary')">全部权益总时长</div>
+        <div class="subtab" id="stab-archived" onclick="gotoTab('archived')">归档权益管理</div>
+        <span class="spacer" style="flex:1"></span>
+        <button class="btn">更新用户权益</button>
+        <button class="btn primary">添加权益</button>
+      </div>
+
+      <div class="err-banner" id="errBanner">⚠ 授权服务查询失败（timeout），请稍后重试。<button class="btn mini" onclick="setState('normal')">重试</button></div>
+
+      <!-- ① 个人权益管理 -->
+      <div id="pane-personal">
+        <div class="filters">
+          <select><option>授权类型：全部</option><option>同步课</option><option>培优课</option><option>电子试卷</option></select>
+          <select><option>授权状态：全部</option><option>使用中</option><option>未使用</option><option>已冻结</option><option>已取消</option><option>已使用</option></select>
+          <select><option>来源类型：全部</option><option>购买获得</option><option>后台手动发放</option><option>兑换码兑换</option></select>
+          <input placeholder="来源 ID / 授权 ID" style="width:150px">
+          <button class="btn">查询</button><button class="btn">重置</button>
+        </div>
+        <div class="anno">📌 PRD §4.1：每行新增「生命周期」入口 → 右侧抽屉时间线（事件倒序、操作者、凭据跳转、前后值 diff）。数据源：auth_audit_event 按 auth_id 查事件流。</div>
+        <table class="grid" id="tbl-personal">
+          <thead><tr>
+            <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源ID</th><th>创建时间</th><th>操作</th>
+          </tr></thead>
+          <tbody id="tbody-personal"></tbody>
+        </table>
+      </div>
+
+      <!-- ② 全部权益总时长 -->
+      <div id="pane-summary" style="display:none">
+        <div class="anno">📌 PRD §3.6：「一科权益跨多笔合并」视角由本 tab 承接（时间轴实时计算），不属于审计事件表。本 tab 交互保持现状不动。</div>
+        <div class="sumgrid">
+          <div class="sumcard"><h4>初中数学 同步课 VIP</h4><div class="big">还剩 412 天</div><div class="sub">合并 3 笔授权 · 截止 2027-08-27 23:59:59</div></div>
+          <div class="sumcard"><h4>初中英语 同步课 VIP</h4><div class="big">还剩 37 天</div><div class="sub">合并 1 笔授权 · 截止 2026-08-17 23:59:59</div></div>
+          <div class="sumcard"><h4>小学数学 培优课</h4><div class="big">已到期</div><div class="sub">最后一笔于 2025-06-30 结束</div></div>
+          <div class="sumcard"><h4>高中数学 同步课 VIP</h4><div class="big">还剩 80 天</div><div class="sub">由初中数学转换而来 · 截止 2026-09-29</div></div>
+        </div>
+      </div>
+
+      <!-- ③ 归档权益管理 -->
+      <div id="pane-archived" style="display:none">
+        <div class="anno">📌 PRD §4.4：归档（ES 冷备）不换体验——archive 事件 + 全量事件保留，抽屉一致，客服无需理解冷热数据。</div>
+        <table class="grid">
+          <thead><tr>
+            <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>归档时间</th><th>操作</th>
+          </tr></thead>
+          <tbody id="tbody-archived"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 抽屉 -->
+<div class="drawer-mask" id="mask" onclick="closeDrawer()"></div>
+<div class="drawer" id="drawer">
+  <div class="drawer-head">
+    <h3 id="d-title">生命周期</h3>
+    <span style="font-size:11px;color:#909399" id="d-authid"></span>
+    <span class="drawer-close" onclick="closeDrawer()">✕</span>
+  </div>
+  <div class="drawer-body" id="d-body"></div>
+</div>
+
+<!-- 调试角标 -->
+<div class="debugbar" id="debugbar">
+  <h5>原型调试（五态 / 标注） <span style="float:right;cursor:pointer" onclick="minDebug(true)">—</span></h5>
+  <div class="row">
+    <button id="db-normal" class="on" onclick="setState('normal')">正常</button>
+    <button id="db-loading" onclick="setState('loading')">加载中</button>
+    <button id="db-empty" onclick="setState('empty')">空态</button>
+    <button id="db-error" onclick="setState('error')">错误</button>
+  </div>
+  <div class="row">
+    <button id="db-anno" onclick="toggleAnno()">标注模式：关</button>
+  </div>
+  <div style="color:#9aa0ab;font-size:11px">audit_since = 2026-10-01（演示值）</div>
+</div>
+<div class="debug-min" id="debugmin" onclick="minDebug(false)">⚙</div>
+<div class="toast" id="toast"></div>
+
+<script>
+/* ================= 假数据：授权列表 ================= */
+const AUTHS = {
+ "A-001": { name:"初中数学 同步课 VIP", type:"同步课", state:"using", stateTxt:"使用中",
+   start:"2026-10-12 00:00:00", end:"2027-10-11 23:59:59", remain:"412 天", src:"购买获得(buy)", srcId:"订单 O2026101201", created:"2026-10-12 10:03:22", archived:false },
+ "A-002": { name:"初中英语 同步课 VIP", type:"同步课", state:"canceled", stateTxt:"已取消",
+   start:"2026-10-15 00:00:00", end:"2026-11-02 14:20:11", remain:"—", src:"购买获得(buy)", srcId:"订单 O2026101502", created:"2026-10-15 09:11:45", archived:false },
+ "A-003": { name:"初中物理 同步课 VIP（30天）", type:"同步课", state:"using", stateTxt:"使用中",
+   start:"2026-11-20 00:00:00", end:"2026-12-19 23:59:59", remain:"22 天", src:"后台手动发放(shadow)", srcId:"工单 WO-88121", created:"2026-11-20 15:40:02", archived:false },
+ "A-004": { name:"高中数学 同步课 VIP", type:"同步课", state:"using", stateTxt:"使用中",
+   start:"2026-11-05 00:00:00", end:"2027-01-24 23:59:59", remain:"80 天", src:"授权转换(auth)", srcId:"原授权 A-000X", created:"2026-11-05 11:00:00", archived:false },
+ "A-005": { name:"小学数学 培优课", type:"培优课", state:"used", stateTxt:"已使用",
+   start:"2024-07-01 00:00:00", end:"2025-06-30 23:59:59", remain:"—", src:"兑换码兑换(redeem)", srcId:"码 RC-7Y2K…", created:"2024-07-01 08:30:00", archived:false },
+ "A-101": { name:"初中化学 体验课（7天）", type:"同步课", state:"canceled", stateTxt:"已取消",
+   start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", src:"体验券兑换(trialVouchers)", srcId:"券 TV-3301", created:"2026-10-03 12:00:00", archived:true, archivedAt:"2026-12-01 02:10:00" },
+};
+
+/* ================= 假数据：事件流（正序存储，展示时倒序） ================= */
+const EVENTS = {
+ /* A-001 正常购买生效 */
+ "A-001": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-10-12 10:03:22",
+     op:"系统（svc:go-order）", opd:null,
+     body:"因订单支付成功发放。授予时长 +365 天。",
+     diff:[["状态","—","未使用"]],
+     cred:{t:"订单", id:"O2026101201"}, meta:"event_id E-9001 · caller=go-order · trace 7f3a…c2 · sku S-MATH-1Y" },
+   { et:"activate", cls:"", label:"生效", time:"2026-10-12 10:03:25",
+     op:"系统（定时/重排）", body:"排队完成，开始计时。截止时间按过期日 23:59:59 规则设定。",
+     diff:[["状态","未使用","使用中"],["截止时间","—","2027-10-11 23:59:59"]],
+     cred:null, meta:"event_id E-9002 · operator=svc:userauth-job" }
+ ]},
+ /* A-002 退款：冻结→撤销 */
+ "A-002": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-10-15 09:11:45",
+     op:"系统（svc:go-order）", body:"因订单支付成功发放，授予 +365 天。",
+     diff:[["状态","—","未使用"]], cred:{t:"订单", id:"O2026101502"}, meta:"event_id E-9101" },
+   { et:"activate", cls:"", label:"生效", time:"2026-10-15 09:11:48",
+     op:"系统（定时/重排）", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null, meta:"event_id E-9102" },
+   { et:"freeze", cls:"", label:"冻结", time:"2026-10-28 16:02:10",
+     op:"系统（svc:go-order）· 原因分类：退款(refund)",
+     body:"用户发起退款，进入退款窗口期，权益冻结不可用。",
+     diff:[["状态","使用中","已冻结"],["截止时间","2027-10-14 23:59:59","2026-10-28 16:02:10"]],
+     cred:{t:"订单", id:"O2026101502"}, meta:"event_id E-9103 · trace 与退款单同链路" },
+   { et:"revoke", cls:"death", label:"撤销", time:"2026-11-02 14:20:11",
+     op:"系统（svc:go-order）· 原因分类：退款完成(refund)",
+     body:"退款完成，权益回收。",
+     diff:[["状态","已冻结","已取消"]],
+     cred:{t:"订单", id:"O2026101502"}, meta:"event_id E-9104 · batch —" }
+ ]},
+ /* A-003 客服手动发放 */
+ "A-003": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-11-20 15:40:02",
+     op:"后台操作 · 李思思（客服一部）",
+     body:"原因说明：「用户投诉课程卡顿，安抚补偿 30 天」。授予 +30 天。",
+     diff:[["状态","—","未使用"]],
+     cred:{t:"客服工单", id:"WO-88121"}, meta:"event_id E-9201 · caller=shadow · api=userAuth.add" },
+   { et:"activate", cls:"", label:"生效", time:"2026-11-20 15:40:05",
+     op:"系统（定时/重排）", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null, meta:"event_id E-9202" }
+ ]},
+ /* A-004 转换链 */
+ "A-004": { chain:[{id:"A-000X", name:"初中数学 VIP（已转出）"},{id:"A-004", name:"高中数学 VIP（当前）"}], events:[
+   { et:"exchange_in", cls:"birth", label:"转换入", time:"2026-11-05 11:00:00",
+     op:"后台操作 · 周敏（运营）",
+     body:"初升高转换：原初中数学 VIP 剩余 100 天 × 系数 0.8 = 授予 +80 天。前驱授权 A-000X。",
+     diff:[["状态","—","使用中"],["时长","0","+80 天"]],
+     cred:{t:"前驱授权", id:"A-000X"}, meta:"event_id E-9301 · parent_auth_id=A-000X" }
+ ], chainEvents:{ "A-000X":[
+   { et:"grant", cls:"birth", label:"发放", time:"2025-11-01 10:00:00", op:"系统（svc:go-order）",
+     body:"因订单支付成功发放 +365 天。", diff:[["状态","—","未使用"]], cred:{t:"订单", id:"O2025110101"}, meta:"event_id E-8001" },
+   { et:"activate", cls:"", label:"生效", time:"2025-11-01 10:00:03", op:"系统", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null, meta:"event_id E-8002" },
+   { et:"exchange_out", cls:"death", label:"转换出", time:"2026-11-05 11:00:00",
+     op:"后台操作 · 周敏（运营）", body:"初升高转换：剩余 100 天转出至高中数学 VIP（A-004）。",
+     diff:[["状态","使用中","已取消"],["时长","-100 天",""]], cred:{t:"前驱授权", id:"A-004（去向）"}, meta:"event_id E-8003 · 原因分类=exchange" }
+ ]}},
+ /* A-005 审计起点前存量：空态 + 历史备注 */
+ "A-005": { chain:null, legacy:true, events:[],
+   remarks:[
+     {t:"2024-07-01 08:30", c:"create ｜ 兑换码兑换发放（creator: system）"},
+     {t:"2025-06-30 23:59", c:"（无记录——过期为覆盖式更新，未留痕，这正是审计要解决的问题）"}
+   ]},
+ /* A-101 归档 */
+ "A-101": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-10-03 12:00:00",
+     op:"系统（svc:活动服务）", body:"体验券兑换发放 +7 天。",
+     diff:[["状态","—","使用中"]], cred:{t:"体验券", id:"TV-3301"}, meta:"event_id E-9401 · batch B-2026NAT01" },
+   { et:"expire", cls:"death", label:"自然到期", time:"2026-10-09 23:59:59",
+     op:"系统（零点批处理）", body:"体验期结束。",
+     diff:[["状态","使用中","已使用"]], cred:null, meta:"event_id E-9402" },
+   { et:"revoke", cls:"death", label:"撤销（清理）", time:"2026-10-20 10:00:00",
+     op:"系统（svc:userauth-job）· 原因分类：批量清理", body:"到期体验权益批量清理。",
+     diff:[["状态","已使用","已取消"]], cred:null, meta:"event_id E-9403" },
+   { et:"archive", cls:"post", label:"归档", time:"2026-12-01 02:10:00",
+     op:"系统（每日归档任务）",
+     body:"已迁移至 ES 冷库归档，主库记录删除。事件流全量保留，详情数据请在归档库查看。",
+     diff:[], cred:null, meta:"event_id E-9404 · 在 pg 物理删除之前落库" }
+ ]}
+};
+
+/* ================= 渲染列表 ================= */
+function rowHtml(id, a){
+  return `<tr>
+    <td><b>${a.name}</b><div style="color:#909399;font-size:11px">${id}</div></td>
+    <td>${a.type}</td>
+    <td><span class="st ${a.state}">${a.stateTxt}</span></td>
+    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.remain}</td>
+    <td>${a.src}</td><td><a onclick="toast('跳转凭据详情：'+this.textContent)">${a.srcId}</a></td>
+    <td>${a.created.slice(0,10)}</td>
+    <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="toast('撤销弹窗（现有功能，交互不变）')">撤销</a></td>
+  </tr>`;
+}
+function archRowHtml(id, a){
+  return `<tr>
+    <td><b>${a.name}</b><div style="color:#909399;font-size:11px">${id}</div></td>
+    <td>${a.type}</td><td><span class="st ${a.state}">${a.stateTxt}</span></td>
+    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.src}</td>
+    <td>${a.archivedAt.slice(0,10)}</td>
+    <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td>
+  </tr>`;
+}
+function renderTables(){
+  const pb = document.getElementById('tbody-personal');
+  pb.innerHTML = Object.entries(AUTHS).filter(([,a])=>!a.archived).map(([id,a])=>rowHtml(id,a)).join('');
+  const ab = document.getElementById('tbody-archived');
+  ab.innerHTML = Object.entries(AUTHS).filter(([,a])=>a.archived).map(([id,a])=>archRowHtml(id,a)).join('');
+}
+
+/* ================= 抽屉 ================= */
+let curDrawerAuth = null;
+function openDrawer(id, chainFocus){
+  curDrawerAuth = id;
+  const a = AUTHS[id] || {name:id, stateTxt:"", start:"—", end:"—"};
+  const data = EVENTS[id] || {events:[]};
+  document.getElementById('d-title').textContent = "生命周期 · " + (a.name || id);
+  document.getElementById('d-authid').textContent = "auth_id: " + id;
+  let html = "";
+
+  html += `<div class="anno">📌 PRD §4.1-§4.5：时间线（倒序）+ 操作者 + 凭据跳转 + 前后值 diff；转换链面包屑；审计起点空态降级展示历史备注。</div>`;
+
+  /* 当前态卡（主表为准） */
+  if (AUTHS[id]) {
+    html += `<div class="nowcard">
+      <div>当前状态：<span class="st ${a.state}">${a.stateTxt}</span></div>
+      <div>剩余：${a.remain||"—"}</div>
+      <div>生效：${a.start}</div><div>截止：${a.end}</div>
+      <div class="full">↑ 当前值以授权主表为准（时间轴重排后的最新排布）；下方事件流是业务事实账本，两者同屏互补（PRD §3.2 降噪规则）。</div>
+    </div>`;
+  }
+
+  /* 链路面包屑 */
+  if (data.chain) {
+    const focus = chainFocus || id;
+    html += `<div class="chain">🔗 转换链：` + data.chain.map(n =>
+      `<span class="node ${n.id===focus?'cur':''}" onclick="switchChain('${id}','${n.id}')">${n.name}</span>`
+    ).join('<span class="arr">→</span>') + `</div>`;
+  }
+
+  /* 事件流 or 空态 */
+  let evs = data.events;
+  if (data.chain && chainFocus && chainFocus !== id && data.chainEvents) evs = data.chainEvents[chainFocus] || [];
+
+  if (data.legacy) {
+    html += `<div class="empty"><div class="ic">🗂</div>
+      该授权早于审计上线时间（<b>2026-10-01</b>），无事件记录。<br>
+      <span style="font-size:11px">这不是数据丢失——审计事件从 audit_since 起记录（存量不回填【已决策】）。</span></div>`;
+    html += `<div class="hist"><h4>历史备注（既有 remark / exchange_history，只读降级展示）</h4>` +
+      (data.remarks||[]).map(r=>`<div class="r">${r.t} ｜ ${r.c}</div>`).join('') + `</div>`;
+  } else if (!evs.length) {
+    html += `<div class="empty"><div class="ic">⏳</div>暂无事件</div>`;
+  } else {
+    html += `<div class="tl">` + [...evs].reverse().map(e=>{
+      const diffs = (e.diff||[]).filter(d=>d[1]!==""||d[2]!=="").map(d=>
+        `<span style="color:#909399">${d[0]}:</span> ${d[1]&&d[1]!=="—"?`<span class="old">${d[1]}</span>→`:""}<span class="new">${d[2]||d[1]}</span>`).join('　');
+      return `<div class="ev ${e.cls}">
+        <div class="ev-head"><span class="badge ${e.cls}">${e.label}</span><span class="t">${e.time}</span></div>
+        <div class="who">操作者：${e.op}</div>
+        <div class="body">${e.body}
+          ${diffs?`<div class="diff">${diffs}</div>`:""}
+          ${e.cred?`<div style="margin-top:4px">凭据：<span class="cred" onclick="toast('跳转 ${e.cred.t} ${e.cred.id} 详情页')">${e.cred.t} ${e.cred.id} ↗</span></div>`:""}
+          <div class="meta">${e.meta||""}</div>
+        </div></div>`;
+    }).join('') + `</div>`;
+    html += `<div style="text-align:center;color:#c0c4cc;font-size:11px;margin-top:4px">— 已展示全部 ${evs.length} 条事件（audit_since 起） —</div>`;
+  }
+
+  document.getElementById('d-body').innerHTML = html;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('mask').classList.add('open');
+}
+function switchChain(rootId, focusId){ openDrawer(rootId, focusId); }
+function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('mask').classList.remove('open'); }
+
+/* ================= tab 切换 ================= */
+function gotoTab(t){
+  ['personal','summary','archived'].forEach(x=>{
+    document.getElementById('pane-'+x).style.display = (x===t?'':'none');
+    document.getElementById('stab-'+x).classList.toggle('active', x===t);
+  });
+}
+
+/* ================= 五态 ================= */
+function setState(s){
+  ['normal','loading','empty','error'].forEach(x=>document.getElementById('db-'+x).classList.toggle('on', x===s));
+  const pb = document.getElementById('tbody-personal');
+  document.getElementById('errBanner').style.display = 'none';
+  if (s==='normal'){ renderTables(); }
+  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="10"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
+  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="10">该用户暂无授权记录</td></tr>`; }
+  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="10" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
+}
+
+/* ================= 标注 / 页面地图 / 其它 ================= */
+function toggleAnno(){
+  document.body.classList.toggle('anno-on');
+  document.getElementById('db-anno').textContent = '标注模式：' + (document.body.classList.contains('anno-on')?'开':'关');
+  document.getElementById('db-anno').classList.toggle('on');
+  if (curDrawerAuth && document.getElementById('drawer').classList.contains('open')) openDrawer(curDrawerAuth);
+}
+function togglePM(){ const p=document.getElementById('pmPanel'); p.style.display = p.style.display==='block'?'none':'block'; }
+function minDebug(min){ document.getElementById('debugbar').style.display=min?'none':'block'; document.getElementById('debugmin').style.display=min?'flex':'none'; }
+let toastTimer=null;
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg+"（原型示意）"; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display='none',1800); }
+
+renderTables();
+</script>
+</body>
+</html>
