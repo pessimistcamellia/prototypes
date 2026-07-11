@@ -3,44 +3,39 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 用户信息 · 内容权限（含生命周期审计抽屉）</title>
+<title>原型｜运营后台 · 用户信息 · 内容权限（含生命周期审计抽屉）v2</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
   body { background:#f0f2f5; color:#303133; font-size:13px; }
   a { color:#409eff; text-decoration:none; cursor:pointer; }
-  /* 顶部 */
   .topbar { background:#20222a; color:#fff; height:48px; display:flex; align-items:center; padding:0 16px; gap:16px; position:sticky; top:0; z-index:50; }
   .topbar .logo { font-weight:700; font-size:15px; }
   .topbar .crumb { color:#9aa0ab; font-size:12px; }
   .topbar .spacer { flex:1; }
   .tag-proto { background:#e6a23c; color:#fff; border-radius:3px; padding:2px 8px; font-size:11px; }
-  /* 布局 */
   .layout { display:flex; min-height:calc(100vh - 48px); }
   .sidebar { width:180px; background:#2b2f3a; color:#bfcbd9; padding:8px 0; flex-shrink:0; }
   .sidebar .menu-item { padding:10px 20px; font-size:13px; cursor:pointer; }
   .sidebar .menu-item.active { color:#409eff; background:#20222a; border-left:3px solid #409eff; }
   .main { flex:1; padding:16px; min-width:0; }
   .card { background:#fff; border-radius:6px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
-  /* 用户信息头 */
   .userhead { display:flex; gap:24px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
   .userhead .avatar { width:44px; height:44px; border-radius:50%; background:#409eff; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; }
   .userhead .kv { font-size:12px; color:#606266; }
   .userhead .kv b { color:#303133; font-size:13px; }
-  /* tabs */
-  .tabs { display:flex; gap:0; border-bottom:2px solid #e4e7ed; margin:8px 0 12px; }
+  .tabs { display:flex; border-bottom:2px solid #e4e7ed; margin:8px 0 12px; }
   .tab { padding:9px 18px; cursor:pointer; font-size:13px; color:#606266; border-bottom:2px solid transparent; margin-bottom:-2px; }
   .tab.active { color:#409eff; border-bottom-color:#409eff; font-weight:600; }
-  .subtabs { display:flex; gap:8px; margin-bottom:12px; align-items:center; }
+  .subtabs { display:flex; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
   .subtab { padding:6px 14px; border:1px solid #dcdfe6; border-radius:4px; cursor:pointer; font-size:12px; background:#fff; }
   .subtab.active { background:#ecf5ff; border-color:#409eff; color:#409eff; font-weight:600; }
   .btn { display:inline-block; padding:6px 14px; border-radius:4px; border:1px solid #dcdfe6; background:#fff; cursor:pointer; font-size:12px; }
   .btn.primary { background:#409eff; border-color:#409eff; color:#fff; }
+  .btn.danger { background:#fff; border-color:#f56c6c; color:#f56c6c; }
   .btn.mini { padding:3px 10px; font-size:12px; }
   .btn:disabled { opacity:.5; cursor:not-allowed; }
-  /* 筛选 */
   .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:12px; }
   .filters select,.filters input { padding:6px 8px; border:1px solid #dcdfe6; border-radius:4px; font-size:12px; background:#fff; }
-  /* 表格 */
   table.grid { width:100%; border-collapse:collapse; font-size:12px; }
   table.grid th { background:#f5f7fa; color:#606266; text-align:left; padding:8px; border-bottom:1px solid #ebeef5; white-space:nowrap; }
   table.grid td { padding:8px; border-bottom:1px solid #ebeef5; vertical-align:top; }
@@ -53,21 +48,19 @@
   .lc-btn:before { content:"◷ "; }
   /* 抽屉 */
   .drawer-mask { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:98; display:none; }
-  .drawer { position:fixed; top:0; right:-620px; width:600px; max-width:92vw; height:100vh; background:#fff; z-index:99; box-shadow:-4px 0 16px rgba(0,0,0,.15); transition:right .25s; display:flex; flex-direction:column; }
+  .drawer { position:fixed; top:0; right:-640px; width:620px; max-width:94vw; height:100vh; background:#fff; z-index:99; box-shadow:-4px 0 16px rgba(0,0,0,.15); transition:right .25s; display:flex; flex-direction:column; }
   .drawer.open { right:0; } .drawer-mask.open { display:block; }
   .drawer-head { padding:14px 18px; border-bottom:1px solid #ebeef5; display:flex; align-items:center; gap:10px; }
   .drawer-head h3 { font-size:15px; flex:1; }
   .drawer-close { cursor:pointer; font-size:18px; color:#909399; }
   .drawer-body { flex:1; overflow:auto; padding:16px 18px; }
-  /* 当前态卡 */
+  .authid-chip { font-size:11px; color:#606266; background:#f5f7fa; border:1px solid #ebeef5; border-radius:4px; padding:2px 8px; cursor:pointer; }
   .nowcard { background:#f5f7fa; border:1px solid #ebeef5; border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:12px; display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; }
   .nowcard .full { grid-column:1/3; color:#909399; }
-  /* 链路面包屑 */
   .chain { background:#ecf5ff; border:1px solid #d9ecff; border-radius:6px; padding:8px 12px; margin-bottom:14px; font-size:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
   .chain .node { padding:2px 8px; border-radius:4px; background:#fff; border:1px solid #b3d8ff; cursor:pointer; }
   .chain .node.cur { background:#409eff; color:#fff; border-color:#409eff; cursor:default; }
   .chain .arr { color:#909399; }
-  /* 时间线 */
   .tl { position:relative; padding-left:24px; }
   .tl:before { content:""; position:absolute; left:7px; top:4px; bottom:4px; width:2px; background:#e4e7ed; }
   .ev { position:relative; margin-bottom:16px; }
@@ -85,20 +78,48 @@
   .diff .old { background:#fef0f0; color:#f56c6c; padding:1px 6px; border-radius:3px; text-decoration:line-through; }
   .diff .new { background:#f0f9eb; color:#67c23a; padding:1px 6px; border-radius:3px; }
   .cred { color:#409eff; cursor:pointer; }
-  .meta { color:#909399; font-size:11px; margin-top:4px; }
-  /* 空态 */
+  details.tech { margin-top:6px; }
+  details.tech summary { font-size:11px; color:#909399; cursor:pointer; user-select:none; }
+  details.tech .tech-body { margin-top:4px; background:#f5f7fa; border-radius:4px; padding:6px 8px; font-size:11px; color:#606266; display:grid; grid-template-columns:1fr 1fr; gap:2px 12px; }
   .empty { text-align:center; color:#909399; padding:36px 12px; }
   .empty .ic { font-size:34px; margin-bottom:8px; }
   .hist { background:#fdf6ec; border:1px solid #faecd8; border-radius:6px; padding:10px 12px; margin-top:14px; font-size:12px; }
   .hist h4 { font-size:12px; color:#e6a23c; margin-bottom:6px; }
   .hist .r { color:#606266; padding:3px 0; border-bottom:1px dashed #f3e3c8; }
-  /* 汇总卡 */
   .sumgrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
   .sumcard { border:1px solid #ebeef5; border-radius:6px; padding:12px; }
   .sumcard h4 { font-size:13px; margin-bottom:6px; }
   .sumcard .big { font-size:20px; font-weight:700; color:#303133; }
   .sumcard .sub { font-size:11px; color:#909399; margin-top:4px; }
-  /* 调试角标 + 标注 */
+  /* 弹窗 */
+  .modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:150; display:none; align-items:flex-start; justify-content:center; padding-top:8vh; }
+  .modal-mask.open { display:flex; }
+  .modal { background:#fff; border-radius:8px; width:560px; max-width:94vw; max-height:82vh; overflow:auto; box-shadow:0 8px 32px rgba(0,0,0,.25); }
+  .modal-head { padding:14px 18px; border-bottom:1px solid #ebeef5; display:flex; align-items:center; }
+  .modal-head h3 { font-size:15px; flex:1; }
+  .modal-body { padding:16px 18px; }
+  .modal-foot { padding:12px 18px; border-top:1px solid #ebeef5; text-align:right; }
+  .modal-foot .btn { margin-left:8px; }
+  .frow { display:flex; margin-bottom:12px; align-items:flex-start; }
+  .frow .lab { width:118px; flex-shrink:0; font-size:12px; color:#606266; padding-top:7px; }
+  .frow .lab .req { color:#f56c6c; margin-right:2px; }
+  .frow .ctl { flex:1; }
+  .frow select,.frow input[type=text],.frow textarea { width:100%; padding:7px 8px; border:1px solid #dcdfe6; border-radius:4px; font-size:12px; }
+  .frow textarea { min-height:56px; resize:vertical; }
+  .frow .tip { font-size:11px; color:#909399; margin-top:3px; }
+  .frow .err { font-size:11px; color:#f56c6c; margin-top:3px; display:none; }
+  .frow.invalid .err { display:block; }
+  .frow.invalid input,.frow.invalid textarea,.frow.invalid select { border-color:#f56c6c; }
+  .ro-chip { background:#f5f7fa; border:1px solid #ebeef5; border-radius:4px; padding:6px 10px; font-size:12px; color:#606266; }
+  .new-tag { display:inline-block; background:#fef0f0; color:#f56c6c; border:1px solid #fbc4c4; border-radius:3px; font-size:10px; padding:0 4px; margin-left:4px; vertical-align:1px; }
+  .batch-preview { background:#fdf6ec; border:1px solid #faecd8; border-radius:4px; padding:8px 10px; font-size:12px; color:#8a6d3b; margin-bottom:12px; }
+  /* 凭据跳转弹层 */
+  .jump-box { background:#ecf5ff; border:1px solid #d9ecff; border-radius:6px; padding:12px; font-size:12px; }
+  .jump-box b { display:block; margin-bottom:4px; }
+  .jump-tag { display:inline-block; border-radius:3px; padding:1px 6px; font-size:11px; margin-left:6px; }
+  .jump-tag.exist { background:#f0f9eb; color:#67c23a; }
+  .jump-tag.new { background:#fef0f0; color:#f56c6c; }
+  /* 调试角标 */
   .debugbar { position:fixed; bottom:14px; right:14px; z-index:120; background:#20222a; color:#fff; border-radius:8px; padding:10px 12px; font-size:12px; box-shadow:0 4px 12px rgba(0,0,0,.3); width:230px; }
   .debugbar h5 { font-size:12px; margin-bottom:6px; color:#e6a23c; }
   .debugbar .row { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px; }
@@ -107,15 +128,12 @@
   .debug-min { position:fixed; bottom:14px; right:14px; z-index:120; background:#20222a; color:#fff; border-radius:50%; width:40px; height:40px; display:none; align-items:center; justify-content:center; cursor:pointer; font-size:16px; }
   .anno { display:none; background:#fffbe6; border:1px dashed #e6a23c; color:#8a6d3b; font-size:11px; padding:6px 10px; border-radius:4px; margin:6px 0; }
   body.anno-on .anno { display:block; }
-  /* 页面地图 */
   .pagemap { position:fixed; top:60px; left:12px; z-index:110; }
   .pagemap .pm-btn { background:#409eff; color:#fff; border-radius:4px; padding:6px 10px; cursor:pointer; font-size:12px; box-shadow:0 2px 8px rgba(0,0,0,.2); }
-  .pm-panel { display:none; margin-top:6px; background:#fff; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,.2); padding:8px; width:220px; }
+  .pm-panel { display:none; margin-top:6px; background:#fff; border-radius:6px; box-shadow:0 4px 16px rgba(0,0,0,.2); padding:8px; width:250px; }
   .pm-panel a { display:block; padding:6px 8px; border-radius:4px; font-size:12px; }
   .pm-panel a:hover { background:#ecf5ff; }
-  /* 凭据弹层 */
-  .toast { position:fixed; top:64px; left:50%; transform:translateX(-50%); background:#303133; color:#fff; padding:8px 16px; border-radius:4px; font-size:12px; z-index:130; display:none; }
-  /* 加载/错误态 */
+  .toast { position:fixed; top:64px; left:50%; transform:translateX(-50%); background:#303133; color:#fff; padding:8px 16px; border-radius:4px; font-size:12px; z-index:200; display:none; }
   .loading-row td { text-align:center; color:#909399; padding:28px; }
   .spinner { display:inline-block; width:14px; height:14px; border:2px solid #c0c4cc; border-top-color:#409eff; border-radius:50%; animation:spin 1s linear infinite; vertical-align:-2px; margin-right:6px;}
   @keyframes spin { to { transform:rotate(360deg);} }
@@ -128,7 +146,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 · PRD-授权全生命周期审计日志 §4</span>
+  <span class="tag-proto">交互原型 v2 · PRD-授权全生命周期审计日志 §4</span>
 </div>
 
 <div class="pagemap">
@@ -141,6 +159,10 @@
     <a onclick="openDrawer('A-004');togglePM()">⑤ 抽屉：转换链面包屑 case</a>
     <a onclick="openDrawer('A-005');togglePM()">⑥ 抽屉：审计起点空态 case</a>
     <a onclick="openDrawer('A-101');togglePM()">⑦ 抽屉：归档授权 case</a>
+    <a onclick="openAddModal();togglePM()">⑧ 添加权益表单（§4.4 新规格）</a>
+    <a onclick="openCancelModal('A-001',false);togglePM()">⑨ 撤销弹窗（§4.5 新规格）</a>
+    <a onclick="openCancelModal(null,true);togglePM()">⑩ 批量撤销（批次号预览）</a>
+    <a onclick="openCred('order','O2026101201');togglePM()">⑪ 凭据跳转示意（§4.2 矩阵）</a>
   </div>
 </div>
 
@@ -175,15 +197,16 @@
         <div class="tab">服务期归属</div>
       </div>
 
-      <div class="anno">📌 PRD §4：保留「内容权限」三个子 tab 现有交互不动（§4.6）；本原型新增的只有行级「生命周期」按钮与右侧抽屉。</div>
+      <div class="anno">📌 PRD §4.1 改动总览：三个子 tab 查询交互不动；列表增强（生命周期按钮+凭据链接）；新增生命周期抽屉；添加权益/撤销表单增强。</div>
 
       <div class="subtabs">
         <div class="subtab active" id="stab-personal" onclick="gotoTab('personal')">个人权益管理</div>
         <div class="subtab" id="stab-summary" onclick="gotoTab('summary')">全部权益总时长</div>
         <div class="subtab" id="stab-archived" onclick="gotoTab('archived')">归档权益管理</div>
-        <span class="spacer" style="flex:1"></span>
+        <span style="flex:1"></span>
         <button class="btn">更新用户权益</button>
-        <button class="btn primary">添加权益</button>
+        <button class="btn danger" onclick="openCancelModal(null,true)">批量撤销</button>
+        <button class="btn primary" onclick="openAddModal()">添加权益</button>
       </div>
 
       <div class="err-banner" id="errBanner">⚠ 授权服务查询失败（timeout），请稍后重试。<button class="btn mini" onclick="setState('normal')">重试</button></div>
@@ -194,13 +217,13 @@
           <select><option>授权类型：全部</option><option>同步课</option><option>培优课</option><option>电子试卷</option></select>
           <select><option>授权状态：全部</option><option>使用中</option><option>未使用</option><option>已冻结</option><option>已取消</option><option>已使用</option></select>
           <select><option>来源类型：全部</option><option>购买获得</option><option>后台手动发放</option><option>兑换码兑换</option></select>
-          <input placeholder="来源 ID / 授权 ID" style="width:150px">
+          <input placeholder="凭据编号 / 授权 ID" style="width:150px">
           <button class="btn">查询</button><button class="btn">重置</button>
         </div>
-        <div class="anno">📌 PRD §4.1：每行新增「生命周期」入口 → 右侧抽屉时间线（事件倒序、操作者、凭据跳转、前后值 diff）。数据源：auth_audit_event 按 auth_id 查事件流。</div>
+        <div class="anno">📌 PRD §4.2：「来源ID」列升级为凭据链接（凭据类型中文名+编号，点击按跳转矩阵）；操作列新增「生命周期」。</div>
         <table class="grid" id="tbl-personal">
           <thead><tr>
-            <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源ID</th><th>创建时间</th><th>操作</th>
+            <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据（原来源ID）</th><th>创建时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
         </table>
@@ -208,7 +231,7 @@
 
       <!-- ② 全部权益总时长 -->
       <div id="pane-summary" style="display:none">
-        <div class="anno">📌 PRD §3.6：「一科权益跨多笔合并」视角由本 tab 承接（时间轴实时计算），不属于审计事件表。本 tab 交互保持现状不动。</div>
+        <div class="anno">📌 PRD §5 粒度说明：「一科合并看总时长」由本 tab 承接（时间轴实时计算），不属于审计事件表。本 tab 交互保持现状不动。</div>
         <div class="sumgrid">
           <div class="sumcard"><h4>初中数学 同步课 VIP</h4><div class="big">还剩 412 天</div><div class="sub">合并 3 笔授权 · 截止 2027-08-27 23:59:59</div></div>
           <div class="sumcard"><h4>初中英语 同步课 VIP</h4><div class="big">还剩 37 天</div><div class="sub">合并 1 笔授权 · 截止 2026-08-17 23:59:59</div></div>
@@ -219,7 +242,7 @@
 
       <!-- ③ 归档权益管理 -->
       <div id="pane-archived" style="display:none">
-        <div class="anno">📌 PRD §4.4：归档（ES 冷备）不换体验——archive 事件 + 全量事件保留，抽屉一致，客服无需理解冷热数据。</div>
+        <div class="anno">📌 PRD §4.2：归档（ES 冷备）不换体验——archive 事件+全量事件保留，「生命周期」抽屉一致。</div>
         <table class="grid">
           <thead><tr>
             <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>归档时间</th><th>操作</th>
@@ -231,15 +254,81 @@
   </div>
 </div>
 
-<!-- 抽屉 -->
+<!-- 生命周期抽屉 -->
 <div class="drawer-mask" id="mask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-head">
     <h3 id="d-title">生命周期</h3>
-    <span style="font-size:11px;color:#909399" id="d-authid"></span>
+    <span class="authid-chip" id="d-authid" onclick="copyAuthId()" title="点击复制">授权 ID：—</span>
     <span class="drawer-close" onclick="closeDrawer()">✕</span>
   </div>
   <div class="drawer-body" id="d-body"></div>
+</div>
+
+<!-- 添加权益弹窗（§4.4） -->
+<div class="modal-mask" id="addMask">
+  <div class="modal">
+    <div class="modal-head"><h3>添加权益</h3><span class="drawer-close" onclick="closeModal('addMask')">✕</span></div>
+    <div class="modal-body">
+      <div class="anno">📌 PRD §4.4：现有字段保留；新增 原因分类 / 原因说明 / 关联工单号 三个必填项，操作人自动带出。与发放同事务落「发放」事件。</div>
+      <div class="frow"><div class="lab"><span class="req">*</span>权益类型</div><div class="ctl">
+        <select><option>同步课（会员时长）</option><option>培优课（课程包）</option><option>电子试卷</option><option>洋葱服务</option></select></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>学科学段</div><div class="ctl"><select><option>初中数学</option><option>初中英语</option><option>高中数学</option></select></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>时长类型</div><div class="ctl"><select><option>固定时长（天）</option><option>指定起止（到期型）</option></select></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>时长（天）</div><div class="ctl"><input type="text" value="30"></div></div>
+      <div class="frow" id="f-reason-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增</span></div><div class="ctl">
+        <select id="add-rcode"><option value="">请选择</option><option>客服补偿</option><option>运营发放</option><option>测试账号</option><option>其他（须详述）</option></select>
+        <div class="tip">枚举与审计「原因分类 reason_code」对齐</div>
+        <div class="err">请选择原因分类</div></div></div>
+      <div class="frow" id="f-reason-text"><div class="lab"><span class="req">*</span>原因说明<span class="new-tag">新增</span></div><div class="ctl">
+        <textarea id="add-rtext" placeholder="5~200 字，写清给谁、因何补偿/发放（例：用户投诉课程卡顿，按客服 SOP 安抚补偿 30 天）"></textarea>
+        <div class="err">原因说明须 5~200 字，且不能是纯数字或重复字符</div></div></div>
+      <div class="frow" id="f-ticket"><div class="lab"><span class="req">*</span>关联工单号<span class="new-tag">新增</span></div><div class="ctl">
+        <input type="text" id="add-ticket" placeholder="WO- 开头的客服工单号；确无工单选下方声明">
+        <label style="font-size:11px;color:#909399;display:block;margin-top:4px"><input type="checkbox" id="add-noticket" onchange="document.getElementById('add-ticket').disabled=this.checked"> 无工单（将触发二次确认并留痕）</label>
+        <div class="err">工单号格式不正确（WO-xxxxx），或勾选"无工单"</div></div></div>
+      <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（登录态自动带出，不可修改）→ 落审计「操作人」三字段</div></div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('addMask')">取消</button>
+      <button class="btn primary" onclick="submitAdd()">提交</button>
+    </div>
+  </div>
+</div>
+
+<!-- 撤销弹窗（§4.5） -->
+<div class="modal-mask" id="cancelMask">
+  <div class="modal">
+    <div class="modal-head"><h3 id="cancel-title">撤销权益</h3><span class="drawer-close" onclick="closeModal('cancelMask')">✕</span></div>
+    <div class="modal-body">
+      <div class="anno">📌 PRD §4.5：撤销原因枚举化+说明必填+工单号必填；批量撤销自动生成批次号；人工操作同事务落「撤销」事件，抽屉即时可见。</div>
+      <div class="batch-preview" id="batch-preview" style="display:none">⚠ 本次将撤销 <b>2</b> 条授权（初中数学VIP A-001、初中物理VIP A-003），批次号 <b>B-20261211-0007</b> ——完成后可按批次号回查整批。</div>
+      <div class="frow" id="f-c-code"><div class="lab"><span class="req">*</span>撤销原因分类<span class="new-tag">改造</span></div><div class="ctl">
+        <select id="c-rcode"><option value="">请选择</option><option>客服处理</option><option>退款补录</option><option>风控</option><option>发放错误</option><option>其他（须详述）</option></select>
+        <div class="tip">替代现状自由文本+半硬编码，落审计「原因分类」</div>
+        <div class="err">请选择撤销原因分类</div></div></div>
+      <div class="frow" id="f-c-text"><div class="lab"><span class="req">*</span>原因说明</div><div class="ctl">
+        <textarea id="c-rtext" placeholder="5~200 字（现有『撤销理由』输入框升格为必填并落审计）"></textarea>
+        <div class="err">原因说明须 5~200 字</div></div></div>
+      <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>关联工单号<span class="new-tag">新增</span></div><div class="ctl">
+        <input type="text" id="c-ticket" placeholder="WO- 开头">
+        <div class="err">工单号格式不正确</div></div></div>
+      <div class="frow"><div class="lab">操作人 / 部门</div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）</div></div></div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn" onclick="closeModal('cancelMask')">取消</button>
+      <button class="btn danger" onclick="submitCancel()">确认撤销</button>
+    </div>
+  </div>
+</div>
+
+<!-- 凭据跳转示意弹窗（§4.2） -->
+<div class="modal-mask" id="credMask">
+  <div class="modal" style="width:460px">
+    <div class="modal-head"><h3>凭据跳转（示意）</h3><span class="drawer-close" onclick="closeModal('credMask')">✕</span></div>
+    <div class="modal-body" id="cred-body"></div>
+    <div class="modal-foot"><button class="btn primary" onclick="closeModal('credMask')">知道了</button></div>
+  </div>
 </div>
 
 <!-- 调试角标 -->
@@ -251,127 +340,159 @@
     <button id="db-empty" onclick="setState('empty')">空态</button>
     <button id="db-error" onclick="setState('error')">错误</button>
   </div>
-  <div class="row">
-    <button id="db-anno" onclick="toggleAnno()">标注模式：关</button>
-  </div>
+  <div class="row"><button id="db-anno" onclick="toggleAnno()">标注模式：关</button></div>
   <div style="color:#9aa0ab;font-size:11px">audit_since = 2026-10-01（演示值）</div>
 </div>
 <div class="debug-min" id="debugmin" onclick="minDebug(false)">⚙</div>
 <div class="toast" id="toast"></div>
 
 <script>
+/* ================= 凭据跳转矩阵（PRD §4.2） ================= */
+const CRED_MATRIX = {
+  order:      { name:"订单",   target:"运营后台-订单管理-订单详情页（带单号定位）", tag:"exist", tagTxt:"现有页面 · 新增带参跳转" },
+  third_order:{ name:"三方订单", target:"运营后台-订单管理-三方订单详情", tag:"exist", tagTxt:"现有页面 · 新增带参跳转" },
+  redeem_code:{ name:"兑换码", target:"本用户详情-兑换码记录 tab（带码号筛选）", tag:"exist", tagTxt:"现有 tab · 新增带参跳转" },
+  voucher:    { name:"体验券", target:"本用户详情-体验券记录 tab（带券号筛选）", tag:"exist", tagTxt:"现有 tab · 新增带参跳转" },
+  work_order: { name:"工单",   target:"客服工单系统对应工单页", tag:"exist", tagTxt:"外部系统链接" },
+  business_auth:{ name:"B端授权", target:"B 端后台对应工单/授权详情", tag:"new", tagTxt:"外部链接 · 格式待 B 端摸底" },
+  activity:   { name:"活动",   target:"授权来源注册表-活动登记详情（活动名/负责人/凭据格式）", tag:"new", tagTxt:"新增页面 · 随来源注册制交付" },
+  auth:       { name:"前驱授权", target:"不跳页：当前抽屉内切换到该授权的事件流", tag:"exist", tagTxt:"新增交互 · 同链路面包屑" },
+  send_rule:  { name:"补发规则", target:"shadow-授权补发规则详情页", tag:"exist", tagTxt:"现有页面 · 新增带参跳转" },
+};
+function openCred(type, id){
+  const m = CRED_MATRIX[type];
+  document.getElementById('cred-body').innerHTML = `<div class="jump-box">
+    <b>${m.name} ${id}</b>
+    跳转目标：${m.target}<span class="jump-tag ${m.tag}">${m.tagTxt}</span>
+    <div style="margin-top:8px;color:#909399">依据：PRD §4.2 凭据点击跳转矩阵（credential_type=${type}）</div></div>`;
+  document.getElementById('credMask').classList.add('open');
+}
+
 /* ================= 假数据：授权列表 ================= */
 const AUTHS = {
  "A-001": { name:"初中数学 同步课 VIP", type:"同步课", state:"using", stateTxt:"使用中",
-   start:"2026-10-12 00:00:00", end:"2027-10-11 23:59:59", remain:"412 天", src:"购买获得(buy)", srcId:"订单 O2026101201", created:"2026-10-12 10:03:22", archived:false },
+   start:"2026-10-12 00:00:00", end:"2027-10-11 23:59:59", remain:"412 天", src:"购买获得(buy)", credT:"order", credId:"O2026101201", created:"2026-10-12 10:03:22", archived:false },
  "A-002": { name:"初中英语 同步课 VIP", type:"同步课", state:"canceled", stateTxt:"已取消",
-   start:"2026-10-15 00:00:00", end:"2026-11-02 14:20:11", remain:"—", src:"购买获得(buy)", srcId:"订单 O2026101502", created:"2026-10-15 09:11:45", archived:false },
+   start:"2026-10-15 00:00:00", end:"2026-11-02 14:20:11", remain:"—", src:"购买获得(buy)", credT:"order", credId:"O2026101502", created:"2026-10-15 09:11:45", archived:false },
  "A-003": { name:"初中物理 同步课 VIP（30天）", type:"同步课", state:"using", stateTxt:"使用中",
-   start:"2026-11-20 00:00:00", end:"2026-12-19 23:59:59", remain:"22 天", src:"后台手动发放(shadow)", srcId:"工单 WO-88121", created:"2026-11-20 15:40:02", archived:false },
+   start:"2026-11-20 00:00:00", end:"2026-12-19 23:59:59", remain:"22 天", src:"后台手动发放(shadow)", credT:"work_order", credId:"WO-88121", created:"2026-11-20 15:40:02", archived:false },
  "A-004": { name:"高中数学 同步课 VIP", type:"同步课", state:"using", stateTxt:"使用中",
-   start:"2026-11-05 00:00:00", end:"2027-01-24 23:59:59", remain:"80 天", src:"授权转换(auth)", srcId:"原授权 A-000X", created:"2026-11-05 11:00:00", archived:false },
+   start:"2026-11-05 00:00:00", end:"2027-01-24 23:59:59", remain:"80 天", src:"授权转换(auth)", credT:"auth", credId:"A-000X", created:"2026-11-05 11:00:00", archived:false },
  "A-005": { name:"小学数学 培优课", type:"培优课", state:"used", stateTxt:"已使用",
-   start:"2024-07-01 00:00:00", end:"2025-06-30 23:59:59", remain:"—", src:"兑换码兑换(redeem)", srcId:"码 RC-7Y2K…", created:"2024-07-01 08:30:00", archived:false },
+   start:"2024-07-01 00:00:00", end:"2025-06-30 23:59:59", remain:"—", src:"兑换码兑换(redeem)", credT:"redeem_code", credId:"RC-7Y2K…", created:"2024-07-01 08:30:00", archived:false },
  "A-101": { name:"初中化学 体验课（7天）", type:"同步课", state:"canceled", stateTxt:"已取消",
-   start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", src:"体验券兑换(trialVouchers)", srcId:"券 TV-3301", created:"2026-10-03 12:00:00", archived:true, archivedAt:"2026-12-01 02:10:00" },
+   start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", src:"体验券兑换(trialVouchers)", credT:"voucher", credId:"TV-3301", created:"2026-10-03 12:00:00", archived:true, archivedAt:"2026-12-01 02:10:00" },
 };
 
-/* ================= 假数据：事件流（正序存储，展示时倒序） ================= */
+/* ================= 假数据：事件流（tech = 技术详情折叠区，中文标签） ================= */
 const EVENTS = {
- /* A-001 正常购买生效 */
  "A-001": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-12 10:03:22",
-     op:"系统（svc:go-order）", opd:null,
+     op:"系统（订单服务）",
      body:"因订单支付成功发放。授予时长 +365 天。",
      diff:[["状态","—","未使用"]],
-     cred:{t:"订单", id:"O2026101201"}, meta:"event_id E-9001 · caller=go-order · trace 7f3a…c2 · sku S-MATH-1Y" },
+     cred:{t:"order", id:"O2026101201"},
+     tech:{"事件编号":"E-9001","事件序号":"1","调用方服务":"go-order","调用接口":"Distribute","链路追踪 ID":"7f3a…c2","商品 SKU":"S-MATH-1Y","受益范围":"本人"} },
    { et:"activate", cls:"", label:"生效", time:"2026-10-12 10:03:25",
-     op:"系统（定时/重排）", body:"排队完成，开始计时。截止时间按过期日 23:59:59 规则设定。",
+     op:"系统（授权定时任务）", body:"排队完成，开始计时。截止时间按过期日 23:59:59 规则设定。",
      diff:[["状态","未使用","使用中"],["截止时间","—","2027-10-11 23:59:59"]],
-     cred:null, meta:"event_id E-9002 · operator=svc:userauth-job" }
+     cred:null, tech:{"事件编号":"E-9002","事件序号":"2","调用方服务":"userauth-job"} }
  ]},
- /* A-002 退款：冻结→撤销 */
  "A-002": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-15 09:11:45",
-     op:"系统（svc:go-order）", body:"因订单支付成功发放，授予 +365 天。",
-     diff:[["状态","—","未使用"]], cred:{t:"订单", id:"O2026101502"}, meta:"event_id E-9101" },
+     op:"系统（订单服务）", body:"因订单支付成功发放，授予 +365 天。",
+     diff:[["状态","—","未使用"]], cred:{t:"order", id:"O2026101502"},
+     tech:{"事件编号":"E-9101","事件序号":"1","调用方服务":"go-order"} },
    { et:"activate", cls:"", label:"生效", time:"2026-10-15 09:11:48",
-     op:"系统（定时/重排）", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null, meta:"event_id E-9102" },
+     op:"系统（授权定时任务）", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     tech:{"事件编号":"E-9102","事件序号":"2","调用方服务":"userauth-job"} },
    { et:"freeze", cls:"", label:"冻结", time:"2026-10-28 16:02:10",
-     op:"系统（svc:go-order）· 原因分类：退款(refund)",
-     body:"用户发起退款，进入退款窗口期，权益冻结不可用。",
+     op:"系统（订单服务）",
+     body:"变更说明：退款 ｜ 用户发起退款，进入退款窗口期，权益冻结不可用。",
      diff:[["状态","使用中","已冻结"],["截止时间","2027-10-14 23:59:59","2026-10-28 16:02:10"]],
-     cred:{t:"订单", id:"O2026101502"}, meta:"event_id E-9103 · trace 与退款单同链路" },
+     cred:{t:"order", id:"O2026101502"},
+     tech:{"事件编号":"E-9103","事件序号":"3","调用方服务":"go-order","链路追踪 ID":"与退款单同链路"} },
    { et:"revoke", cls:"death", label:"撤销", time:"2026-11-02 14:20:11",
-     op:"系统（svc:go-order）· 原因分类：退款完成(refund)",
-     body:"退款完成，权益回收。",
+     op:"系统（订单服务）",
+     body:"变更说明：退款 ｜ 退款完成，权益回收。",
      diff:[["状态","已冻结","已取消"]],
-     cred:{t:"订单", id:"O2026101502"}, meta:"event_id E-9104 · batch —" }
+     cred:{t:"order", id:"O2026101502"},
+     tech:{"事件编号":"E-9104","事件序号":"4","调用方服务":"go-order"} }
  ]},
- /* A-003 客服手动发放 */
  "A-003": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-11-20 15:40:02",
-     op:"后台操作 · 李思思（客服一部）",
-     body:"原因说明：「用户投诉课程卡顿，安抚补偿 30 天」。授予 +30 天。",
+     op:"李思思（客服一部）",
+     body:"变更说明：客服补偿 ｜ 用户投诉课程卡顿，安抚补偿 30 天。授予 +30 天。",
      diff:[["状态","—","未使用"]],
-     cred:{t:"客服工单", id:"WO-88121"}, meta:"event_id E-9201 · caller=shadow · api=userAuth.add" },
+     cred:{t:"work_order", id:"WO-88121"},
+     tech:{"事件编号":"E-9201","事件序号":"1","调用方服务":"shadow","调用接口":"userAuth.add"} },
    { et:"activate", cls:"", label:"生效", time:"2026-11-20 15:40:05",
-     op:"系统（定时/重排）", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null, meta:"event_id E-9202" }
+     op:"系统（授权定时任务）", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     tech:{"事件编号":"E-9202","事件序号":"2","调用方服务":"userauth-job"} }
  ]},
- /* A-004 转换链 */
  "A-004": { chain:[{id:"A-000X", name:"初中数学 VIP（已转出）"},{id:"A-004", name:"高中数学 VIP（当前）"}], events:[
    { et:"exchange_in", cls:"birth", label:"转换入", time:"2026-11-05 11:00:00",
-     op:"后台操作 · 周敏（运营）",
-     body:"初升高转换：原初中数学 VIP 剩余 100 天 × 系数 0.8 = 授予 +80 天。前驱授权 A-000X。",
-     diff:[["状态","—","使用中"],["时长","0","+80 天"]],
-     cred:{t:"前驱授权", id:"A-000X"}, meta:"event_id E-9301 · parent_auth_id=A-000X" }
+     op:"周敏（运营）",
+     body:"变更说明：转换 ｜ 初升高转换：原初中数学 VIP 剩余 100 天 × 系数 0.8 = 授予 +80 天。",
+     diff:[["状态","—","使用中"],["时长变化","","+80 天"]],
+     cred:{t:"auth", id:"A-000X"},
+     tech:{"事件编号":"E-9301","事件序号":"1","前驱授权 ID":"A-000X","调用方服务":"shadow"} }
  ], chainEvents:{ "A-000X":[
-   { et:"grant", cls:"birth", label:"发放", time:"2025-11-01 10:00:00", op:"系统（svc:go-order）",
-     body:"因订单支付成功发放 +365 天。", diff:[["状态","—","未使用"]], cred:{t:"订单", id:"O2025110101"}, meta:"event_id E-8001" },
-   { et:"activate", cls:"", label:"生效", time:"2025-11-01 10:00:03", op:"系统", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null, meta:"event_id E-8002" },
+   { et:"grant", cls:"birth", label:"发放", time:"2025-11-01 10:00:00", op:"系统（订单服务）",
+     body:"因订单支付成功发放 +365 天。", diff:[["状态","—","未使用"]], cred:{t:"order", id:"O2025110101"},
+     tech:{"事件编号":"E-8001","事件序号":"1","调用方服务":"go-order"} },
+   { et:"activate", cls:"", label:"生效", time:"2025-11-01 10:00:03", op:"系统（授权定时任务）", body:"开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     tech:{"事件编号":"E-8002","事件序号":"2"} },
    { et:"exchange_out", cls:"death", label:"转换出", time:"2026-11-05 11:00:00",
-     op:"后台操作 · 周敏（运营）", body:"初升高转换：剩余 100 天转出至高中数学 VIP（A-004）。",
-     diff:[["状态","使用中","已取消"],["时长","-100 天",""]], cred:{t:"前驱授权", id:"A-004（去向）"}, meta:"event_id E-8003 · 原因分类=exchange" }
+     op:"周敏（运营）", body:"变更说明：转换 ｜ 初升高转换：剩余 100 天转出至高中数学 VIP（A-004）。",
+     diff:[["状态","使用中","已取消"],["时长变化","","-100 天"]], cred:{t:"auth", id:"A-004"},
+     tech:{"事件编号":"E-8003","事件序号":"3","前驱授权 ID":"A-004（去向）"} }
  ]}},
- /* A-005 审计起点前存量：空态 + 历史备注 */
  "A-005": { chain:null, legacy:true, events:[],
    remarks:[
      {t:"2024-07-01 08:30", c:"create ｜ 兑换码兑换发放（creator: system）"},
      {t:"2025-06-30 23:59", c:"（无记录——过期为覆盖式更新，未留痕，这正是审计要解决的问题）"}
    ]},
- /* A-101 归档 */
  "A-101": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-03 12:00:00",
-     op:"系统（svc:活动服务）", body:"体验券兑换发放 +7 天。",
-     diff:[["状态","—","使用中"]], cred:{t:"体验券", id:"TV-3301"}, meta:"event_id E-9401 · batch B-2026NAT01" },
+     op:"系统（活动服务）", body:"体验券兑换发放 +7 天。",
+     diff:[["状态","—","使用中"]], cred:{t:"voucher", id:"TV-3301"},
+     tech:{"事件编号":"E-9401","事件序号":"1","批次号":"B-2026NAT01","调用方服务":"活动服务"} },
    { et:"expire", cls:"death", label:"自然到期", time:"2026-10-09 23:59:59",
      op:"系统（零点批处理）", body:"体验期结束。",
-     diff:[["状态","使用中","已使用"]], cred:null, meta:"event_id E-9402" },
+     diff:[["状态","使用中","已使用"]], cred:null,
+     tech:{"事件编号":"E-9402","事件序号":"2","调用方服务":"userauth-job"} },
    { et:"revoke", cls:"death", label:"撤销（清理）", time:"2026-10-20 10:00:00",
-     op:"系统（svc:userauth-job）· 原因分类：批量清理", body:"到期体验权益批量清理。",
-     diff:[["状态","已使用","已取消"]], cred:null, meta:"event_id E-9403" },
+     op:"系统（授权定时任务）", body:"变更说明：批量清理 ｜ 到期体验权益批量清理。",
+     diff:[["状态","已使用","已取消"]], cred:null,
+     tech:{"事件编号":"E-9403","事件序号":"3"} },
    { et:"archive", cls:"post", label:"归档", time:"2026-12-01 02:10:00",
      op:"系统（每日归档任务）",
      body:"已迁移至 ES 冷库归档，主库记录删除。事件流全量保留，详情数据请在归档库查看。",
-     diff:[], cred:null, meta:"event_id E-9404 · 在 pg 物理删除之前落库" }
+     diff:[], cred:null,
+     tech:{"事件编号":"E-9404","事件序号":"4","备注":"在主库物理删除之前落库"} }
  ]}
 };
 
 /* ================= 渲染列表 ================= */
+function credLink(a){
+  const m = CRED_MATRIX[a.credT];
+  return `<a onclick="openCred('${a.credT}','${a.credId}')">${m.name} ${a.credId} ↗</a>`;
+}
 function rowHtml(id, a){
   return `<tr>
-    <td><b>${a.name}</b><div style="color:#909399;font-size:11px">${id}</div></td>
+    <td><b>${a.name}</b><div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
     <td>${a.type}</td>
     <td><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.remain}</td>
-    <td>${a.src}</td><td><a onclick="toast('跳转凭据详情：'+this.textContent)">${a.srcId}</a></td>
+    <td>${a.src}</td><td>${credLink(a)}</td>
     <td>${a.created.slice(0,10)}</td>
-    <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="toast('撤销弹窗（现有功能，交互不变）')">撤销</a></td>
+    <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
 }
 function archRowHtml(id, a){
   return `<tr>
-    <td><b>${a.name}</b><div style="color:#909399;font-size:11px">${id}</div></td>
+    <td><b>${a.name}</b><div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
     <td>${a.type}</td><td><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.src}</td>
     <td>${a.archivedAt.slice(0,10)}</td>
@@ -379,10 +500,8 @@ function archRowHtml(id, a){
   </tr>`;
 }
 function renderTables(){
-  const pb = document.getElementById('tbody-personal');
-  pb.innerHTML = Object.entries(AUTHS).filter(([,a])=>!a.archived).map(([id,a])=>rowHtml(id,a)).join('');
-  const ab = document.getElementById('tbody-archived');
-  ab.innerHTML = Object.entries(AUTHS).filter(([,a])=>a.archived).map(([id,a])=>archRowHtml(id,a)).join('');
+  document.getElementById('tbody-personal').innerHTML = Object.entries(AUTHS).filter(([,a])=>!a.archived).map(([id,a])=>rowHtml(id,a)).join('');
+  document.getElementById('tbody-archived').innerHTML = Object.entries(AUTHS).filter(([,a])=>a.archived).map(([id,a])=>archRowHtml(id,a)).join('');
 }
 
 /* ================= 抽屉 ================= */
@@ -392,22 +511,19 @@ function openDrawer(id, chainFocus){
   const a = AUTHS[id] || {name:id, stateTxt:"", start:"—", end:"—"};
   const data = EVENTS[id] || {events:[]};
   document.getElementById('d-title').textContent = "生命周期 · " + (a.name || id);
-  document.getElementById('d-authid').textContent = "auth_id: " + id;
+  document.getElementById('d-authid').textContent = "授权 ID：" + id;
   let html = "";
+  html += `<div class="anno">📌 PRD §4.3：中文名主体（3.1 总表"前端可见中文名"口径）；后端字段与技术标识收进「技术详情」折叠区；当前状态卡=主表，时间线=审计事件表。</div>`;
 
-  html += `<div class="anno">📌 PRD §4.1-§4.5：时间线（倒序）+ 操作者 + 凭据跳转 + 前后值 diff；转换链面包屑；审计起点空态降级展示历史备注。</div>`;
-
-  /* 当前态卡（主表为准） */
   if (AUTHS[id]) {
     html += `<div class="nowcard">
       <div>当前状态：<span class="st ${a.state}">${a.stateTxt}</span></div>
-      <div>剩余：${a.remain||"—"}</div>
-      <div>生效：${a.start}</div><div>截止：${a.end}</div>
-      <div class="full">↑ 当前值以授权主表为准（时间轴重排后的最新排布）；下方事件流是业务事实账本，两者同屏互补（PRD §3.2 降噪规则）。</div>
+      <div>剩余时长：${a.remain||"—"}</div>
+      <div>生效时间：${a.start}</div><div>截止时间：${a.end}</div>
+      <div class="full">↑ 当前值以授权主表为准（时间轴重排后的最新排布）；下方事件流是业务事实账本，两者互补（PRD §3.2 降噪规则）。</div>
     </div>`;
   }
 
-  /* 链路面包屑 */
   if (data.chain) {
     const focus = chainFocus || id;
     html += `<div class="chain">🔗 转换链：` + data.chain.map(n =>
@@ -415,7 +531,6 @@ function openDrawer(id, chainFocus){
     ).join('<span class="arr">→</span>') + `</div>`;
   }
 
-  /* 事件流 or 空态 */
   let evs = data.events;
   if (data.chain && chainFocus && chainFocus !== id && data.chainEvents) evs = data.chainEvents[chainFocus] || [];
 
@@ -431,16 +546,18 @@ function openDrawer(id, chainFocus){
     html += `<div class="tl">` + [...evs].reverse().map(e=>{
       const diffs = (e.diff||[]).filter(d=>d[1]!==""||d[2]!=="").map(d=>
         `<span style="color:#909399">${d[0]}:</span> ${d[1]&&d[1]!=="—"?`<span class="old">${d[1]}</span>→`:""}<span class="new">${d[2]||d[1]}</span>`).join('　');
+      const credHtml = e.cred ? `<div style="margin-top:4px">凭据：<span class="cred" onclick="openCred('${e.cred.t}','${e.cred.id}')">${CRED_MATRIX[e.cred.t].name} ${e.cred.id} ↗</span></div>` : "";
+      const techHtml = e.tech ? `<details class="tech"><summary>技术详情（研发排查用）</summary><div class="tech-body">` +
+        Object.entries(e.tech).map(([k,v])=>`<div><span style="color:#909399">${k}：</span>${v}</div>`).join('') + `</div></details>` : "";
       return `<div class="ev ${e.cls}">
         <div class="ev-head"><span class="badge ${e.cls}">${e.label}</span><span class="t">${e.time}</span></div>
-        <div class="who">操作者：${e.op}</div>
+        <div class="who">操作人：${e.op}</div>
         <div class="body">${e.body}
           ${diffs?`<div class="diff">${diffs}</div>`:""}
-          ${e.cred?`<div style="margin-top:4px">凭据：<span class="cred" onclick="toast('跳转 ${e.cred.t} ${e.cred.id} 详情页')">${e.cred.t} ${e.cred.id} ↗</span></div>`:""}
-          <div class="meta">${e.meta||""}</div>
+          ${credHtml}${techHtml}
         </div></div>`;
     }).join('') + `</div>`;
-    html += `<div style="text-align:center;color:#c0c4cc;font-size:11px;margin-top:4px">— 已展示全部 ${evs.length} 条事件（audit_since 起） —</div>`;
+    html += `<div style="text-align:center;color:#c0c4cc;font-size:11px;margin-top:4px">— 已展示全部 ${evs.length} 条事件（审计起点 2026-10-01 起） —</div>`;
   }
 
   document.getElementById('d-body').innerHTML = html;
@@ -449,16 +566,46 @@ function openDrawer(id, chainFocus){
 }
 function switchChain(rootId, focusId){ openDrawer(rootId, focusId); }
 function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('mask').classList.remove('open'); }
+function copyAuthId(){ toast('已复制 ' + document.getElementById('d-authid').textContent); }
 
-/* ================= tab 切换 ================= */
+/* ================= 添加权益 / 撤销 表单（§4.4 / §4.5） ================= */
+function openAddModal(){ document.getElementById('addMask').classList.add('open'); }
+function openCancelModal(id, isBatch){
+  document.getElementById('cancel-title').textContent = isBatch ? '批量撤销权益' : ('撤销权益 · ' + (AUTHS[id]?AUTHS[id].name:id));
+  document.getElementById('batch-preview').style.display = isBatch ? 'block' : 'none';
+  document.getElementById('cancelMask').classList.add('open');
+}
+function closeModal(mid){ document.getElementById(mid).classList.remove('open'); }
+function validText(t){ if(!t) return false; t=t.trim(); if(t.length<5||t.length>200) return false; if(/^\d+$/.test(t)) return false; if(/^(.)\1+$/.test(t)) return false; return true; }
+function validTicket(v, noTicket){ if(noTicket) return true; return /^WO-\w{3,}$/i.test((v||'').trim()); }
+function mark(fid, bad){ document.getElementById(fid).classList.toggle('invalid', bad); return !bad; }
+function submitAdd(){
+  let ok = true;
+  ok = mark('f-reason-code', !document.getElementById('add-rcode').value) && ok;
+  ok = mark('f-reason-text', !validText(document.getElementById('add-rtext').value)) && ok;
+  ok = mark('f-ticket', !validTicket(document.getElementById('add-ticket').value, document.getElementById('add-noticket').checked)) && ok;
+  if(!ok) return;
+  if(document.getElementById('add-noticket').checked && !confirm('您选择了「无工单」发放。\n该操作将被完整留痕（操作人/原因/无工单声明），并可能进入抽查名单。\n确认继续？')) return;
+  closeModal('addMask');
+  toast('已发放并同事务落「发放」事件——列表与生命周期抽屉即时可见');
+}
+function submitCancel(){
+  let ok = true;
+  ok = mark('f-c-code', !document.getElementById('c-rcode').value) && ok;
+  ok = mark('f-c-text', !validText(document.getElementById('c-rtext').value)) && ok;
+  ok = mark('f-c-ticket', !validTicket(document.getElementById('c-ticket').value, false)) && ok;
+  if(!ok) return;
+  closeModal('cancelMask');
+  toast('已撤销并同事务落「撤销」事件（批量操作共享批次号）');
+}
+
+/* ================= tab / 五态 / 其它 ================= */
 function gotoTab(t){
   ['personal','summary','archived'].forEach(x=>{
     document.getElementById('pane-'+x).style.display = (x===t?'':'none');
     document.getElementById('stab-'+x).classList.toggle('active', x===t);
   });
 }
-
-/* ================= 五态 ================= */
 function setState(s){
   ['normal','loading','empty','error'].forEach(x=>document.getElementById('db-'+x).classList.toggle('on', x===s));
   const pb = document.getElementById('tbody-personal');
@@ -468,8 +615,6 @@ function setState(s){
   else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="10">该用户暂无授权记录</td></tr>`; }
   else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="10" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
 }
-
-/* ================= 标注 / 页面地图 / 其它 ================= */
 function toggleAnno(){
   document.body.classList.toggle('anno-on');
   document.getElementById('db-anno').textContent = '标注模式：' + (document.body.classList.contains('anno-on')?'开':'关');
@@ -479,7 +624,7 @@ function toggleAnno(){
 function togglePM(){ const p=document.getElementById('pmPanel'); p.style.display = p.style.display==='block'?'none':'block'; }
 function minDebug(min){ document.getElementById('debugbar').style.display=min?'none':'block'; document.getElementById('debugmin').style.display=min?'flex':'none'; }
 let toastTimer=null;
-function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg+"（原型示意）"; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display='none',1800); }
+function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg+"（原型示意）"; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display='none',2200); }
 
 renderTables();
 </script>
