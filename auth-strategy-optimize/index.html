@@ -171,6 +171,10 @@ tr:hover td{background:#fafcff}
 .muted{color:var(--text3);font-size:12px}
 .kbd{background:#f2f3f5;border-radius:4px;padding:1px 6px;font-size:12px;color:var(--text2)}
 .toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#1f2329;color:#fff;padding:10px 20px;border-radius:8px;font-size:13px;z-index:2000;display:none}
+.preview-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:14px}
+.preview-tab{padding:9px 14px;cursor:pointer;color:var(--text2);border-bottom:2px solid transparent}
+.preview-tab.on{color:var(--primary);border-color:var(--primary);font-weight:600}
+.preview-pane{display:none}.preview-pane.on{display:block}
 </style>
 </head>
 <body>
@@ -185,9 +189,9 @@ tr:hover td{background:#fafcff}
   <a onclick="openDetail('r2');toggleMap(false)">③ 任务与操作日志（列表行展开）</a>
   <a onclick="openDetail('r2');setTimeout(()=>document.getElementById('taskblock').scrollIntoView({behavior:'smooth'}),100);toggleMap(false)">④ 执行任务（部分失败）</a>
   <a onclick="nav('form');setTimeout(()=>demoImpact(),200);toggleMap(false)">⑤ 影响面预估确认弹窗</a>
-  <a onclick="openDetail('r2');setTimeout(()=>openDryrun(),150);toggleMap(false)">⑥ 单用户预演 dry-run</a>
+  <a onclick="openDetail('r2');setTimeout(()=>openDryrun(),150);toggleMap(false)">⑥ Case / 真实用户预演</a>
   <a onclick="openDetail('r2');setTimeout(()=>openRecall('r2'),150);toggleMap(false)">⑦ 召回二次确认</a>
-  <a onclick="nav('agent');toggleMap(false)">⑧ 场景预演 Agent（二期 Demo）</a>
+  <a onclick="nav('agent');toggleMap(false)">⑧ 自然语言 Case 预演</a>
 </div>
 
 <div id="app">
@@ -218,12 +222,12 @@ tr:hover td{background:#fafcff}
         <div class="pagehead">
           <h2>权益更新策略</h2>
           <div class="spacer"></div>
-          <button class="btn" onclick="nav('agent')">✨ 场景预演 Agent<span class="badge-beta">二期DEMO</span></button>
+          <button class="btn" onclick="nav('agent')">✨ Case 预演</button>
           <button class="btn primary" onclick="nav('form')">+ 新增策略</button>
         </div>
         <div class="card">
           <div class="filters">
-            <select><option>状态：全部</option><option>待生效</option><option>生效中</option><option>已停用</option><option>已召回</option></select>
+            <select><option>状态：全部</option><option>审批中</option><option>待生效</option><option>生效中</option><option>已停用</option><option>已召回</option><option>已取消</option></select>
             <input type="text" placeholder="策略名称（模糊）" style="width:160px">
             <input type="text" placeholder="策略 ID（精确）" style="width:180px">
             <input type="text" placeholder="更新人" style="width:110px">
@@ -391,7 +395,7 @@ tr:hover td{background:#fafcff}
 
           <!-- 区块4 生效设置 -->
           <div class="fsection">
-            <div class="fhead"><span class="stepnum">4</span>生效设置<span class="subnote">【本期新增】策略提交后不提供编辑，如需调整请「复制为新策略」；待生效可删除，生效后仅可停用/召回/复制</span></div>
+            <div class="fhead"><span class="stepnum">4</span>生效设置<span class="subnote">策略提交后不提供编辑；审批中可撤回，待生效可取消；需改口径请「复制为新策略」</span></div>
             <div class="fbody">
               <div class="frow">
                 <label><span class="req">*</span>生效方式</label>
@@ -406,7 +410,7 @@ tr:hover td{background:#fafcff}
                 <label><span class="req">*</span>生效时间</label>
                 <div class="fctl">
                   <input type="datetime-local" id="f-effat" value="2026-07-10T00:00">
-                  <div class="fhint">须晚于当前时间 5 分钟以上；不得晚于任一条件组时间条件的结束点（当前条件组 1 结束点：2026-06-30 23:59 —— <b style="color:var(--danger)">校验将拦截此冲突，点击提交查看效果</b>）。到点前可编辑、可删除。</div>
+                  <div class="fhint">须晚于当前时间 5 分钟以上；不得晚于任一条件组时间条件的结束点。提交后先匹配审批流；到点未审批通过时保持「审批中」。</div>
                   <div class="ferr" id="efferr">生效时间（2026-07-10 00:00）晚于条件组 1 时间条件的结束点（2026-06-30 23:59）：策略生效时其时间窗口已结束，请检查时间条件或生效时间</div>
                 </div>
               </div>
@@ -415,7 +419,7 @@ tr:hover td{background:#fafcff}
 
           <div style="display:flex;gap:12px;justify-content:center;padding:8px 0">
             <button class="btn" onclick="nav('list')">取消</button>
-            <button class="btn" onclick="openDryrun()">🔍 单用户预演</button>
+            <button class="btn" onclick="openDryrun()">🔍 规则预演</button>
             <button class="btn primary" onclick="submitForm()">提交并预估影响面</button>
           </div>
         </div>
@@ -429,19 +433,11 @@ tr:hover td{background:#fafcff}
           <span class="muted" style="margin-left:8px">6月英语课包权益补齐 ·</span>
           <span class="tag active" id="dstatus">生效中</span>
           <div class="spacer"></div>
-          <button class="btn" onclick="openDryrun()">🔍 单用户预演</button>
-          <button class="btn" onclick="toast('已复制为新策略草稿')">⧉ 复制为新策略</button>
+          <button class="btn" onclick="openDryrun()">🔍 预演</button>
+          <button class="btn" onclick="copyRule()">⧉ 复制为新策略</button>
           <button class="btn" onclick="toast('已停用：停止新增补发，已发放权益不受影响')">停用</button>
           <button class="btn danger" onclick="openRecall('r2')">召回</button>
           <button class="btn" onclick="nav('list')">返回列表</button>
-        </div>
-
-        <div class="statrow">
-          <div class="statcard"><div class="n">12,480</div><div class="l">候选用户数</div></div>
-          <div class="statcard"><div class="n" style="color:var(--success)">11,942</div><div class="l">补发成功</div></div>
-          <div class="statcard"><div class="n" style="color:var(--danger)">218</div><div class="l">失败</div></div>
-          <div class="statcard"><div class="n">320</div><div class="l">判定未命中</div></div>
-          <div class="statcard"><div class="n">0</div><div class="l">已撤销</div></div>
         </div>
 
         <div class="card" id="taskblock">
@@ -467,7 +463,7 @@ tr:hover td{background:#fafcff}
               </tr>
             </tbody>
           </table>
-          <div class="fhint" style="margin-top:8px">失败明细可下载 CSV 供人工核查。限流：每批 500 用户。</div>
+          <div class="fhint" style="margin-top:8px">失败明细可下载 CSV 供人工核查。限流：每批 500 用户。暂停位置：P0 由研发值班在内部任务控制台操作，运营页面仅展示 pausing/paused 状态。</div>
         </div>
 
         <div class="card">
@@ -483,11 +479,11 @@ tr:hover td{background:#fafcff}
         </div>
       </div>
 
-      <!-- ================= AGENT VIEW ================= -->
+      <!-- ================= CASE PREVIEW ================= -->
       <div class="view" id="view-agent">
-        <div class="anno">二期规划（PRD §11.2，本期不实施）：场景预演 Agent —— 自然语言用例 → 解析为预演参数 → 调用本期 dry-run 接口与订单/兑换服务只读模拟 → 给出到账时间结论。演示为脚本化假轨迹。</div>
+        <div class="anno">PRD §7.3：LLM 只把自然语言解析为结构化 ScenarioCase；命中结论由确定性规则引擎计算。LLM 不可用时可切换结构化 Case 表单。</div>
         <div class="pagehead">
-          <h2>场景预演 Agent <span class="badge-beta">二期 DEMO</span></h2>
+          <h2>自然语言 Case 预演</h2>
           <div class="spacer"></div>
           <button class="btn" onclick="nav('list')">返回列表</button>
         </div>
@@ -500,7 +496,7 @@ tr:hover td{background:#fafcff}
               <div class="ri"><span>时间基准已指定</span><span class="ok">✓ 订单支付时间</span></div>
               <div class="ri"><span>生效设置</span><span class="ok">✓ 定时 07-10 00:00</span></div>
               <div class="ri"><span>dry-run 接口连通</span><span class="ok">✓ userauth 可用</span></div>
-              <div class="fhint" style="margin-top:8px">必要配置项未就绪时，Agent 将拒绝预演并指出缺失项。</div>
+              <div class="fhint" style="margin-top:8px">必要配置项未就绪时，系统将拒绝预演并指出缺失项。</div>
             </div>
             <div class="readybox">
               <h4>示例用例（点击发送）</h4>
@@ -511,7 +507,7 @@ tr:hover td{background:#fafcff}
           </div>
           <div class="agent-chat">
             <div class="chatlog" id="chatlog">
-              <div class="msg agent"><div class="bubble">你好，我是<b>场景预演 Agent</b>。用自然语言描述一个用户用例（购买/兑换情况 + 时间），我会基于当前策略「7月数学新课补发」的配置，联动订单、兑换与权益服务做<b>只读模拟</b>，回答该用户何时、以何种方式得到补发权益。左侧有示例用例可直接点击。</div></div>
+              <div class="msg agent"><div class="bubble">请描述一个假设 Case，无需提供真实用户 ID。例如「用户于 2026-07-01 购买初中数学系统课」。系统会先展示解析出的结构化 Case，再由规则引擎给出命中结论；不落库、不发权益。</div></div>
             </div>
             <div class="chatinput">
               <input type="text" id="agentinput" placeholder="描述用例，如：用户于2026年7月购买了XX课程，策略生效后何时得到补发权益？" onkeydown="if(event.key==='Enter')runAgent(-1)">
@@ -531,16 +527,17 @@ tr:hover td{background:#fafcff}
   <div class="modal">
     <div class="mhead">生效确认 · 影响面预估<span class="x" onclick="closeM('m-impact')">✕</span></div>
     <div class="mbody">
-      <div class="anno" style="display:block">PRD §7.2 影响面预估 + §3 危险操作防护：候选收集 + 抽样判定外推；超阈值需第二人复核。</div>
+      <div class="anno" style="display:block">PRD §7.2：这是生效时初始快照，不包含未来新增命中用户；初始影响面用于匹配审批策略。</div>
       <div id="impact-loading" style="text-align:center;padding:30px"><div class="spin"></div>正在收集候选用户并抽样判定…<div class="muted" style="margin-top:6px">按商品 #SKG-8821 反查支付成功买家 → 抽样 1,000 人跑完整判定</div></div>
       <div id="impact-result" style="display:none">
         <div class="impactbox">
           预计命中约 <b style="font-size:18px">8,632</b> 名用户（候选 9,410 人 × 抽样命中率 91.7%）<br>
           将补发权益：<b>初中数学 · 函数专题 v2</b> × 1 / 人 · 时长跟随来源权益（取最长）<br>
-          <span class="muted">候选量 ≤ 1,000 时展示精确值；本次为抽样外推值（约）。</span>
+          <span class="muted">候选量 ≤ 1,000 时展示精确值；本次为抽样外推值（约）。无时间条件规则未来新增命中用户由增量事件处理，不计入本快照。</span>
         </div>
         <div class="dangerbox" style="background:#fff8e6;border-color:#ffe1a0">
-          <b style="color:#b26a00">⚠ 命中人数未超过复核阈值（10,000）</b>，确认后策略将于 <b>2026-07-10 00:00</b> 生效并自动创建存量补发任务；<b>生效后策略不可再编辑</b>。若超过阈值，需第二名权益运营复核通过后才执行。
+          <b style="color:#b26a00">当前匹配审批流：定时发布 · 中影响面</b><br>
+          审批策略：权益运营负责人单审（1 级） · 审批通过且到达 <b>2026-07-10 00:00</b> 后生效。若生效时间到达但审批未通过，将保持「审批中」，通过后立即生效。
         </div>
         <label style="font-size:13px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="impact-ck">我已确认补发内容、条件与影响面无误</label>
       </div>
@@ -576,17 +573,41 @@ tr:hover td{background:#fafcff}
   </div>
 </div>
 
-<!-- dryrun -->
+<!-- preview -->
 <div class="mask" id="m-dryrun">
   <div class="modal wide">
-    <div class="mhead">单用户预演（dry-run）<span class="x" onclick="closeM('m-dryrun')">✕</span></div>
+    <div class="mhead">规则预演<span class="x" onclick="closeM('m-dryrun')">✕</span></div>
     <div class="mbody">
-      <div class="anno" style="display:block">PRD §7.2：只读执行完整判定引擎，不落库、不发权益。该接口同时是二期「场景预演 Agent」的基础能力。</div>
-      <div style="display:flex;gap:10px;margin-bottom:14px">
-        <input type="text" id="dryrun-uid" placeholder="输入 userId" value="u_5f8a3c21" style="flex:1">
-        <button class="btn primary" onclick="doDryrun()">执行预演</button>
+      <div class="preview-tabs">
+        <div class="preview-tab on" onclick="switchPreview('case',this)">自然语言 Case</div>
+        <div class="preview-tab" onclick="switchPreview('structured',this)">结构化 Case</div>
+        <div class="preview-tab" onclick="switchPreview('user',this)">真实用户</div>
+      </div>
+      <div class="preview-pane on" id="preview-case">
+        <div class="fhint" style="margin-bottom:8px">无需真实用户。LLM 只负责解析 Case，最终结论由规则引擎计算。</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input type="text" id="case-input" placeholder="例如：用户于 2026-07-01 购买了初中数学系统课" style="flex:1">
+          <button class="btn primary" onclick="doDryrun('case')">解析并预演</button>
+        </div>
+      </div>
+      <div class="preview-pane" id="preview-structured">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px">
+          <select><option>行为：购买商品</option><option>兑换兑换码</option><option>持有权益</option></select>
+          <select><option>初中数学系统课·三年畅学</option></select>
+          <input type="datetime-local" value="2026-07-01T10:00">
+          <input type="text" placeholder="已有权益/剩余时长（可选）">
+        </div>
+        <button class="btn primary" onclick="doDryrun('structured')">执行预演</button>
+      </div>
+      <div class="preview-pane" id="preview-user">
+        <div class="fhint" style="margin-bottom:8px">请输入真实用户的<strong>洋葱用户 ID</strong>，系统将只读查询其订单、兑换与权益。</div>
+        <div style="display:flex;gap:10px;margin-bottom:14px">
+          <input type="text" id="dryrun-uid" placeholder="请输入洋葱用户 ID，例如 u_5f8a3c21" style="flex:1">
+          <button class="btn primary" onclick="doDryrun('user')">执行预演</button>
+        </div>
       </div>
       <div id="dryrun-result" style="display:none">
+        <div class="planbox"><b>解析后的 Case</b>：来源=商品购买；商品=初中数学系统课·三年畅学；行为时间=2026-03-01 14:22；数据性质=假设 Case</div>
         <table>
           <thead><tr><th>判定项</th><th>取值</th><th>结果</th></tr></thead>
           <tbody>
@@ -599,7 +620,7 @@ tr:hover td{background:#fafcff}
           <div class="ah">✓ 预演结论：将补发</div>
           <div class="ab">
             将补发 <b>初中数学 · 函数专题 v2</b> × 1；时长跟随该商品订单批次内权益（时长取值=最长）→ <b>到期时间 2027-03-01</b>。<br>
-            <span class="muted">对照修复前行为：若按旧口径（权益到账时间 2026-03-01 14:25）本例结论相同；但延迟发放用户（见 Agent 示例 2）新旧口径结论不同。</span>
+            <span class="muted">结论由确定性规则引擎计算；LLM 仅参与自然语言 Case 的结构化解析。</span>
           </div>
         </div>
       </div>
@@ -613,7 +634,7 @@ tr:hover td{background:#fafcff}
   <div class="modal wide">
     <div class="mhead">失败明细 · T-20260620-001（218 条）<span class="x" onclick="closeM('m-fail')">✕</span></div>
     <div class="mbody">
-      <div class="anno" style="display:block">PRD §4.4 部分成功处理：失败明细可下载 CSV、可仅重试失败部分（幂等）。</div>
+      <div class="anno" style="display:block">PRD §4.4：失败明细可下载 CSV 供人工核查，本期不提供仅重试失败部分。</div>
       <table>
         <thead><tr><th>userId</th><th>失败环节</th><th>失败原因</th></tr></thead>
         <tbody>
@@ -626,7 +647,6 @@ tr:hover td{background:#fafcff}
     </div>
     <div class="mfoot">
       <button class="btn" onclick="toast('已下载 fail-detail-T-20260620-001.csv')">⬇ 下载 CSV</button>
-      <button class="btn primary" onclick="closeM('m-fail');toast('已创建重试任务，仅重跑 218 个失败用户（幂等键：策略+用户+批次+权益）')">重试失败部分</button>
     </div>
   </div>
 </div>
@@ -639,16 +659,16 @@ const rules=[
  {id:'r3',name:'522活动兑换码补偿',status:'stopped',eff:'2026-05-22 14:00（立即）',target:'大会员月卡 · 固定30天',task:'success',by:'李运营',at:'2026-06-01 09:40'},
  {id:'r4',name:'419错发权益回收',status:'recalled',eff:'2026-04-19 10:00（立即）',target:'力学进阶 · 有效期',task:'recall',by:'张运营',at:'2026-04-20 16:22'},
 ];
-const stag={scheduled:['scheduled','待生效'],active:['active','生效中'],stopped:['stopped','已停用'],recalled:['recalled','已召回']};
+const stag={approving:['scheduled','审批中'],scheduled:['scheduled','待生效'],active:['active','生效中'],stopped:['stopped','已停用'],recalled:['recalled','已召回'],canceled:['stopped','已取消']};
 const ttag={partial:'<span class="tag partial">补发·部分失败</span> <a style="color:var(--primary);cursor:pointer" onclick="openDetail(\'r2\')">查看</a>',
   success:'<span class="tag success">补发·成功</span>',recall:'<span class="tag success">召回·完成</span>','—':'<span class="muted">未执行</span>'};
 function ops(r){
   const b=[];
   b.push(`<button class="btn sm link" onclick="openDetail('${r.id}')">任务/日志</button>`);
-  if(r.status==='scheduled'){b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="toast('二次确认后逻辑删除（仅待生效可删）')">删除</button>`)}
+  if(r.status==='scheduled'){b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="toast('已取消待生效，策略记录保留')">取消</button>`)}
   if(r.status==='active'){b.push(`<button class="btn sm link" onclick="toast('已停用')">停用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
   if(r.status==='stopped'){b.push(`<button class="btn sm link" onclick="toast('重新启用需重新确认影响面')">启用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
-  b.push(`<button class="btn sm link" onclick="toast('已复制为新策略草稿')">复制</button>`);
+  b.push(`<button class="btn sm link" onclick="copyRule()">复制</button>`);
   return b.join('');
 }
 function renderList(){
@@ -660,7 +680,7 @@ function renderList(){
 renderList();
 
 /* ---------- nav ---------- */
-const crumbs={list:'权益更新策略',form:'权益更新策略 / 新增策略',detail:'权益更新策略 / 任务与操作日志',agent:'权益更新策略 / 场景预演 Agent'};
+const crumbs={list:'权益更新策略',form:'权益更新策略 / 新增策略',detail:'权益更新策略 / 任务与操作日志',agent:'权益更新策略 / 自然语言 Case 预演'};
 function nav(v){
   document.querySelectorAll('.view').forEach(e=>e.classList.remove('show'));
   document.getElementById('view-'+v).classList.add('show');
@@ -668,6 +688,12 @@ function nav(v){
   if(v==='form'){document.getElementById('formtitle').textContent='新增策略';updDesc()}
 }
 function openDetail(id){nav('detail')}
+function copyRule(){
+  nav('form');
+  document.getElementById('formtitle').textContent='新建策略（复制）';
+  document.getElementById('f-name').value='7月数学新课补发-副本';
+  toast('已从源策略预填业务配置，请修改后重新提交审批');
+}
 function toggleMap(open){
   document.getElementById('mapdrawer').classList.toggle('open',open);
   document.getElementById('mapmask').classList.toggle('open',open);
@@ -737,7 +763,7 @@ document.getElementById('impact-ck').addEventListener('change',e=>{
 });
 function confirmSubmit(){
   closeM('m-impact');
-  toast('已创建：状态「待生效」，2026-07-10 00:00 自动激活并触发存量补发任务');
+  toast('已提交审批：权益运营负责人单审；通过且到达生效时间后执行');
   setTimeout(()=>nav('list'),900);
 }
 /* ---------- modals ---------- */
@@ -751,9 +777,16 @@ function doRecall(){
   toast('召回任务已创建并立即执行：批量撤销 → 清缓存 → 广播权益变更');
 }
 function openDryrun(){openM('m-dryrun');document.getElementById('dryrun-result').style.display='none'}
-function doDryrun(){
+function switchPreview(mode,el){
+  document.querySelectorAll('.preview-tab').forEach(x=>x.classList.remove('on'));
+  document.querySelectorAll('.preview-pane').forEach(x=>x.classList.remove('on'));
+  el.classList.add('on');
+  document.getElementById('preview-'+mode).classList.add('on');
   document.getElementById('dryrun-result').style.display='none';
-  toast('执行只读判定…');
+}
+function doDryrun(mode){
+  document.getElementById('dryrun-result').style.display='none';
+  toast(mode==='case'?'正在解析 Case 并执行规则引擎…':'执行只读规则预演…');
   setTimeout(()=>{document.getElementById('dryrun-result').style.display='block'},700);
 }
 function openFailDetail(){openM('m-fail')}
@@ -771,7 +804,7 @@ const cases=[
          ['userauth.dryRun','条件组1判定：商品命中 ✓ / 时间条件（基准=订单支付时间 2026-07-15）→ 不在 2025-09-01~2026-06-30 区间 ✗','done'],
          ['userauth.dryRun','兜底检查：无其他条件组','done']],
   verdict:'miss',
-  answer:'<b>该用户不会收到补发。</b><div class="timelinemini" style="margin-top:8px"><div class="ti"><div class="dot gray"></div><div>2026-07-10 00:00 策略生效，存量补发任务执行 —— 用户此时尚未购买，不在候选内</div></div><div class="ti"><div class="dot gray"></div><div>2026-07-15 10:00 用户购买 → 活跃事件触发增量判定</div></div><div class="ti"><div class="dot gray"></div><div>时间条件判定：订单支付时间 2026-07-15 <b>晚于区间右端点 2026-06-30</b> → 未命中</div></div></div>原因：条件组 1 的时间区间为 2025-09-01 ~ 2026-06-30，本策略面向<b>历史购课用户</b>补齐；2026 年 7 月新购用户会在购买时直接获得新版课程权益（商品配置内已含 v2），无需补发。<br><span class="muted">如果预期 7 月新购用户也走补发，请把时间区间右端点后移，或增加「无时间要求」条件组。</span>'},
+  answer:'<b>该用户不会收到补发。</b><div class="timelinemini" style="margin-top:8px"><div class="ti"><div class="dot gray"></div><div>2026-07-10 00:00 策略生效，存量补发任务执行 —— 用户此时尚未购买，不在初始快照内</div></div><div class="ti"><div class="dot gray"></div><div>2026-07-15 10:00 用户购买 → order_paid 事件在 5 分钟内触发增量判定</div></div><div class="ti"><div class="dot gray"></div><div>时间条件判定：订单支付时间 2026-07-15 <b>晚于区间右端点 2026-06-30</b> → 未命中</div></div></div>原因：条件组 1 的时间区间为 2025-09-01 ~ 2026-06-30，本策略面向<b>历史购课用户</b>补齐。若策略无时间要求，该 order_paid 事件会触发补发，无需等待用户登录。'},
  {q:'用户 2025 年 5 月买的课、权益 2025 年 10 月才到账（延迟发放），能命中时间区间 2025-09-01~2026-06-30 吗？',
   plan:['解析用例 → 订单支付 2025-05-20，权益到账 2025-10-01（延迟发放）','读取条件组 1 时间基准配置','分别按新旧口径执行 dry-run，对比结论'],
   tools:[['userauth.dryRun','新口径（时间基准=订单支付时间 2025-05-20）→ 早于区间左端点 2025-09-01 → <b>未命中</b>','done'],
@@ -799,7 +832,7 @@ function runAgent(idx){
     c={q:v,plan:['解析用例中的用户行为与时间','检查策略配置就绪度','调用订单/兑换服务构造虚拟数据','执行 dry-run 判定','生成结论'],
        tools:[['userauth.dryRun','原型演示：自由输入将在真实版本中由 LLM 解析为预演参数后执行','done']],
        verdict:'info',
-       answer:'【原型演示】自由输入的用例将在二期真实版本中由 Agent 解析为结构化预演参数（用户行为、时间、来源），再调用本期交付的 dry-run 接口模拟。请点击左侧预置示例查看完整推演轨迹。'};
+       answer:'自然语言已解析为结构化 Case（用户行为、时间、来源），结论将由确定性规则引擎计算；若解析有歧义，系统会追问，LLM 不直接决定命中结果。'};
   }
   agentBusy=true;
   const log=document.getElementById('chatlog');
