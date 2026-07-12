@@ -181,6 +181,8 @@
     <a onclick="openCred('order','O2026101201');togglePM()">⑫ 订单凭据跳转（唯一一期跳转）</a>
     <a onclick="openDrawer('A-010');togglePM()">⑬ 抽屉：无凭据来源 case</a>
     <a onclick="openDrawer('A-011');togglePM()">⑭ 抽屉：设备凭据 case</a>
+    <a onclick="gotoTab('summary');setTimeout(()=>toggleSum(0,0),100);togglePM()">⑮ 附加权益（case16：不进表怎么记）</a>
+    <a onclick="openRuleAudit('R-001');togglePM()">⑯ 规则变更记录（配置变更审计表）</a>
   </div>
 </div>
 
@@ -366,6 +368,15 @@
   </div>
 </div>
 
+<!-- 规则变更记录抽屉（配置变更审计表 auth_config_audit） -->
+<div class="modal-mask" id="ruleMask">
+  <div class="modal" style="width:640px">
+    <div class="modal-head"><h3 id="rule-title">规则变更记录</h3><span class="drawer-close" onclick="closeModal('ruleMask')">✕</span></div>
+    <div class="modal-body" id="rule-body"></div>
+    <div class="modal-foot"><button class="btn primary" onclick="closeModal('ruleMask')">知道了</button></div>
+  </div>
+</div>
+
 <!-- 订单凭据跳转示意 -->
 <div class="modal-mask" id="credMask">
   <div class="modal" style="width:460px">
@@ -414,6 +425,37 @@ function credCell(t, id, drawerCtx){
   }
   return `<span class="cred-text" title="${CRED_TITLE[t]||''}">${CRED_NAME[t]} ${id}</span>`;
 }
+/* ============ 配置变更审计（auth_config_audit）假数据与弹窗 ============ */
+const RULE_AUDIT = {
+ "R-001": { name:"初中数学多版本课关联规则", type:"关联规则（attach_rule）", events:[
+   { time:"2026-11-10 14:22", action:"修改", op:"王工（内容平台）",
+     before:"适用版本：人教版、北师大版", after:"适用版本：人教版、北师大版、沪教版",
+     reason:"沪教版课程上线，纳入多版本关联" },
+   { time:"2025-03-02 10:05", action:"新增", op:"陈璐（内容平台）",
+     before:"—", after:"本体：初中数学（人教版）→ 附加：北师大版；随本体起止",
+     reason:"多版本课上线，配置初版关联规则" },
+ ]},
+};
+function openRuleAudit(rid){
+  const r = RULE_AUDIT[rid];
+  if(!r){ toast('无该规则的变更记录'); return; }
+  document.getElementById('rule-title').textContent = `规则变更记录 · ${rid} ${r.name}`;
+  document.getElementById('rule-body').innerHTML =
+    `<div class="anno">📌 数据源=「配置变更审计表」（PRD §3.6 case16）：授权审计事件表管"用户权益的变化"，这张表管"影响权益的规则/配置的变化"，同样只增不改不删。</div>
+    <div style="font-size:12px;color:#606266;margin-bottom:8px">配置类型：${r.type} ｜ 配置编号：${rid}</div>
+    <div class="tl">` + r.events.map(e=>`
+      <div class="ev ${e.action==='新增'?'birth':''}">
+        <div class="ev-head"><span class="badge ${e.action==='新增'?'birth':''}">${e.action}</span><span class="t">${e.time}</span></div>
+        <div class="who">操作人：${e.op}</div>
+        <div class="body">变更原因：${e.reason}
+          <div class="diff" style="margin-top:6px">
+            ${e.before!=='—'?`<span class="old">${e.before}</span>→`:''}<span class="new">${e.after}</span>
+          </div>
+        </div></div>`).join('') + `</div>
+    <div style="font-size:11px;color:#909399">该规则影响的所有用户的附加权益随本次变更即时生效/失效；单个用户侧不产生逐人事件（虚拟权益不记流水）。</div>`;
+  document.getElementById('ruleMask').classList.add('open');
+}
+
 function openCred(type, id){
   document.getElementById('cred-body').innerHTML = `<div class="jump-box">
     <b>订单 ${id}</b>跳转目标：运营后台-订单管理-订单详情页（带单号定位，现有页面+带参跳转）
@@ -459,7 +501,7 @@ const AUTHS = {
 /* ============ 全部权益总时长：分组汇总（对齐线上） ============ */
 const SUMMARY = [
  { cat:"同步课", rows:[
-   { name:"初中数学", remain:"412 天", deadline:"2027-08-27 23:59:59", details:["A-001","A-009","A-011"] },
+   { name:"初中数学", remain:"412 天", deadline:"2027-08-27 23:59:59", details:["A-001","A-009","A-011"], attach:[{name:"初中数学（北师大版）", rule:"R-001", host:"A-001"},{name:"初中数学（沪教版）", rule:"R-001", host:"A-001"}] },
    { name:"初中英语", remain:"37 天", deadline:"2026-08-17 23:59:59", details:["A-002"] },
    { name:"初中语文", remain:"3 天", deadline:"2026-12-14 23:59:59", details:["A-008"] },
    { name:"高中数学", remain:"80 天", deadline:"2027-01-24 23:59:59", details:["A-004"] },
@@ -642,11 +684,18 @@ function renderSummary(){
           <td><span class="st ${a.state}">${a.stateTxt}</span></td><td>${a.creator}</td><td>${a.created.slice(0,10)}</td><td>${a.reason}</td>
           <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td></tr>`;
       }).join('');
+      const attachRows = (r.attach||[]).map(at=>`<tr style="background:#fdfaf3">
+          <td><span style="color:#909399">—</span><div style="color:#e6a23c;font-size:11px">附加权益·无独立授权记录</div></td>
+          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（配置类对象，变更记录见「规则变更记录」）">规则 ${at.rule}</span></td>
+          <td colspan="4" style="color:#909399">与本体授权 ${at.host} 同起止（${at.name}）</td>
+          <td><span class="st using">随本体生效</span></td><td>—</td><td>—</td><td>由授权 ${at.host} 按规则 ${at.rule} 附加</td>
+          <td><a onclick="openRuleAudit('${at.rule}')">规则变更记录</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
       return `<div class="sum-row" id="sr-${gi}-${ri}" onclick="toggleSum(${gi},${ri})">
-          <span class="arr">▶</span><span>${r.name}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
+          <span class="arr">▶</span><span>${r.name}${r.attach?` <span style="color:#e6a23c;font-size:11px">（含 ${r.attach.length} 条附加权益）</span>`:''}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
         <div class="sum-detail" id="sd-${gi}-${ri}">
           <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据（原来源ID）</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
-          <tbody>${detailRows}</tbody></table></div>`;
+          <tbody>${detailRows}${attachRows}</tbody></table>
+          ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则的变更记录（配置变更审计表）。</div>`:''}</div>`;
     }).join('');
     return `<div class="cat-title">${g.cat}</div>
       <div class="sum-head"><span></span><span>授权名称</span><span>总剩余时长</span><span>总截止时间</span></div>${rows}`;
