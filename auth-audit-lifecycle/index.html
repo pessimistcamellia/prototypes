@@ -234,17 +234,15 @@
       <div id="pane-personal">
         <div class="filters">
           <div class="f-item"><span class="f-lab">授权状态:</span>
-            <div class="chips" onclick="toast('状态多选下拉（线上为多选，原型演示当前选中3项）')">
-              <span class="chip">未使用 <span class="x">×</span></span><span class="chip">使用中 <span class="x">×</span></span><span class="chip">已冻结 <span class="x">×</span></span>
-            </div></div>
-          <div class="f-item"><span class="f-lab">授权类型:</span><select><option>请选择授权类型</option><option>同步课</option><option>培优课</option><option>电子试卷</option><option>洋葱服务</option></select></div>
-          <div class="f-item"><span class="f-lab">授权名称:</span><select><option>请选择授权名称</option><option>初中数学</option><option>初中英语</option><option>初中物理</option></select></div>
-          <div class="f-item"><span class="f-lab">来源类型:</span><select><option>请选择授权类型</option><option>购买获得</option><option>后台手动发放</option><option>兑换码兑换</option><option>授权转换</option></select></div>
-          <div class="f-item"><span class="f-lab">来源ID:</span><input placeholder="多个ID用;分隔"></div>
-          <div class="f-item"><span class="f-lab">创建日期:</span><input type="date" style="max-width:120px"><span class="date-sep">至</span><input type="date" style="max-width:120px"></div>
+            <div class="chips" id="stateChips"></div></div>
+          <div class="f-item"><span class="f-lab">授权类型:</span><select id="pf-type"><option value="">请选择授权类型</option><option>同步课</option><option>培优课</option><option>电子试卷</option><option>洋葱服务</option></select></div>
+          <div class="f-item"><span class="f-lab">授权名称:</span><select id="pf-name"><option value="">请选择授权名称</option><option>初中数学</option><option>初中英语</option><option>初中物理</option><option>初中语文</option><option>初中全科</option><option>高中数学</option><option>小学数学</option><option>教师全科</option></select></div>
+          <div class="f-item"><span class="f-lab">来源类型:</span><select id="pf-src"><option value="">请选择来源类型</option><option>购买获得</option><option>后台手动发放</option><option>兑换码兑换</option><option>授权转换</option><option>抖店订单</option><option>B端进校</option><option>活动发放</option><option>规则补发</option><option>教师升级赠送</option><option>一口价平板激活</option></select></div>
+          <div class="f-item"><span class="f-lab">来源ID:</span><input id="pf-srcid" placeholder="多个ID用;分隔"></div>
+          <div class="f-item"><span class="f-lab">创建日期:</span><input type="date" id="pf-d1" style="max-width:120px"><span class="date-sep">至</span><input type="date" id="pf-d2" style="max-width:120px"></div>
         </div>
         <div class="filter-actions">
-          <button class="btn primary mini">查询</button><button class="btn mini">重置</button>
+          <button class="btn primary mini" onclick="renderTables()">查询</button><button class="btn mini" onclick="resetPersonalFilter()">重置</button>
           <span style="flex:1"></span><button class="btn mini" onclick="renderTables();toast('已刷新')">↻ 刷新</button>
         </div>
         <div class="anno">📌 PRD §4.2：筛选与查询交互=线上现状全保留；新增①行复选框与批量撤销联动（线上已有，规格增强）②「生命周期」按钮③凭据列升级（一期仅订单可点击、前驱授权抽屉锚定，其余文字展示）。</div>
@@ -265,12 +263,12 @@
       <!-- ② 全部权益总时长（对齐线上：筛选+分组+展开明细） -->
       <div id="pane-summary" style="display:none">
         <div class="filters" style="grid-template-columns:repeat(2,minmax(260px,1fr))">
-          <div class="f-item"><span class="f-lab">授权类型:</span><select><option>请选择授权类型</option><option>同步课</option><option>培优课</option><option>洋葱服务</option><option>电子试卷</option></select></div>
-          <div class="f-item"><span class="f-lab">授权名称:</span><input placeholder="请输入授权名称"></div>
+          <div class="f-item"><span class="f-lab">授权类型:</span><select id="sf-type" onchange="renderSummary()"><option value="">请选择授权类型</option><option>同步课</option><option>培优课</option><option>洋葱服务</option><option>电子试卷</option></select></div>
+          <div class="f-item"><span class="f-lab">授权名称:</span><input id="sf-name" placeholder="请输入授权名称" oninput="renderSummary()"></div>
         </div>
         <div class="filter-actions">
           <span style="flex:1"></span>
-          <button class="btn mini" onclick="toast('已刷新')">↻ 刷新</button>
+          <button class="btn mini" onclick="renderSummary();toast('已刷新')">↻ 刷新</button>
           <button class="btn primary mini" onclick="openAddModal()">添加授权</button>
         </div>
         <div class="anno">📌 线上交互全保留：按类目分组（同步课/培优课…按学段+学科排序）、行可展开看该科全部授权明细、筛选/刷新/添加授权。合并总时长由时间轴实时计算（PRD §5 粒度说明）。新增：明细行「生命周期」入口。</div>
@@ -280,13 +278,13 @@
       <!-- ③ 归档权益管理 -->
       <div id="pane-archived" style="display:none">
         <div class="filters">
-          <div class="f-item"><span class="f-lab">授权类型:</span><select><option>请选择授权类型</option><option>同步课</option><option>培优课</option></select></div>
-          <div class="f-item"><span class="f-lab">授权名称:</span><input placeholder="请输入授权名称"></div>
-          <div class="f-item"><span class="f-lab">来源类型:</span><input placeholder="请输入来源类型"></div>
-          <div class="f-item"><span class="f-lab">来源ID:</span><input placeholder="多个ID用;分隔"></div>
-          <div class="f-item"><span class="f-lab">创建日期:</span><input type="date" style="max-width:120px"><span class="date-sep">至</span><input type="date" style="max-width:120px"></div>
+          <div class="f-item"><span class="f-lab">授权类型:</span><select id="af-type"><option value="">请选择授权类型</option><option>同步课</option><option>培优课</option></select></div>
+          <div class="f-item"><span class="f-lab">授权名称:</span><input id="af-name" placeholder="请输入授权名称"></div>
+          <div class="f-item"><span class="f-lab">来源类型:</span><input id="af-src" placeholder="请输入来源类型"></div>
+          <div class="f-item"><span class="f-lab">来源ID:</span><input id="af-srcid" placeholder="多个ID用;分隔"></div>
+          <div class="f-item"><span class="f-lab">创建日期:</span><input type="date" id="af-d1" style="max-width:120px"><span class="date-sep">至</span><input type="date" id="af-d2" style="max-width:120px"></div>
         </div>
-        <div class="filter-actions"><button class="btn primary mini">查询</button><button class="btn mini">重置</button></div>
+        <div class="filter-actions"><button class="btn primary mini" onclick="renderTables()">查询</button><button class="btn mini" onclick="resetArchFilter()">重置</button></div>
         <div class="anno">📌 PRD §4.2 归档不换体验：筛选=线上现状；每行同样有「生命周期」，事件流全量保留（archive 事件）。</div>
         <table class="grid">
           <thead><tr>
@@ -315,7 +313,12 @@
   <div class="modal">
     <div class="modal-head"><h3>添加权益</h3><span class="drawer-close" onclick="closeModal('addMask')">✕</span></div>
     <div class="modal-body">
-      <div class="anno">📌 PRD §4.4：绿标=线上已有字段（保留）；红标=本需求新增/升格。提交与发放同事务落「发放」事件。</div>
+      <div class="anno">📌 PRD §4.4：绿标=线上已有字段（保留）；红标=本需求新增/升格。提交与发放同事务落「发放」事件。硬件权益 tab=线上「添加硬件权益」入口，按 device 凭据对齐规格。</div>
+      <div class="subtabs" style="margin-bottom:14px">
+        <div class="subtab active" id="addtab-course" onclick="switchAddTab('course')">课程权益</div>
+        <div class="subtab" id="addtab-hw" onclick="switchAddTab('hw')">硬件权益 <span class="old-tag">线上已有入口</span></div>
+      </div>
+      <div id="addpane-course">
       <div class="frow"><div class="lab"><span class="req">*</span>权益类型<span class="old-tag">线上已有</span></div><div class="ctl">
         <select><option>会员时长（同步课）</option><option>培优课（原专项课）</option><option>电子试卷</option><option>洋葱服务（志愿卡等）</option></select></div></div>
       <div class="frow"><div class="lab"><span class="req">*</span>学科学段<span class="old-tag">线上已有</span></div><div class="ctl"><select><option>初中数学</option><option>初中英语</option><option>高中数学</option><option>小学数学</option></select></div></div>
@@ -323,6 +326,15 @@
         <select id="add-dur-type" onchange="toggleDurType()"><option value="fixed">固定时长（随队列排队生效）</option><option value="range">有效期（指定起止，立即生效）</option></select></div></div>
       <div class="frow" id="f-days"><div class="lab"><span class="req">*</span>时长（天）<span class="old-tag">线上已有</span></div><div class="ctl"><input type="text" value="30"><div class="tip">时长必须为正整数</div></div></div>
       <div class="frow" id="f-range" style="display:none"><div class="lab"><span class="req">*</span>有效期<span class="old-tag">线上已有</span></div><div class="ctl" style="display:flex;gap:6px;align-items:center"><input type="date"><span class="date-sep">至</span><input type="date"></div></div>
+      </div>
+      <div id="addpane-hw" style="display:none">
+      <div class="frow"><div class="lab"><span class="req">*</span>硬件 SN 码<span class="old-tag">线上已有</span></div><div class="ctl" style="display:flex;gap:6px">
+        <input type="text" id="hw-sn" placeholder="请输入硬件 SN 码查询设备详情" style="flex:1">
+        <button class="btn mini" onclick="hwQuery()">查询设备</button></div>
+        <div class="tip" id="hw-device" style="display:none">✓ 设备已找到：一口价学习平板 · 脱敏标识 omvd-8f3…a2 · 已绑定本用户（审计凭据类型=设备，落脱敏标识）</div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>权益类型<span class="old-tag">线上已有</span></div><div class="ctl"><select><option>平板权益（按设备预设配置发放课程）</option></select></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>权益时长<span class="old-tag">线上已有</span></div><div class="ctl"><input type="text" value="7300"><div class="tip">一口价平板默认 20 年（7300 天）</div></div></div>
+      </div>
       <div class="frow" id="f-reason-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增</span></div><div class="ctl">
         <select id="add-rcode"><option value="">请选择</option><option>客服补偿</option><option>运营发放</option><option>测试账号</option><option>其他（须详述）</option></select>
         <div class="tip">枚举与审计「原因分类」对齐</div>
@@ -406,14 +418,14 @@
    其余=纯文字"类型中文名+编号"（hover 说明是什么 ID）；无凭据=灰字提示 */
 const CRED_NAME = { order:"订单", third_order:"三方订单", redeem_code:"兑换码", voucher:"体验券",
   business_auth:"B端授权", activity:"活动", auth:"前驱授权", work_order:"工单", send_rule:"补发规则", device:"设备", none:"无凭据" };
-const CRED_TITLE = { third_order:"三方平台订单号（一期不跳转，二期跳三方订单详情）",
-  redeem_code:"兑换码编号（一期不跳转，二期跳兑换码记录）",
-  voucher:"体验券编号（一期不跳转）",
-  business_auth:"B端授权/工单编号（一期不跳转，外链格式待B端摸底）",
-  activity:"活动登记编号（一期不跳转，二期跳来源注册表详情）",
-  work_order:"客服工单号（一期不跳转，二期拼外部工单链接）",
-  send_rule:"补发规则编号（一期不跳转，二期跳规则详情）",
-  device:"设备标识·已脱敏（一期不跳转，二期跳平板管理）" };
+const CRED_TITLE = { third_order:"三方平台原始订单号（抖店/京东等平台单号原值；一期不跳转，二期跳三方订单详情）",
+  redeem_code:"兑换码记录 ID（redeemCode 服务主键；一期不跳转，二期跳兑换码记录）",
+  voucher:"体验券/体验机会记录 ID（一期不跳转）",
+  business_auth:"B端授权 ID（B端系统 businessAuth 表主键 uuid；一期不跳转，外链格式待B端摸底）",
+  activity:"来源注册表登记的活动代号（生产=注册代号，活动记录 ID 在技术详情；一期不跳转，二期跳注册表活动详情）",
+  work_order:"客服工单号（工单系统单号，新规范必填；一期不跳转，二期拼工单外链）",
+  send_rule:"补发规则 ID（send_rule 表主键 uuid，规则名见事件原因说明；一期不跳转，二期跳规则详情）",
+  device:"脱敏设备标识 omvd（合规要求禁止可读设备号；一期不跳转，二期跳平板管理）" };
 
 function credCell(t, id, drawerCtx){
   if (t === 'none') return `<span class="cred-none" title="该来源无凭据，原因见事件的原因说明">无凭据 ⓘ</span>`;
@@ -485,11 +497,11 @@ const AUTHS = {
  "A-006": { name:"初中数学 培优课", type:"培优课", subject:"初中数学", state:"using", stateTxt:"使用中",
    start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"抖店订单(doudian)", credT:"third_order", credId:"D20261120887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换", archived:false },
  "A-007": { name:"初中全科 同步课 VIP", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
-   start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", credT:"business_auth", credId:"BA-2026-0915", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
+   start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", credT:"business_auth", credId:"ba_5f8e02cd…91a4", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
  "A-008": { name:"初中语文 同步课 VIP（14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
-   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"活动发放(activity)", credT:"activity", credId:"ACT-2026NY01", created:"2026-12-01 00:10:00", creator:"system", reason:"新年活动", archived:false },
+   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"活动发放(activity)", credT:"activity", credId:"mkt_2026ny01", created:"2026-12-01 00:10:00", creator:"system", reason:"新年活动", archived:false },
  "A-009": { name:"初中数学 同步课 VIP（新学科扩容）", type:"同步课", subject:"初中数学", state:"unused", stateTxt:"未使用",
-   start:"—", end:"—", remain:"排队中", total:"90天", src:"规则补发(sendRule)", credT:"send_rule", credId:"SR-102", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
+   start:"—", end:"—", remain:"排队中", total:"90天", src:"规则补发(sendRule)", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
  "A-010": { name:"教师版 全科 VIP", type:"同步课", subject:"教师全科", state:"using", stateTxt:"使用中",
    start:"2026-10-20 00:00:00", end:"2027-10-19 23:59:59", remain:"312 天", total:"365天", src:"教师升级赠送(teacherLevelUp)", credT:"none", credId:"", created:"2026-10-20 10:00:00", creator:"system", reason:"教师升级", archived:false },
  "A-011": { name:"初中数学 同步课 VIP（平板权益）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
@@ -550,22 +562,31 @@ const EVENTS = {
      body:"本条权益自动开始生效、开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
      tech:{"事件编号":"E-9202","事件序号":"2"} }
  ]},
- "A-004": { chain:[{id:"A-000X", name:"初中数学 VIP（已转出）"},{id:"A-004", name:"高中数学 VIP（当前）"}], events:[
+ "A-004": { chain:[{id:"A-000W", name:"小学数学 VIP（已转出）"},{id:"A-000X", name:"初中数学 VIP（已转出）"},{id:"A-004", name:"高中数学 VIP（当前）"}], events:[
    { et:"exchange_in", cls:"birth", label:"转换入", time:"2026-11-05 11:00:00", op:"周敏（运营）",
      body:"原因：转换 ｜ 初升高转换：原初中数学 VIP 剩余 100 天 × 系数 0.8 = 授予 +80 天。",
      diff:[["状态","—","使用中"],["时长变化","","+80 天"]], cred:{t:"auth", id:"A-000X"},
      tech:{"事件编号":"E-9301","事件序号":"1","前驱授权 ID":"A-000X","调用方服务":"shadow"} }
  ], chainEvents:{ "A-000X":[
-   { et:"grant", cls:"birth", label:"发放", time:"2025-11-01 10:00:00", op:"系统（订单服务）",
-     body:"因订单支付成功发放 +365 天。", diff:[["状态","—","未使用"]], cred:{t:"order", id:"O2025110101"},
-     tech:{"事件编号":"E-8001","事件序号":"1","调用方服务":"go-order"} },
-   { et:"activate", cls:"", label:"生效", time:"2025-11-01 10:00:03", op:"系统（自动生效）",
-     body:"本条权益自动开始生效、开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
-     tech:{"事件编号":"E-8002","事件序号":"2"} },
+   { et:"exchange_in", cls:"birth", label:"转换入", time:"2025-11-01 10:00:00", op:"陈璐（运营）",
+     body:"原因：转换 ｜ 小升初转换：原小学数学 VIP 剩余 150 天 × 系数 1.0 = 授予 +150 天；后续用户又续费叠加。",
+     diff:[["状态","—","使用中"],["时长变化","","+150 天"]], cred:{t:"auth", id:"A-000W"},
+     tech:{"事件编号":"E-8001","事件序号":"1","前驱授权 ID":"A-000W"} },
    { et:"exchange_out", cls:"death", label:"转换出", time:"2026-11-05 11:00:00", op:"周敏（运营）",
      body:"原因：转换 ｜ 初升高转换：剩余 100 天转出至高中数学 VIP（A-004）。",
      diff:[["状态","使用中","已取消"],["时长变化","","-100 天"]], cred:{t:"auth", id:"A-004"},
      tech:{"事件编号":"E-8003","事件序号":"3","前驱授权 ID":"A-004（去向）"} }
+ ], "A-000W":[
+   { et:"grant", cls:"birth", label:"发放", time:"2024-09-01 10:00:00", op:"系统（订单服务）",
+     body:"因订单支付成功发放 +365 天（链条最初的凭据：真实订单）。", diff:[["状态","—","未使用"]], cred:{t:"order", id:"O2024090188"},
+     tech:{"事件编号":"E-7001","事件序号":"1","调用方服务":"go-order"} },
+   { et:"activate", cls:"", label:"生效", time:"2024-09-01 10:00:03", op:"系统（自动生效）",
+     body:"本条权益自动开始生效、开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     tech:{"事件编号":"E-7002","事件序号":"2"} },
+   { et:"exchange_out", cls:"death", label:"转换出", time:"2025-11-01 10:00:00", op:"陈璐（运营）",
+     body:"原因：转换 ｜ 小升初转换：剩余 150 天转出至初中数学 VIP（A-000X）。",
+     diff:[["状态","使用中","已取消"],["时长变化","","-150 天"]], cred:{t:"auth", id:"A-000X"},
+     tech:{"事件编号":"E-7003","事件序号":"3","前驱授权 ID":"A-000X（去向）"} }
  ]}},
  "A-005": { chain:null, legacy:true, events:[],
    remarks:[
@@ -584,19 +605,19 @@ const EVENTS = {
  "A-007": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-11-01 08:00:00", op:"赵强（渠道经理）",
      body:"原因：B端进校开通 ｜ XX中学 2026 秋季批次。",
-     diff:[["状态","—","使用中"]], cred:{t:"business_auth", id:"BA-2026-0915"},
+     diff:[["状态","—","使用中"]], cred:{t:"business_auth", id:"ba_5f8e02cd…91a4"},
      tech:{"事件编号":"E-9601","事件序号":"1","调用方服务":"B端服务","调用接口":"BusinessAuth.Distribute","批次号":"B-SCHOOL-0915"} }
  ]},
  "A-008": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-12-01 00:10:00", op:"系统（活动服务）",
      body:"原因：运营发放 ｜ 2026 新年活动批量发放（该活动已在来源注册表登记）。",
-     diff:[["状态","—","使用中"]], cred:{t:"activity", id:"ACT-2026NY01"},
-     tech:{"事件编号":"E-9701","事件序号":"1","批次号":"B-2026NY01-003","调用方服务":"活动服务"} }
+     diff:[["状态","—","使用中"]], cred:{t:"activity", id:"mkt_2026ny01"},
+     tech:{"事件编号":"E-9701","事件序号":"1","活动记录 ID":"act_88291f…3d","批次号":"B-2026NY01-003","调用方服务":"活动服务"} }
  ]},
  "A-009": { chain:null, events:[
    { et:"grant_supplement", cls:"birth", label:"补发", time:"2026-12-05 03:00:00", op:"系统（补发规则引擎）",
      body:"原因：规则补发 ｜ 命中补发规则「大会员新上线学科自动补发」。当前排队等待生效：前面的权益结束后，本条自动开始。",
-     diff:[["状态","—","未使用"]], cred:{t:"send_rule", id:"SR-102"},
+     diff:[["状态","—","未使用"]], cred:{t:"send_rule", id:"sr_67ea5749…4b0c"},
      tech:{"事件编号":"E-9801","事件序号":"1","调用方服务":"userauth","调用接口":"sendRule.Exec"} }
  ]},
  "A-010": { chain:null, events:[
@@ -652,12 +673,59 @@ function archRowHtml(id, a){
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td>
   </tr>`;
 }
+/* 状态多选（真实过滤） */
+const STATE_OPTS=[["unused","未使用"],["using","使用中"],["freeze","已冻结"],["canceled","已取消"],["used","已使用"]];
+let stateSel = new Set(["unused","using","freeze"]);
+function renderStateChips(){
+  document.getElementById('stateChips').innerHTML = STATE_OPTS.map(([v,n])=>
+    stateSel.has(v)?`<span class="chip">${n} <span class="x" onclick="toggleState('${v}')">×</span></span>`
+    :`<span class="chip" style="opacity:.45" onclick="toggleState('${v}')">${n} +</span>`).join('');
+}
+function toggleState(v){ stateSel.has(v)?stateSel.delete(v):stateSel.add(v); renderStateChips(); renderTables(); }
+function val(id){ const el=document.getElementById(id); return el?el.value.trim():""; }
+function dateOk(created, d1, d2){
+  const d = created.slice(0,10);
+  if (d1 && d < d1) return false;
+  if (d2 && d > d2) return false;
+  return true;
+}
+function srcIdOk(a, raw){
+  if (!raw) return true;
+  const ids = raw.split(';').map(s=>s.trim()).filter(Boolean);
+  return ids.some(x => (a.credId||'').includes(x));
+}
+function personalFilter([id,a]){
+  if (!stateSel.has(a.state)) return false;
+  if (val('pf-type') && a.type !== val('pf-type')) return false;
+  if (val('pf-name') && a.subject !== val('pf-name')) return false;
+  if (val('pf-src') && !a.src.includes(val('pf-src'))) return false;
+  if (!srcIdOk(a, val('pf-srcid'))) return false;
+  if (!dateOk(a.created, val('pf-d1'), val('pf-d2'))) return false;
+  return true;
+}
+function archFilter([id,a]){
+  if (val('af-type') && a.type !== val('af-type')) return false;
+  if (val('af-name') && !a.name.includes(val('af-name'))) return false;
+  if (val('af-src') && !a.src.includes(val('af-src'))) return false;
+  if (!srcIdOk(a, val('af-srcid'))) return false;
+  if (!dateOk(a.created, val('af-d1'), val('af-d2'))) return false;
+  return true;
+}
+function resetPersonalFilter(){
+  ['pf-type','pf-name','pf-src','pf-srcid','pf-d1','pf-d2'].forEach(i=>document.getElementById(i).value='');
+  stateSel = new Set(["unused","using","freeze"]); renderStateChips(); renderTables();
+}
+function resetArchFilter(){
+  ['af-type','af-name','af-src','af-srcid','af-d1','af-d2'].forEach(i=>document.getElementById(i).value='');
+  renderTables();
+}
 function renderTables(){
   const only = document.getElementById('selOnly').checked;
-  let entries = Object.entries(AUTHS).filter(([,a])=>!a.archived);
+  let entries = Object.entries(AUTHS).filter(([,a])=>!a.archived).filter(personalFilter);
   if (only) entries = entries.filter(([id])=>selected.has(id));
-  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="11">无已选中记录</td></tr>`;
-  document.getElementById('tbody-archived').innerHTML = Object.entries(AUTHS).filter(([,a])=>a.archived).map(([id,a])=>archRowHtml(id,a)).join('');
+  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="11">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
+  const arch = Object.entries(AUTHS).filter(([,a])=>a.archived).filter(archFilter);
+  document.getElementById('tbody-archived').innerHTML = arch.map(([id,a])=>archRowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="8">无符合筛选条件的记录</td></tr>`;
   updateSelUI();
 }
 function toggleSel(id, on){ on?selected.add(id):selected.delete(id); updateSelUI(); }
@@ -674,8 +742,9 @@ function selectDemo(){ gotoTab('personal'); selected.add('A-001'); selected.add(
 /* ============ 全部权益总时长渲染 ============ */
 function renderSummary(){
   const el = document.getElementById('summary-groups');
-  el.innerHTML = SUMMARY.map((g,gi)=>{
-    const rows = g.rows.map((r,ri)=>{
+  const ftype = val('sf-type'), fname = val('sf-name');
+  el.innerHTML = SUMMARY.filter(g=>!ftype || g.cat===ftype).map((g,gi)=>{
+    const rows = g.rows.filter(r=>!fname || r.name.includes(fname)).map((r,ri)=>{
       const detailRows = r.details.map(id=>{
         const a=AUTHS[id];
         return `<tr>
@@ -737,7 +806,7 @@ function openDrawer(id, chainFocus){
   let focusNote = "";
   if (data.chain && chainFocus && chainFocus !== id && data.chainEvents) {
     evs = data.chainEvents[chainFocus] || [];
-    focusNote = `<div style="background:#fdf6ec;border:1px solid #faecd8;border-radius:4px;padding:6px 10px;font-size:12px;color:#8a6d3b;margin-bottom:10px">当前展示的是前驱授权 <b>${chainFocus}</b> 的事件流（由凭据/面包屑点击锚定）。<a onclick="openDrawer('${id}')">← 返回当前授权</a></div>`;
+    focusNote = `<div style="background:#fdf6ec;border:1px solid #faecd8;border-radius:4px;padding:6px 10px;font-size:12px;color:#8a6d3b;margin-bottom:10px">当前展示的是前驱授权 <b>${chainFocus}</b> 的事件流。<a onclick="openDrawer('${id}')">← 返回当前授权</a></div>`;
   }
   html += focusNote;
 
@@ -780,6 +849,17 @@ function toggleDurType(){
   const v = document.getElementById('add-dur-type').value;
   document.getElementById('f-days').style.display = v==='fixed'?'flex':'none';
   document.getElementById('f-range').style.display = v==='range'?'flex':'none';
+}
+function switchAddTab(t){
+  document.getElementById('addpane-course').style.display = t==='course'?'':'none';
+  document.getElementById('addpane-hw').style.display = t==='hw'?'':'none';
+  document.getElementById('addtab-course').classList.toggle('active', t==='course');
+  document.getElementById('addtab-hw').classList.toggle('active', t==='hw');
+}
+function hwQuery(){
+  const sn=document.getElementById('hw-sn').value.trim();
+  if(!sn){ toast('请输入 SN 码'); return; }
+  document.getElementById('hw-device').style.display='block';
 }
 function openAddModal(){ document.getElementById('addMask').classList.add('open'); }
 function openCancelModal(id, isBatch){
@@ -846,6 +926,7 @@ function minDebug(min){ document.getElementById('debugbar').style.display=min?'n
 let toastTimer=null;
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg+"（原型示意）"; t.style.display='block'; clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.style.display='none',2400); }
 
+renderStateChips();
 renderTables();
 renderSummary();
 </script>
