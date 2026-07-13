@@ -258,7 +258,7 @@
         </div>
         <table class="grid" id="tbl-personal">
           <thead><tr>
-            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源ID（source_id）</th><th>凭据（credential_id）</th><th>创建时间</th><th>操作</th>
+            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据</th><th>创建时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
         </table>
@@ -715,9 +715,7 @@ function rowHtml(id, a){
     <td class="nowrap">${a.type}</td>
     <td class="nowrap"><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td class="nowrap">${a.start.slice(0,10)}</td><td class="nowrap">${a.end.slice(0,10)}</td><td class="nowrap">${a.remain}</td>
-    <td>${a.src}</td>
-    <td><span class="cred-text" title="${a.sourceIdTip||'现有 userauth.source_id 原值'}">${a.sourceId||'（空）'}</span></td>
-    <td>${credCell(a.credT, a.credId)}</td>
+    <td>${a.src}</td><td>${credCell(a.credT, a.credId)}</td>
     <td class="nowrap">${a.created.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
@@ -781,7 +779,7 @@ function renderTables(){
   const only = document.getElementById('selOnly').checked;
   let entries = Object.entries(AUTHS).filter(([,a])=>!a.archived).filter(personalFilter);
   if (only) entries = entries.filter(([id])=>selected.has(id));
-  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="12">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
+  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="11">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
   const arch = Object.entries(AUTHS).filter(([,a])=>a.archived).filter(archFilter);
   document.getElementById('tbody-archived').innerHTML = arch.map(([id,a])=>archRowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="8">无符合筛选条件的记录</td></tr>`;
   updateSelUI();
@@ -806,21 +804,21 @@ function renderSummary(){
       const detailRows = r.details.map(id=>{
         const a=AUTHS[id];
         return `<tr>
-          <td>${id}</td><td>${a.src}</td><td>${a.sourceId||'（空）'}</td><td>${credCell(a.credT,a.credId)}</td>
+          <td>${id}</td><td>${a.src}</td><td>${credCell(a.credT,a.credId)}</td>
           <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.total}</td><td>${a.remain}</td>
           <td><span class="st ${a.state}">${a.stateTxt}</span></td><td>${a.creator}</td><td>${a.created.slice(0,10)}</td><td>${a.reason}</td>
           <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td></tr>`;
       }).join('');
       const attachRows = (r.attach||[]).map(at=>`<tr style="background:#fdfaf3">
           <td><span style="color:#909399">—</span><div style="color:#e6a23c;font-size:11px">附加权益·无独立授权记录</div></td>
-          <td>关联规则附加</td><td>（无 source_id）</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td>
+          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td>
           <td colspan="4" style="color:#909399">与本体授权 ${at.host} 同起止（${at.name}）</td>
           <td><span class="st using">随本体生效</span></td><td>—</td><td>—</td><td>由授权 ${at.host} 按规则 ${at.rule} 附加</td>
           <td><a onclick="openRuleAudit('${at.rule}')">查看关联规则</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
       return `<div class="sum-row" id="sr-${gi}-${ri}" onclick="toggleSum(${gi},${ri})">
           <span class="arr">▶</span><span>${r.name}${r.attach?` <span style="color:#e6a23c;font-size:11px">（含 ${r.attach.length} 条附加权益）</span>`:''}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
         <div class="sum-detail" id="sd-${gi}-${ri}">
-          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>来源ID</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
+          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
           <tbody>${detailRows}${attachRows}</tbody></table>
           ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则当前配置（飞书Base「关联规则 attach_rule」）+ Base自带记录修改历史。本期不新建配置审计后端表。</div>`:''}</div>`;
     }).join('');
@@ -998,9 +996,9 @@ function setState(s){
   const pb = document.getElementById('tbody-personal');
   document.getElementById('errBanner').style.display = 'none';
   if (s==='normal'){ renderTables(); }
-  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
-  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12">该用户暂无授权记录</td></tr>`; }
-  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
+  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
+  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11">该用户暂无授权记录</td></tr>`; }
+  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
 }
 function toggleAnno(){
   document.body.classList.toggle('anno-on');
