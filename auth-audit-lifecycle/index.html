@@ -183,7 +183,8 @@
     <a onclick="openDrawer('A-010');togglePM()">⑬ 抽屉：无凭据来源 case</a>
     <a onclick="openDrawer('A-011');togglePM()">⑭ 抽屉：设备凭据 case</a>
     <a onclick="gotoTab('summary');setTimeout(()=>toggleSum(0,0),100);togglePM()">⑮ 附加权益（case16：不进表怎么记）</a>
-    <a onclick="openRuleAudit('R-001');togglePM()">⑯ 规则变更记录（配置变更审计表）</a>
+    <a onclick="openRuleAudit('R-001');togglePM()">⑯ 关联规则（飞书Base+记录历史）</a>
+    <a onclick="openSourceIdSamples();togglePM()">⑰ source_id 现状语义样例（全类型）</a>
   </div>
 </div>
 
@@ -255,7 +256,7 @@
         </div>
         <table class="grid" id="tbl-personal">
           <thead><tr>
-            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据（原来源ID）</th><th>创建时间</th><th>操作</th>
+            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据</th><th>创建时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
         </table>
@@ -381,10 +382,10 @@
   </div>
 </div>
 
-<!-- 规则变更记录抽屉（配置变更审计表 auth_config_audit） -->
+<!-- 关联规则查看（数据源：飞书Base「关联规则 attach_rule」+ Base记录历史） -->
 <div class="modal-mask" id="ruleMask">
   <div class="modal" style="width:640px">
-    <div class="modal-head"><h3 id="rule-title">规则变更记录</h3><span class="drawer-close" onclick="closeModal('ruleMask')">✕</span></div>
+    <div class="modal-head"><h3 id="rule-title">关联规则</h3><span class="drawer-close" onclick="closeModal('ruleMask')">✕</span></div>
     <div class="modal-body" id="rule-body"></div>
     <div class="modal-foot"><button class="btn primary" onclick="closeModal('ruleMask')">知道了</button></div>
   </div>
@@ -396,6 +397,15 @@
     <div class="modal-head"><h3>订单凭据跳转（示意）</h3><span class="drawer-close" onclick="closeModal('credMask')">✕</span></div>
     <div class="modal-body" id="cred-body"></div>
     <div class="modal-foot"><button class="btn primary" onclick="closeModal('credMask')">知道了</button></div>
+  </div>
+</div>
+
+<!-- source_id 现状语义样例：覆盖注册表初始化中的全部类型 -->
+<div class="modal-mask" id="sourceIdMask">
+  <div class="modal" style="width:900px">
+    <div class="modal-head"><h3>source_id 现状语义样例（存量初始化全类型）</h3><span class="drawer-close" onclick="closeModal('sourceIdMask')">✕</span></div>
+    <div class="modal-body" id="sourceid-body"></div>
+    <div class="modal-foot"><button class="btn primary" onclick="closeModal('sourceIdMask')">知道了</button></div>
   </div>
 </div>
 
@@ -422,8 +432,8 @@ const CRED_NAME = { order:"订单", third_order:"三方订单", redeem_code:"兑
 const CRED_TITLE = { third_order:"三方平台原始订单号（抖店/京东等平台单号原值；一期不跳转，二期跳三方订单详情）",
   redeem_code:"兑换码记录 ID（redeemCode 服务主键；一期不跳转，二期跳兑换码记录）",
   voucher:"体验券/体验机会记录 ID（一期不跳转）",
-  business_auth:"B端授权 ID（B端系统 businessAuth 表主键 uuid；一期不跳转，外链格式待B端摸底）",
-  activity:"来源注册表登记的活动代号（生产=注册代号，活动记录 ID 在技术详情；一期不跳转，二期跳注册表活动详情）",
+  business_auth:"businessAuthId（B端授权接口查询主键；代码确认必传 string，但具体格式以 B端真实主键为准，待接口摸底，不能默认 uuid）",
+  activity:"活动记录 ID（单次发放的业务记录ID）；注意 source_type 的活动来源代号来自注册表，来源代号不是 credential_id",
   work_order:"客服工单号（工单系统单号，新规范必填；一期不跳转，二期拼工单外链）",
   send_rule:"补发规则 ID（send_rule 表主键 uuid，规则名见事件原因说明；一期不跳转，二期跳规则详情）",
   device:"脱敏设备标识 omvd（合规要求禁止可读设备号；一期不跳转，二期跳平板管理）" };
@@ -438,7 +448,7 @@ function credCell(t, id, drawerCtx){
   }
   return `<span class="cred-text" title="${CRED_TITLE[t]||''}">${CRED_NAME[t]} ${id}</span>`;
 }
-/* ============ 配置变更审计（auth_config_audit）假数据与弹窗 ============ */
+/* ============ 关联规则（飞书Base attach_rule + Base记录历史）假数据与弹窗 ============ */
 const RULE_AUDIT = {
  "R-001": { name:"初中数学多版本课关联规则", type:"关联规则（attach_rule）", events:[
    { time:"2026-11-10 14:22", action:"修改", op:"王工（内容平台）",
@@ -452,9 +462,9 @@ const RULE_AUDIT = {
 function openRuleAudit(rid){
   const r = RULE_AUDIT[rid];
   if(!r){ toast('无该规则的变更记录'); return; }
-  document.getElementById('rule-title').textContent = `规则变更记录 · ${rid} ${r.name}`;
+  document.getElementById('rule-title').textContent = `关联规则 · ${rid} ${r.name}`;
   document.getElementById('rule-body').innerHTML =
-    `<div class="anno">📌 数据源=飞书《授权来源与审计枚举注册表》的「配置变更记录」表（关联规则/补发规则/来源注册/枚举变更四类共用，配合 Base 记录修改历史兜底；不新建后端表，见 PRD case16）。</div>
+    `<div class="anno">📌 数据源=飞书《授权来源与审计枚举注册表》的「关联规则 attach_rule」表；当前值在表内维护，变更前后/修改人/修改时间用 Base 自带记录修改历史查看。本期不新建配置审计后端表（见 PRD case16、7.8）。</div>
     <div style="font-size:12px;color:#606266;margin-bottom:8px">配置类型：${r.type} ｜ 配置编号：${rid}</div>
     <div class="tl">` + r.events.map(e=>`
       <div class="ev ${e.action==='新增'?'birth':''}">
@@ -474,6 +484,33 @@ function openCred(type, id){
     <b>订单 ${id}</b>跳转目标：运营后台-订单管理-订单详情页（带单号定位，现有页面+带参跳转）
     <div style="margin-top:8px;color:#909399">一期唯一开通点击跳转的凭据类型（PRD §4.2）</div></div>`;
   document.getElementById('credMask').classList.add('open');
+}
+
+/* source_id 存量语义全覆盖：来自 source.go 注释与注册表初始化 */
+const SOURCE_ID_SAMPLES = [
+  ["订单ID","buy / 公域订单补发","5f8e02cd…91a4","新口径 credential_id 与 source_id 相同：洋葱订单号"],
+  ["兑换码记录ID","redeem","rc_67ea…102f","新口径相同：redeemCode 服务记录主键（不是码面文字）"],
+  ["操作者ID（历史）","admin / award","shadowUser_04af…","历史 source_id 是人，不是单据；新口径 credential_id 改填客服工单号"],
+  ["彩票ID","present","lottery_2027NY_0088","新口径归 activity，credential_id 填抽奖/彩票业务记录ID"],
+  ["机会计数记录ID","trialChance","chance_88021","新口径归 voucher，credential_id 与 source_id 相同"],
+  ["前驱授权ID","auth / unfreeze / 转换","3374defd-5ebe-49ea…","新口径归 auth，credential_id 与 source_id 相同，可在抽屉锚定事件流"],
+  ["无 sourceId","teacherLevelUp / vip / freeTime","（空）","归 none；reason_text 强制写清发放依据，新业务禁用"],
+  ["unionId 拼接串（历史）","parentsReward","unionId:o7Xt4t…","不是可追溯单据，按 none 兼容；原因说明必填"],
+  ["渠道工单ID","entryTripVip / entryTeacherTrialVIP / entryCollectionCourses","entry_2f91…","归 business_auth；历史同值，新口径按B端/渠道真实主键登记"],
+  ["教师认证记录UUID","teacherAuth","authcert_56c2…","归 activity（认证/任务类），credential_id 与业务认证记录ID对齐"],
+  ["体验券记录ID","trialVouchers","tv_3301","归 voucher，credential_id 与 source_id 相同"],
+  ["B端统一来源键","businessAuth","sourceId=school_2026fall","source_id=BusinessAuthDetail.sourceId；credential_id=businessAuthId（通常不同，格式待B端摸底）"],
+  ["设备号+用户ID拼接（历史）","huaweiEduKitBindUser0318","device123:user_abc（历史原值）","新口径归 device：credential_id 改用脱敏 omvd 或 SN记录ID，禁止可读设备号"],
+  ["活动记录ID/空/自由文本（历史）","各中文活动串","act_88291f… /（空）","source_type=注册来源代号；credential_id=规范化活动业务记录ID；存量需逐来源治理"],
+  ["三方平台单号","doudian 等","D20261120887","归 third_order，credential_id 与 source_id 相同"],
+  ["补发规则ID","新课程补发 / 规则补发","sr_67ea5749…4b0c","归 send_rule；新口径相同，存量中文补发来源可能没有规则ID"],
+];
+function openSourceIdSamples(){
+  document.getElementById('sourceid-body').innerHTML =
+    `<div class="anno" style="display:block">📌 这张表是原型内的“口径样例页”，逐类覆盖注册表 Base 已初始化的 source_id 语义。正式唯一口径仍是 Base「来源注册表 source_type」的 sourceId 说明 / sourceId 填写说明 / source_id 与 credential_id 的关系三列。</div>
+    <table class="grid"><thead><tr><th>source_id 现状类型</th><th>典型 source_type</th><th>生产值形态示例</th><th>新口径怎么填 credential_id</th></tr></thead>
+    <tbody>${SOURCE_ID_SAMPLES.map(r=>`<tr><td><b>${r[0]}</b></td><td>${r[1]}</td><td>${r[2]}</td><td>${r[3]}</td></tr>`).join('')}</tbody></table>`;
+  document.getElementById('sourceIdMask').classList.add('open');
 }
 /* 列表点前驱授权：找到持有该链的授权并打开抽屉锚定 */
 function openDrawerByAuthRef(refId){
@@ -498,11 +535,11 @@ const AUTHS = {
  "A-006": { name:"初中数学 培优课", type:"培优课", subject:"初中数学", state:"using", stateTxt:"使用中",
    start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"抖店订单(doudian)", credT:"third_order", credId:"D20261120887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换", archived:false },
  "A-007": { name:"初中全科 同步课 VIP", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
-   start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", credT:"business_auth", credId:"ba_5f8e02cd…91a4", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
+   start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", credT:"business_auth", credId:"businessAuthId=67ea…4b0c", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
  "A-008": { name:"初中语文 同步课 VIP（14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
-   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"活动发放(activity)", credT:"activity", credId:"mkt_2026ny01", created:"2026-12-01 00:10:00", creator:"system", reason:"新年活动", archived:false },
+   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"2026新年活动(mkt_2026ny01)", credT:"activity", credId:"act_88291f…3d", created:"2026-12-01 00:10:00", creator:"system", reason:"新年活动", archived:false },
  "A-009": { name:"初中数学 同步课 VIP（新学科扩容）", type:"同步课", subject:"初中数学", state:"unused", stateTxt:"未使用",
-   start:"—", end:"—", remain:"排队中", total:"90天", src:"规则补发(sendRule)", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
+   start:"—", end:"—", remain:"排队中", total:"90天", src:"新课程补发", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
  "A-010": { name:"教师版 全科 VIP", type:"同步课", subject:"教师全科", state:"using", stateTxt:"使用中",
    start:"2026-10-20 00:00:00", end:"2027-10-19 23:59:59", remain:"312 天", total:"365天", src:"教师升级赠送(teacherLevelUp)", credT:"none", credId:"", created:"2026-10-20 10:00:00", creator:"system", reason:"教师升级", archived:false },
  "A-011": { name:"初中数学 同步课 VIP（平板权益）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
@@ -606,13 +643,13 @@ const EVENTS = {
  "A-007": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-11-01 08:00:00", op:"赵强（渠道经理）",
      body:"原因：B端进校开通 ｜ XX中学 2026 秋季批次。",
-     diff:[["状态","—","使用中"]], cred:{t:"business_auth", id:"ba_5f8e02cd…91a4"},
+     diff:[["状态","—","使用中"]], cred:{t:"business_auth", id:"businessAuthId=67ea…4b0c"},
      tech:{"事件编号":"E-9601","事件序号":"1","调用方服务":"B端服务","调用接口":"BusinessAuth.Distribute","批次号":"B-SCHOOL-0915"} }
  ]},
  "A-008": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-12-01 00:10:00", op:"系统（活动服务）",
      body:"原因：运营发放 ｜ 2026 新年活动批量发放（该活动已在来源注册表登记）。",
-     diff:[["状态","—","使用中"]], cred:{t:"activity", id:"mkt_2026ny01"},
+     diff:[["状态","—","使用中"]], cred:{t:"activity", id:"act_88291f…3d"},
      tech:{"事件编号":"E-9701","事件序号":"1","活动记录 ID":"act_88291f…3d","批次号":"B-2026NY01-003","调用方服务":"活动服务"} }
  ]},
  "A-009": { chain:null, events:[
@@ -756,16 +793,16 @@ function renderSummary(){
       }).join('');
       const attachRows = (r.attach||[]).map(at=>`<tr style="background:#fdfaf3">
           <td><span style="color:#909399">—</span><div style="color:#e6a23c;font-size:11px">附加权益·无独立授权记录</div></td>
-          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（配置类对象，变更记录见「规则变更记录」）">规则 ${at.rule}</span></td>
+          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td>
           <td colspan="4" style="color:#909399">与本体授权 ${at.host} 同起止（${at.name}）</td>
           <td><span class="st using">随本体生效</span></td><td>—</td><td>—</td><td>由授权 ${at.host} 按规则 ${at.rule} 附加</td>
-          <td><a onclick="openRuleAudit('${at.rule}')">规则变更记录</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
+          <td><a onclick="openRuleAudit('${at.rule}')">查看关联规则</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
       return `<div class="sum-row" id="sr-${gi}-${ri}" onclick="toggleSum(${gi},${ri})">
           <span class="arr">▶</span><span>${r.name}${r.attach?` <span style="color:#e6a23c;font-size:11px">（含 ${r.attach.length} 条附加权益）</span>`:''}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
         <div class="sum-detail" id="sd-${gi}-${ri}">
-          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据（原来源ID）</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
+          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
           <tbody>${detailRows}${attachRows}</tbody></table>
-          ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则的变更记录（飞书注册表 Base「配置变更记录」表）。</div>`:''}</div>`;
+          ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则当前配置（飞书Base「关联规则 attach_rule」）+ Base自带记录修改历史。本期不新建配置审计后端表。</div>`:''}</div>`;
     }).join('');
     return `<div class="cat-title">${g.cat}</div>
       <div class="sum-head"><span></span><span>授权名称</span><span>总剩余时长</span><span>总截止时间</span></div>${rows}`;
@@ -820,7 +857,8 @@ function openDrawer(id, chainFocus){
     html += `<div class="empty"><div class="ic">⏳</div>暂无事件</div>`;
   } else {
     html += `<div class="tl">` + [...evs].reverse().map(e=>{
-      const diffs = (e.diff||[]).filter(d=>d[1]!==""||d[2]!=="").map(d=>
+      const noStatusDiff = ['grant','grant_supplement','grant_delayed','activate'].includes(e.et);
+      const diffs = (e.diff||[]).filter(d=>(d[1]!==""||d[2]!=="") && !(noStatusDiff && d[0]==='状态')).map(d=>
         `<span style="color:#909399">${d[0]}:</span> ${d[1]&&d[1]!=="—"?`<span class="old">${d[1]}</span>→`:""}<span class="new">${d[2]||d[1]}</span>`).join('　');
       const credHtml = e.cred ? `<div style="margin-top:4px">凭据：${credCell(e.cred.t, e.cred.id, {root:id})}</div>` : "";
       const techHtml = e.tech ? `<details class="tech"><summary>技术详情（研发排查用）</summary><div class="tech-body">` +
@@ -829,6 +867,7 @@ function openDrawer(id, chainFocus){
         <div class="ev-head"><span class="badge ${e.cls}">${e.label}</span><span class="t">${e.time}</span></div>
         <div class="who">操作人：${e.op}</div>
         <div class="body">${e.body}
+          <div style="margin-top:5px;color:#606266">事件后状态：<span class="st ${statusClass(eventAfterStatus(e))}">${eventAfterStatus(e)}</span></div>
           ${diffs?`<div class="diff">${diffs}</div>`:""}
           ${credHtml}${techHtml}
         </div></div>`;
@@ -843,6 +882,29 @@ function openDrawer(id, chainFocus){
 function switchChain(rootId, focusId){ openDrawer(rootId, focusId); }
 function closeDrawer(){ document.getElementById('drawer').classList.remove('open'); document.getElementById('mask').classList.remove('open'); }
 function copyAuthId(){ toast('已复制 ' + document.getElementById('d-authid').textContent); }
+
+/* 每个事件节点都展示“事件后状态”；发放/生效不再用红绿 diff，其他业务变更仍可额外展示前后值 */
+function eventAfterStatus(e){
+  const statusDiff = (e.diff||[]).find(d=>d[0]==='状态');
+  if (statusDiff) return statusDiff[2] || statusDiff[1];
+  const m = {
+    grant:'未使用', grant_supplement:'未使用', grant_delayed:'待激活',
+    activate:'使用中', freeze:'已冻结', unfreeze:'未使用',
+    exchange_in:'使用中', exchange_out:'已取消',
+    deduct_revoke:'已取消', restore:'未使用', adjust:'状态不变',
+    expire:'已使用', revoke:'已取消', archive:'状态不变（已归档）',
+    repair:'按修复后主表状态', correction:'状态不变'
+  };
+  return m[e.et] || '状态不变';
+}
+function statusClass(txt){
+  if(txt.includes('使用中')) return 'using';
+  if(txt.includes('未使用')||txt.includes('待激活')) return 'unused';
+  if(txt.includes('冻结')) return 'freeze';
+  if(txt.includes('取消')) return 'canceled';
+  if(txt.includes('已使用')) return 'used';
+  return 'used';
+}
 
 /* ============ 表单 ============ */
 function toggleDurType(){
