@@ -274,7 +274,7 @@ tr:hover td{background:#fafcff}
                 <label><span class="req">*</span>策略描述<span class="tip">?<span class="tiptext">建议写明：补发原因、关联活动/工单编号、预期影响范围。将展示在审计日志与详情页。</span></span></label>
                 <div class="fctl">
                   <textarea id="f-desc" maxlength="200" rows="3" style="width:100%" placeholder="请输入补发原因、关联活动/工单、预期影响范围（200 字以内）">7月初中数学上新「函数专题 v2」，2025年9月至2026年6月期间购买过初中数学系统课（或兑换过0625批次兑换码）的在期用户，补齐新专题课程权益。关联工单 OP-20260707-118。</textarea>
-                  <div class="charcount"><span id="desccount">0</span>/200（原上限 24 字 → 现 200 字）</div>
+                  <div class="charcount"><span id="desccount">0</span>/200</div>
                   <div class="ferr">请输入策略描述</div>
                 </div>
               </div>
@@ -311,9 +311,10 @@ tr:hover td{background:#fafcff}
                     <label style="width:130px;text-align:right;padding-right:14px;padding-top:8px"><span class="req">*</span>时长取值<span class="tip">?<span class="tiptext">当一次命中涉及多个学科 / 多条依赖权益 / 多个来源批次、剩余时长不一致时，补发时长按哪一个为准，由你选择。</span></span></label>
                     <div class="fctl">
                       <div class="radio-group">
-                        <label><input type="radio" name="aggr1" value="longest" checked>跟随最长剩余时长</label>
-                        <label><input type="radio" name="aggr1" value="shortest">跟随最短剩余时长</label>
+                        <label><input type="radio" name="aggr1" value="longest" checked onchange="onAggr(this.value)">跟随最长剩余时长</label>
+                        <label><input type="radio" name="aggr1" value="shortest" onchange="onAggr(this.value)">跟随最短剩余时长</label>
                       </div>
+                      <div class="fhint" id="aggrhint">取本次命中范围内剩余时长最长的来源权益作为补发时长，适合希望用户不早于任何来源权益到期的场景。</div>
                     </div>
                   </div>
                 </div>
@@ -382,10 +383,10 @@ tr:hover td{background:#fafcff}
                   <label style="padding-top:8px"><span class="req">*</span>时间基准<span class="tip">?<span class="tiptext">【本期新增】判断"获得时间"以什么为准。修复前系统只看权益到账时间，即便指定了商品/兑换码来源；修复后按来源自动推荐正确基准。</span></span></label>
                   <div class="fctl">
                     <div class="radio-group" id="basis1">
-                      <label><input type="radio" name="basis1" value="orderPaid" checked>订单支付时间（推荐）</label>
-                      <label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>
+                      <label><input type="radio" name="basis1" value="orderPaid" checked onchange="onBasis('good',this.value)">订单支付时间（推荐）</label>
+                      <label><input type="radio" name="basis1" value="authAcquired" onchange="onBasis('good',this.value)">权益到账时间</label>
                     </div>
-                    <div class="fhint">已按「商品购买」来源默认选中订单支付时间；延迟发放、无主订单后补绑定用户将按真实购买时间判定。</div>
+                    <div class="fhint" id="basishint1">按订单支付成功时间圈选；延迟发放、后补绑定不会改变购买时间。</div>
                   </div>
                 </div>
               </div>
@@ -536,8 +537,8 @@ tr:hover td{background:#fafcff}
           <span class="muted">候选量 ≤ 1,000 时展示精确值；本次为抽样外推值（约）。无时间条件规则未来新增命中用户由增量事件处理，不计入本快照。</span>
         </div>
         <div class="dangerbox" style="background:#fff8e6;border-color:#ffe1a0">
-          <b style="color:#b26a00">当前匹配审批流：定时发布 · 中影响面</b><br>
-          审批策略：权益运营负责人单审（1 级） · 审批通过且到达 <b>2026-07-10 00:00</b> 后生效。若生效时间到达但审批未通过，将保持「审批中」，通过后立即生效。
+          <b style="color:#b26a00">当前匹配：直接确认（direct）</b><br>
+          初始影响面 8,632 ≤ 阈值 10,000，无需审批；提交人确认后，策略在 <b>2026-07-10 00:00</b> 生效。若超过阈值，才进入 maker-checker 独立复核。
         </div>
         <label style="font-size:13px;display:flex;gap:8px;align-items:center"><input type="checkbox" id="impact-ck">我已确认补发内容、条件与影响面无误</label>
       </div>
@@ -718,15 +719,31 @@ function onRangeMethod(){
   document.getElementById('autohint').style.display=auto?'block':'none';
   document.getElementById('fr-aggr').style.display=auto?'flex':'none';
 }
+function onAggr(v){
+  document.getElementById('aggrhint').textContent=v==='longest'
+    ?'取本次命中范围内剩余时长最长的来源权益作为补发时长，适合希望用户不早于任何来源权益到期的场景。'
+    :'取本次命中范围内剩余时长最短的来源权益作为补发时长，适合希望补发权益不超过最短来源权益边界的场景。';
+}
+function onBasis(src,v){
+  const hints={
+    'good:orderPaid':'按订单支付成功时间圈选；延迟发放、后补绑定不会改变购买时间。',
+    'good:authAcquired':'按该订单实际生成权益记录的时间圈选，可能晚于订单支付时间。',
+    'redeem:redeemAt':'按用户成功兑换该兑换码的时间圈选。',
+    'redeem:authAcquired':'按兑换后实际生成权益记录的时间圈选，可能晚于兑换时间。',
+    'any:authAcquired':'按用户获得指定依赖权益记录的时间圈选。'
+  };
+  document.getElementById('basishint1').textContent=hints[src+':'+v]||'';
+}
 function onSrc(n,v){
   document.getElementById('fr-good'+n).style.display=v==='good'?'flex':'none';
   document.getElementById('fr-redeem'+n).style.display=v==='redeem'?'flex':'none';
   // 依赖权益仅「不限来源」时展示；选商品/兑换码时命中依据即为商品订单/兑换码本身
   document.getElementById('fr-depend'+n).style.display=v==='any'?'flex':'none';
   const basis=document.getElementById('basis'+n);
-  if(v==='good')basis.innerHTML='<label><input type="radio" name="basis1" value="orderPaid" checked>订单支付时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>';
-  if(v==='redeem')basis.innerHTML='<label><input type="radio" name="basis1" value="redeemAt" checked>兑换码兑换时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired">权益到账时间</label>';
-  if(v==='any')basis.innerHTML='<label><input type="radio" name="basis1" value="authAcquired" checked>权益到账时间（不限来源仅支持此项）</label>';
+  if(v==='good')basis.innerHTML='<label><input type="radio" name="basis1" value="orderPaid" checked onchange="onBasis(&quot;good&quot;,this.value)">订单支付时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired" onchange="onBasis(&quot;good&quot;,this.value)">权益到账时间</label>';
+  if(v==='redeem')basis.innerHTML='<label><input type="radio" name="basis1" value="redeemAt" checked onchange="onBasis(&quot;redeem&quot;,this.value)">兑换码兑换时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired" onchange="onBasis(&quot;redeem&quot;,this.value)">权益到账时间</label>';
+  if(v==='any')basis.innerHTML='<label><input type="radio" name="basis1" value="authAcquired" checked onchange="onBasis(&quot;any&quot;,this.value)">权益到账时间（不限来源仅支持此项）</label>';
+  onBasis(v,v==='good'?'orderPaid':v==='redeem'?'redeemAt':'authAcquired');
 }
 function onEff(){
   document.getElementById('fr-efftime').style.display=document.querySelector('input[name=eff]:checked').value==='sched'?'flex':'none';
@@ -763,7 +780,7 @@ document.getElementById('impact-ck').addEventListener('change',e=>{
 });
 function confirmSubmit(){
   closeM('m-impact');
-  toast('已提交审批：权益运营负责人单审；通过且到达生效时间后执行');
+  toast('已确认：当前为 direct 直接确认；到达生效时间后执行');
   setTimeout(()=>nav('list'),900);
 }
 /* ---------- modals ---------- */
