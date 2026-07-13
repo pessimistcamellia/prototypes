@@ -47,6 +47,7 @@
   table.grid { width:100%; border-collapse:collapse; font-size:12px; }
   table.grid th { background:#f5f7fa; color:#606266; text-align:left; padding:8px; border-bottom:1px solid #ebeef5; white-space:nowrap; }
   table.grid td { padding:8px; border-bottom:1px solid #ebeef5; vertical-align:top; }
+  table.grid td.nowrap, table.grid td:last-child { white-space:nowrap; }
   table.grid tr:hover td { background:#f5f7fa; }
   .st { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; }
   .st.using { background:#f0f9eb; color:#67c23a; } .st.unused{ background:#ecf5ff; color:#409eff; }
@@ -313,7 +314,7 @@
   <div class="modal">
     <div class="modal-head"><h3>添加权益</h3><span class="drawer-close" onclick="closeModal('addMask')">✕</span></div>
     <div class="modal-body">
-      <div class="anno">📌 PRD §4.4：绿标=线上已有字段（保留）；红标=本需求新增/升格。提交与发放同事务落「发放」事件。硬件权益 tab=线上「添加硬件权益」入口，按 device 凭据对齐规格。</div>
+      <div class="anno">📌 PRD §4.4：绿标=线上已有字段（保留）；红标=本需求新增/升格。提交与发放同事务落「发放」事件。硬件权益 tab=线上「添加硬件权益」能力（线上现状位于 运营后台-平板管理/平板一口价管理 页面，入口位置不迁移；此处为规格演示），按 device 凭据对齐。</div>
       <div class="subtabs" style="margin-bottom:14px">
         <div class="subtab active" id="addtab-course" onclick="switchAddTab('course')">课程权益</div>
         <div class="subtab" id="addtab-hw" onclick="switchAddTab('hw')">硬件权益 <span class="old-tag">线上已有入口</span></div>
@@ -365,13 +366,13 @@
       <div class="frow" id="f-c-code"><div class="lab"><span class="req">*</span>撤销原因分类<span class="new-tag">改造</span></div><div class="ctl">
         <select id="c-rcode"><option value="">请选择</option><option>客服处理</option><option>退款补录</option><option>风控</option><option>发放错误</option><option>其他（须详述）</option></select>
         <div class="err">请选择撤销原因分类</div></div></div>
-      <div class="frow" id="f-c-text"><div class="lab"><span class="req">*</span>原因说明<span class="old-tag">线上已有</span></div><div class="ctl">
+      <div class="frow" id="f-c-text"><div class="lab"><span class="req">*</span>原因说明<span class="old-tag">线上已有·升格必填</span></div><div class="ctl">
         <textarea id="c-rtext" placeholder="5~200 字（线上『撤销理由』输入框升格：必填+落审计）"></textarea>
         <div class="err">原因说明须 5~200 字</div></div></div>
       <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>关联工单号<span class="new-tag">新增</span></div><div class="ctl">
         <input type="text" id="c-ticket" placeholder="WO- 开头">
         <div class="err">工单号格式不正确</div></div></div>
-      <div class="frow"><div class="lab">操作人 / 部门</div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）</div></div></div>
+      <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('cancelMask')">取消</button>
@@ -453,7 +454,7 @@ function openRuleAudit(rid){
   if(!r){ toast('无该规则的变更记录'); return; }
   document.getElementById('rule-title').textContent = `规则变更记录 · ${rid} ${r.name}`;
   document.getElementById('rule-body').innerHTML =
-    `<div class="anno">📌 数据源=「配置变更审计表」（PRD §3.6 case16）：授权审计事件表管"用户权益的变化"，这张表管"影响权益的规则/配置的变化"，同样只增不改不删。</div>
+    `<div class="anno">📌 数据源=飞书《授权来源与审计枚举注册表》的「配置变更记录」表（关联规则/补发规则/来源注册/枚举变更四类共用，配合 Base 记录修改历史兜底；不新建后端表，见 PRD case16）。</div>
     <div style="font-size:12px;color:#606266;margin-bottom:8px">配置类型：${r.type} ｜ 配置编号：${rid}</div>
     <div class="tl">` + r.events.map(e=>`
       <div class="ev ${e.action==='新增'?'birth':''}">
@@ -533,7 +534,7 @@ const EVENTS = {
      tech:{"事件编号":"E-9001","事件序号":"1","调用方服务":"go-order","调用接口":"Distribute","链路追踪 ID":"7f3a…c2","商品 SKU":"S-MATH-1Y","受益范围":"本人"} },
    { et:"activate", cls:"", label:"生效", time:"2026-10-12 10:03:25", op:"系统（自动生效）",
      body:"本条权益自动开始生效、开始计时。到期时间统一设为到期当天 23:59:59（保证用户当天学习不中断）。",
-     diff:[["状态","未使用","使用中"],["截止时间","—","2027-10-11 23:59:59"]], cred:null,
+     diff:[], cred:null,
      tech:{"事件编号":"E-9002","事件序号":"2","调用方服务":"userauth-job"} }
  ]},
  "A-002": { chain:null, events:[
@@ -541,7 +542,7 @@ const EVENTS = {
      body:"因订单支付成功发放，授予 +365 天。", diff:[["状态","—","未使用"]], cred:{t:"order", id:"O2026101502"},
      tech:{"事件编号":"E-9101","事件序号":"1","调用方服务":"go-order"} },
    { et:"activate", cls:"", label:"生效", time:"2026-10-15 09:11:48", op:"系统（自动生效）",
-     body:"本条权益自动开始生效、开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
      tech:{"事件编号":"E-9102","事件序号":"2"} },
    { et:"freeze", cls:"", label:"冻结", time:"2026-10-28 16:02:10", op:"系统（订单服务）",
      body:"原因：退款 ｜ 用户发起退款，进入退款处理期，权益暂时冻结不可用。",
@@ -559,7 +560,7 @@ const EVENTS = {
      diff:[["状态","—","未使用"]], cred:{t:"work_order", id:"WO-88121"},
      tech:{"事件编号":"E-9201","事件序号":"1","调用方服务":"shadow","调用接口":"userAuth.add"} },
    { et:"activate", cls:"", label:"生效", time:"2026-11-20 15:40:05", op:"系统（自动生效）",
-     body:"本条权益自动开始生效、开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
      tech:{"事件编号":"E-9202","事件序号":"2"} }
  ]},
  "A-004": { chain:[{id:"A-000W", name:"小学数学 VIP（已转出）"},{id:"A-000X", name:"初中数学 VIP（已转出）"},{id:"A-004", name:"高中数学 VIP（当前）"}], events:[
@@ -581,7 +582,7 @@ const EVENTS = {
      body:"因订单支付成功发放 +365 天（链条最初的凭据：真实订单）。", diff:[["状态","—","未使用"]], cred:{t:"order", id:"O2024090188"},
      tech:{"事件编号":"E-7001","事件序号":"1","调用方服务":"go-order"} },
    { et:"activate", cls:"", label:"生效", time:"2024-09-01 10:00:03", op:"系统（自动生效）",
-     body:"本条权益自动开始生效、开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
      tech:{"事件编号":"E-7002","事件序号":"2"} },
    { et:"exchange_out", cls:"death", label:"转换出", time:"2025-11-01 10:00:00", op:"陈璐（运营）",
      body:"原因：转换 ｜ 小升初转换：剩余 150 天转出至初中数学 VIP（A-000X）。",
@@ -599,7 +600,7 @@ const EVENTS = {
      diff:[["状态","—","未使用"]], cred:{t:"third_order", id:"D20261120887"},
      tech:{"事件编号":"E-9501","事件序号":"1","调用方服务":"growth-order-thirdparty","请求 ID":"r-88ac…"} },
    { et:"activate", cls:"", label:"生效", time:"2026-11-20 09:00:04", op:"系统（自动生效）",
-     body:"本条权益自动开始生效、开始计时。", diff:[["状态","未使用","使用中"]], cred:null,
+     body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
      tech:{"事件编号":"E-9502","事件序号":"2"} }
  ]},
  "A-007": { chain:null, events:[
@@ -656,11 +657,11 @@ function rowHtml(id, a){
   return `<tr>
     <td>${a.state==='using'||a.state==='unused'||a.state==='freeze'?chk:''}</td>
     <td><b>${a.name}</b><div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
-    <td>${a.type}</td>
-    <td><span class="st ${a.state}">${a.stateTxt}</span></td>
-    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.remain}</td>
+    <td class="nowrap">${a.type}</td>
+    <td class="nowrap"><span class="st ${a.state}">${a.stateTxt}</span></td>
+    <td class="nowrap">${a.start.slice(0,10)}</td><td class="nowrap">${a.end.slice(0,10)}</td><td class="nowrap">${a.remain}</td>
     <td>${a.src}</td><td>${credCell(a.credT, a.credId)}</td>
-    <td>${a.created.slice(0,10)}</td>
+    <td class="nowrap">${a.created.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
 }
@@ -764,7 +765,7 @@ function renderSummary(){
         <div class="sum-detail" id="sd-${gi}-${ri}">
           <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据（原来源ID）</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
           <tbody>${detailRows}${attachRows}</tbody></table>
-          ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则的变更记录（配置变更审计表）。</div>`:''}</div>`;
+          ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则的变更记录（飞书注册表 Base「配置变更记录」表）。</div>`:''}</div>`;
     }).join('');
     return `<div class="cat-title">${g.cat}</div>
       <div class="sum-head"><span></span><span>授权名称</span><span>总剩余时长</span><span>总截止时间</span></div>${rows}`;
@@ -791,7 +792,6 @@ function openDrawer(id, chainFocus){
       <div>当前状态：<span class="st ${a.state}">${a.stateTxt}</span></div>
       <div>剩余时长：${a.remain||"—"}</div>
       <div>生效时间：${a.start}</div><div>截止时间：${a.end}</div>
-      <div class="full">说明：上方是这条权益<b>此刻的最新状态</b>；下方时间线是它从发放至今<b>发生过的每件事</b>。两处起止时间如有出入，以上方为准——用户有多笔同科权益时，系统会排队顺延、自动调整每笔的起止时间。</div>
     </div>`;
   }
 
