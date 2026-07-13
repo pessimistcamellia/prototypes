@@ -45,6 +45,8 @@
   .chip .x { color:#909399; margin-left:3px; cursor:pointer; }
   .filter-actions { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
   table.grid { width:100%; border-collapse:collapse; font-size:12px; }
+  #pane-personal, #pane-archived { overflow-x:auto; }
+  #pane-personal table.grid { min-width:1450px; }
   table.grid th { background:#f5f7fa; color:#606266; text-align:left; padding:8px; border-bottom:1px solid #ebeef5; white-space:nowrap; }
   table.grid td { padding:8px; border-bottom:1px solid #ebeef5; vertical-align:top; }
   table.grid td.nowrap, table.grid td:last-child { white-space:nowrap; }
@@ -256,7 +258,7 @@
         </div>
         <table class="grid" id="tbl-personal">
           <thead><tr>
-            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据</th><th>创建时间</th><th>操作</th>
+            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源ID（source_id）</th><th>凭据（credential_id）</th><th>创建时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
         </table>
@@ -523,29 +525,45 @@ function openDrawerByAuthRef(refId){
 /* ============ 授权数据 ============ */
 const AUTHS = {
  "A-001": { name:"初中数学 同步课 VIP", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-10-12 00:00:00", end:"2027-10-11 23:59:59", remain:"412 天", total:"365天", src:"购买获得(buy)", credT:"order", credId:"O2026101201", created:"2026-10-12 10:03:22", creator:"—", reason:"订单购买", archived:false },
+   start:"2026-10-12 00:00:00", end:"2027-10-11 23:59:59", remain:"412 天", total:"365天", src:"购买获得(buy)", sourceId:"O2026101201", credT:"order", credId:"O2026101201", created:"2026-10-12 10:03:22", creator:"—", reason:"订单购买", archived:false },
  "A-002": { name:"初中英语 同步课 VIP", type:"同步课", subject:"初中英语", state:"canceled", stateTxt:"已取消",
-   start:"2026-10-15 00:00:00", end:"2026-11-02 14:20:11", remain:"—", total:"365天", src:"购买获得(buy)", credT:"order", credId:"O2026101502", created:"2026-10-15 09:11:45", creator:"—", reason:"订单购买", archived:false },
+   start:"2026-10-15 00:00:00", end:"2026-11-02 14:20:11", remain:"—", total:"365天", src:"购买获得(buy)", sourceId:"O2026101502", credT:"order", credId:"O2026101502", created:"2026-10-15 09:11:45", creator:"—", reason:"订单购买", archived:false },
  "A-003": { name:"初中物理 同步课 VIP（30天）", type:"同步课", subject:"初中物理", state:"using", stateTxt:"使用中",
-   start:"2026-11-20 00:00:00", end:"2026-12-19 23:59:59", remain:"22 天", total:"30天", src:"后台手动发放(shadow)", credT:"work_order", credId:"WO-88121", created:"2026-11-20 15:40:02", creator:"李思思", reason:"客服补偿", archived:false },
+   start:"2026-11-20 00:00:00", end:"2026-12-19 23:59:59", remain:"22 天", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_04af…25cc", sourceIdTip:"存量shadow来源：source_id是操作人ID；新审计凭据改用工单号", credT:"work_order", credId:"WO-88121", created:"2026-11-20 15:40:02", creator:"李思思", reason:"客服补偿", archived:false },
  "A-004": { name:"高中数学 同步课 VIP", type:"同步课", subject:"高中数学", state:"using", stateTxt:"使用中",
-   start:"2026-11-05 00:00:00", end:"2027-01-24 23:59:59", remain:"80 天", total:"80天", src:"授权转换(auth)", credT:"auth", credId:"A-000X", created:"2026-11-05 11:00:00", creator:"周敏", reason:"初升高转换", archived:false },
+   start:"2026-11-05 00:00:00", end:"2027-01-24 23:59:59", remain:"80 天", total:"80天", src:"授权转换(auth)", sourceId:"A-000X", credT:"auth", credId:"A-000X", created:"2026-11-05 11:00:00", creator:"周敏", reason:"初升高转换", archived:false },
  "A-005": { name:"小学数学 培优课", type:"培优课", subject:"小学数学", state:"used", stateTxt:"已使用",
-   start:"2024-07-01 00:00:00", end:"2025-06-30 23:59:59", remain:"—", total:"365天", src:"兑换码兑换(redeem)", credT:"redeem_code", credId:"RC-7Y2K…", created:"2024-07-01 08:30:00", creator:"system", reason:"兑换码兑换", archived:false },
+   start:"2024-07-01 00:00:00", end:"2025-06-30 23:59:59", remain:"—", total:"365天", src:"兑换码兑换(redeem)", sourceId:"rc_67ea…102f", credT:"redeem_code", credId:"rc_67ea…102f", created:"2024-07-01 08:30:00", creator:"system", reason:"兑换码兑换", archived:false },
  "A-006": { name:"初中数学 培优课", type:"培优课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"抖店订单(doudian)", credT:"third_order", credId:"D20261120887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换", archived:false },
+   start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"抖店订单(doudian)", sourceId:"D20261120887", credT:"third_order", credId:"D20261120887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换", archived:false },
  "A-007": { name:"初中全科 同步课 VIP", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
-   start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", credT:"business_auth", credId:"businessAuthId=67ea…4b0c", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
+   start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", sourceId:"school_2026fall", sourceIdTip:"BusinessAuthDetail.sourceId（写入userauth的统一来源键）", credT:"business_auth", credId:"businessAuthId=67ea…4b0c", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
  "A-008": { name:"初中语文 同步课 VIP（14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
-   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"2026新年活动(mkt_2026ny01)", credT:"activity", credId:"act_88291f…3d", created:"2026-12-01 00:10:00", creator:"system", reason:"新年活动", archived:false },
+   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"2026新年活动(mkt_2026ny01)", sourceId:"act_88291f…3d", credT:"activity", credId:"act_88291f…3d", created:"2026-12-01 00:10:00", creator:"system", reason:"新年活动", archived:false },
  "A-009": { name:"初中数学 同步课 VIP（新学科扩容）", type:"同步课", subject:"初中数学", state:"unused", stateTxt:"未使用",
-   start:"—", end:"—", remain:"排队中", total:"90天", src:"新课程补发", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
+   start:"—", end:"—", remain:"排队中", total:"90天", src:"新课程补发", sourceId:"sr_67ea5749…4b0c", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
  "A-010": { name:"教师版 全科 VIP", type:"同步课", subject:"教师全科", state:"using", stateTxt:"使用中",
-   start:"2026-10-20 00:00:00", end:"2027-10-19 23:59:59", remain:"312 天", total:"365天", src:"教师升级赠送(teacherLevelUp)", credT:"none", credId:"", created:"2026-10-20 10:00:00", creator:"system", reason:"教师升级", archived:false },
+   start:"2026-10-20 00:00:00", end:"2027-10-19 23:59:59", remain:"312 天", total:"365天", src:"教师升级赠送(teacherLevelUp)", sourceId:"", sourceIdTip:"历史无sourceId", credT:"none", credId:"", created:"2026-10-20 10:00:00", creator:"system", reason:"教师升级", archived:false },
  "A-011": { name:"初中数学 同步课 VIP（平板权益）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-10-05 00:00:00", end:"2046-10-04 23:59:59", remain:"7200+ 天", total:"20年", src:"一口价平板激活(school)", credT:"device", credId:"omvd-8f3…a2", created:"2026-10-05 14:00:00", creator:"system", reason:"平板激活", archived:false },
+   start:"2026-10-05 00:00:00", end:"2046-10-04 23:59:59", remain:"7200+ 天", total:"20年", src:"一口价平板激活(school)", sourceId:"device123:user_58f2（历史拼接）", sourceIdTip:"存量设备号+用户ID拼接；新凭据改用脱敏omvd", credT:"device", credId:"omvd-8f3…a2", created:"2026-10-05 14:00:00", creator:"system", reason:"平板激活", archived:false },
+ "A-012": { name:"初中数学 同步课 VIP（抽奖7天）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
+   start:"2026-12-02 00:00:00", end:"2026-12-08 23:59:59", remain:"5 天", total:"7天", src:"彩票抽取(present)", sourceId:"lottery_2026NY_0088", sourceIdTip:"彩票/抽奖业务记录ID（lotteryId）", credT:"activity", credId:"lottery_2026NY_0088", created:"2026-12-02 09:00:00", creator:"system", reason:"彩票抽取", archived:false },
+ "A-013": { name:"初中英语 同步课 VIP（体验机会）", type:"同步课", subject:"初中英语", state:"unused", stateTxt:"未使用",
+   start:"—", end:"—", remain:"排队中", total:"5天", src:"体验机会兑换(trialChance)", sourceId:"chance_88021", sourceIdTip:"体验机会计数记录ID", credT:"voucher", credId:"chance_88021", created:"2026-12-03 10:00:00", creator:"system", reason:"体验机会兑换", archived:false },
+ "A-014": { name:"初中生物 同步课 VIP（任务奖励）", type:"同步课", subject:"初中生物", state:"using", stateTxt:"使用中",
+   start:"2026-12-04 00:00:00", end:"2026-12-10 23:59:59", remain:"6 天", total:"7天", src:"完成任务获得(subtask)", sourceId:"task_171725377933451915", sourceIdTip:"任务/子任务记录ID（subtaskId）", credT:"activity", credId:"task_171725377933451915", created:"2026-12-04 12:00:00", creator:"system", reason:"完成任务奖励", archived:false },
+ "A-015": { name:"家长端赠送 7天 VIP", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
+   start:"2026-12-05 00:00:00", end:"2026-12-11 23:59:59", remain:"6 天", total:"7天", src:"家长端赠送(parentsReward)", sourceId:"unionId:o7Xt4txU…", sourceIdTip:"历史unionId拼接串，不是可追溯业务单据", credT:"none", credId:"", created:"2026-12-05 13:00:00", creator:"system", reason:"家长端赠送", archived:false },
+ "A-016": { name:"渠道赠送 1个月 VIP", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
+   start:"2026-12-06 00:00:00", end:"2027-01-05 23:59:59", remain:"30 天", total:"31天", src:"渠道赠送VIP(entryTripVip)", sourceId:"entry_2f91…77aa", sourceIdTip:"渠道工单ID", credT:"business_auth", credId:"entry_2f91…77aa", created:"2026-12-06 14:00:00", creator:"渠道系统", reason:"渠道工单赠送", archived:false },
+ "A-017": { name:"教师认证赠送 VIP", type:"同步课", subject:"小学数学", state:"using", stateTxt:"使用中",
+   start:"2026-12-07 00:00:00", end:"2027-12-06 23:59:59", remain:"365 天", total:"365天", src:"教师认证赠送(teacherAuth)", sourceId:"authcert_56c2…18f0", sourceIdTip:"教师认证记录UUID", credT:"activity", credId:"authcert_56c2…18f0", created:"2026-12-07 15:00:00", creator:"教师认证系统", reason:"教师认证通过", archived:false },
+ "A-018": { name:"积分兑换 VIP（3天）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
+   start:"2026-12-08 00:00:00", end:"2026-12-10 23:59:59", remain:"2 天", total:"3天", src:"积分兑换(integral)", sourceId:"integral_bill_99182", sourceIdTip:"积分兑换/账单记录ID", credT:"redeem_code", credId:"integral_bill_99182", created:"2026-12-08 16:00:00", creator:"积分商城", reason:"积分商品兑换", archived:false },
+ "A-019": { name:"退款取消恢复 VIP", type:"同步课", subject:"初中物理", state:"unused", stateTxt:"未使用",
+   start:"—", end:"—", remain:"排队中", total:"20天", src:"授权解冻(unfreeze)", sourceId:"A-OLD-778", sourceIdTip:"原授权ID（退款取消后解冻新建授权）", credT:"auth", credId:"A-OLD-778", created:"2026-12-09 17:00:00", creator:"system", reason:"退款取消解冻", archived:false },
  "A-101": { name:"初中化学 体验课（7天）", type:"同步课", subject:"初中化学", state:"canceled", stateTxt:"已取消",
-   start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", total:"7天", src:"体验券兑换(trialVouchers)", credT:"voucher", credId:"TV-3301", created:"2026-10-03 12:00:00", creator:"system", reason:"体验券兑换", archived:true, archivedAt:"2026-12-01 02:10:00" },
+   start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", total:"7天", src:"体验券兑换(trialVouchers)", sourceId:"tv_3301", credT:"voucher", credId:"tv_3301", created:"2026-10-03 12:00:00", creator:"system", reason:"体验券兑换", archived:true, archivedAt:"2026-12-01 02:10:00" },
 };
 
 /* ============ 全部权益总时长：分组汇总（对齐线上） ============ */
@@ -697,7 +715,9 @@ function rowHtml(id, a){
     <td class="nowrap">${a.type}</td>
     <td class="nowrap"><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td class="nowrap">${a.start.slice(0,10)}</td><td class="nowrap">${a.end.slice(0,10)}</td><td class="nowrap">${a.remain}</td>
-    <td>${a.src}</td><td>${credCell(a.credT, a.credId)}</td>
+    <td>${a.src}</td>
+    <td><span class="cred-text" title="${a.sourceIdTip||'现有 userauth.source_id 原值'}">${a.sourceId||'（空）'}</span></td>
+    <td>${credCell(a.credT, a.credId)}</td>
     <td class="nowrap">${a.created.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
@@ -730,7 +750,7 @@ function dateOk(created, d1, d2){
 function srcIdOk(a, raw){
   if (!raw) return true;
   const ids = raw.split(';').map(s=>s.trim()).filter(Boolean);
-  return ids.some(x => (a.credId||'').includes(x));
+  return ids.some(x => (a.sourceId||'').includes(x));
 }
 function personalFilter([id,a]){
   if (!stateSel.has(a.state)) return false;
@@ -761,7 +781,7 @@ function renderTables(){
   const only = document.getElementById('selOnly').checked;
   let entries = Object.entries(AUTHS).filter(([,a])=>!a.archived).filter(personalFilter);
   if (only) entries = entries.filter(([id])=>selected.has(id));
-  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="11">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
+  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="12">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
   const arch = Object.entries(AUTHS).filter(([,a])=>a.archived).filter(archFilter);
   document.getElementById('tbody-archived').innerHTML = arch.map(([id,a])=>archRowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="8">无符合筛选条件的记录</td></tr>`;
   updateSelUI();
@@ -786,21 +806,21 @@ function renderSummary(){
       const detailRows = r.details.map(id=>{
         const a=AUTHS[id];
         return `<tr>
-          <td>${id}</td><td>${a.src}</td><td>${credCell(a.credT,a.credId)}</td>
+          <td>${id}</td><td>${a.src}</td><td>${a.sourceId||'（空）'}</td><td>${credCell(a.credT,a.credId)}</td>
           <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.total}</td><td>${a.remain}</td>
           <td><span class="st ${a.state}">${a.stateTxt}</span></td><td>${a.creator}</td><td>${a.created.slice(0,10)}</td><td>${a.reason}</td>
           <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td></tr>`;
       }).join('');
       const attachRows = (r.attach||[]).map(at=>`<tr style="background:#fdfaf3">
           <td><span style="color:#909399">—</span><div style="color:#e6a23c;font-size:11px">附加权益·无独立授权记录</div></td>
-          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td>
+          <td>关联规则附加</td><td>（无 source_id）</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td>
           <td colspan="4" style="color:#909399">与本体授权 ${at.host} 同起止（${at.name}）</td>
           <td><span class="st using">随本体生效</span></td><td>—</td><td>—</td><td>由授权 ${at.host} 按规则 ${at.rule} 附加</td>
           <td><a onclick="openRuleAudit('${at.rule}')">查看关联规则</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
       return `<div class="sum-row" id="sr-${gi}-${ri}" onclick="toggleSum(${gi},${ri})">
           <span class="arr">▶</span><span>${r.name}${r.attach?` <span style="color:#e6a23c;font-size:11px">（含 ${r.attach.length} 条附加权益）</span>`:''}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
         <div class="sum-detail" id="sd-${gi}-${ri}">
-          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
+          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>来源ID</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
           <tbody>${detailRows}${attachRows}</tbody></table>
           ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则当前配置（飞书Base「关联规则 attach_rule」）+ Base自带记录修改历史。本期不新建配置审计后端表。</div>`:''}</div>`;
     }).join('');
@@ -818,7 +838,12 @@ let curDrawerAuth = null;
 function openDrawer(id, chainFocus){
   curDrawerAuth = id;
   const a = AUTHS[id] || {name:id, stateTxt:"", start:"—", end:"—"};
-  const data = EVENTS[id] || {events:[]};
+  const data = EVENTS[id] || {events:[{
+    et:"grant", cls:"birth", label:"发放", time:a.created, op:a.creator==="system"?"系统（业务服务）":a.creator,
+    body:`原因：${a.reason} ｜ 按来源 ${a.src} 发放，授予时长 ${a.total}。`,
+    diff:[["状态","—",a.stateTxt]], cred:{t:a.credT,id:a.credId},
+    tech:{"事件编号":`E-${id.replace(/\\D/g,'')}01`,"事件序号":"1","来源ID（source_id）":a.sourceId||"（空）"}
+  }]};
   document.getElementById('d-title').textContent = "生命周期 · " + (a.name || id);
   document.getElementById('d-authid').textContent = "授权 ID：" + id;
   let html = "";
@@ -973,9 +998,9 @@ function setState(s){
   const pb = document.getElementById('tbody-personal');
   document.getElementById('errBanner').style.display = 'none';
   if (s==='normal'){ renderTables(); }
-  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
-  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11">该用户暂无授权记录</td></tr>`; }
-  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
+  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
+  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12">该用户暂无授权记录</td></tr>`; }
+  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
 }
 function toggleAnno(){
   document.body.classList.toggle('anno-on');
