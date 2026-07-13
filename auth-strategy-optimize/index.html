@@ -222,7 +222,7 @@ tr:hover td{background:#fafcff}
         <div class="pagehead">
           <h2>权益更新策略</h2>
           <div class="spacer"></div>
-          <button class="btn" onclick="nav('agent')">✨ Case 预演</button>
+          <button class="btn" onclick="nav('agent')">✨ Case 预演 <span class="badge-beta">P1</span></button>
           <button class="btn primary" onclick="nav('form')">+ 新增策略</button>
         </div>
         <div class="card">
@@ -420,8 +420,9 @@ tr:hover td{background:#fafcff}
 
           <div style="display:flex;gap:12px;justify-content:center;padding:8px 0">
             <button class="btn" onclick="nav('list')">取消</button>
-            <button class="btn" onclick="openDryrun()">🔍 规则预演</button>
-            <button class="btn primary" onclick="submitForm()">提交并预估影响面</button>
+            <button class="btn" onclick="openDryrun()">🔍 规则预演 <span class="badge-beta">P1</span></button>
+            <button class="btn" onclick="directSubmit()">直接提交（P0）</button>
+            <button class="btn primary" onclick="submitForm()">预估影响面并提交（P1）</button>
           </div>
         </div>
       </div>
@@ -434,7 +435,7 @@ tr:hover td{background:#fafcff}
           <span class="muted" style="margin-left:8px">6月英语课包权益补齐 ·</span>
           <span class="tag active" id="dstatus">生效中</span>
           <div class="spacer"></div>
-          <button class="btn" onclick="openDryrun()">🔍 预演</button>
+          <button class="btn" onclick="openDryrun()">🔍 预演 <span class="badge-beta">P1</span></button>
           <button class="btn" onclick="copyRule()">⧉ 复制为新策略</button>
           <button class="btn" onclick="toast('已停用：停止新增补发，已发放权益不受影响')">停用</button>
           <button class="btn danger" onclick="openRecall('r2')">召回</button>
@@ -749,6 +750,10 @@ function onEff(){
   document.getElementById('fr-efftime').style.display=document.querySelector('input[name=eff]:checked').value==='sched'?'flex':'none';
 }
 let effFixed=false;
+function directSubmit(){
+  toast('P0 已直接提交；定时策略将在生效时间执行（不含审批、影响面预估、规则预演）');
+  setTimeout(()=>nav('list'),900);
+}
 function submitForm(){
   // demo validation: effectiveAt vs time-condition end
   const fr=document.getElementById('fr-efftime');
