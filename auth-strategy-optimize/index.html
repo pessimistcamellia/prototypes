@@ -218,7 +218,7 @@ tr:hover td{background:#fafcff}
 
       <!-- ================= LIST VIEW ================= -->
       <div class="view show" id="view-list">
-        <div class="anno">PRD §4.1 列表页：新增「待生效」状态、生效时间列、最近任务列；操作按钮显隐与 §2.5 状态机一一对应。</div>
+        <div class="anno">PRD §4.1：P0 状态为待生效/生效中/已停用/已召回/已取消；P1 才新增「审批中」和「撤回审批」。</div>
         <div class="pagehead">
           <h2>权益更新策略</h2>
           <div class="spacer"></div>
@@ -227,7 +227,7 @@ tr:hover td{background:#fafcff}
         </div>
         <div class="card">
           <div class="filters">
-            <select><option>状态：全部</option><option>审批中</option><option>待生效</option><option>生效中</option><option>已停用</option><option>已召回</option><option>已取消</option></select>
+            <select><option>状态：全部</option><option>审批中（P1）</option><option>待生效</option><option>生效中</option><option>已停用</option><option>已召回</option><option>已取消</option></select>
             <input type="text" placeholder="策略名称（模糊）" style="width:160px">
             <input type="text" placeholder="策略 ID（精确）" style="width:180px">
             <input type="text" placeholder="更新人" style="width:110px">
@@ -251,7 +251,7 @@ tr:hover td{background:#fafcff}
 
       <!-- ================= FORM VIEW ================= -->
       <div class="view" id="view-form">
-        <div class="anno">PRD §4.2 表单文案改造 + §5 定时生效 + §7.1 时间基准。四区块分组；全部字段带 tooltip；提交走影响面预估确认（§7.2）。</div>
+        <div class="anno">PRD §4.2：表单字段与动态帮助说明属于 P0；规则预演、影响面预估、审批流属于 P1。</div>
         <div class="pagehead">
           <h2 id="formtitle">新增策略</h2>
           <div class="spacer"></div>
@@ -396,7 +396,7 @@ tr:hover td{background:#fafcff}
 
           <!-- 区块4 生效设置 -->
           <div class="fsection">
-            <div class="fhead"><span class="stepnum">4</span>生效设置<span class="subnote">策略提交后不提供编辑；审批中可撤回，待生效可取消；需改口径请「复制为新策略」</span></div>
+            <div class="fhead"><span class="stepnum">4</span>生效设置<span class="subnote">P0：待生效可取消；P1：maker-checker 审批中可撤回；需改口径请「复制为新策略」</span></div>
             <div class="fbody">
               <div class="frow">
                 <label><span class="req">*</span>生效方式</label>
@@ -411,7 +411,7 @@ tr:hover td{background:#fafcff}
                 <label><span class="req">*</span>生效时间</label>
                 <div class="fctl">
                   <input type="datetime-local" id="f-effat" value="2026-07-10T00:00">
-                  <div class="fhint">须晚于当前时间 5 分钟以上；不得晚于任一条件组时间条件的结束点。提交后先匹配审批流；到点未审批通过时保持「审批中」。</div>
+                  <div class="fhint">P0：须晚于当前时间 5 分钟且不得晚于条件结束点。P1：maker-checker 到点未复核通过时保持「审批中」。</div>
                   <div class="ferr" id="efferr">生效时间（2026-07-10 00:00）晚于条件组 1 时间条件的结束点（2026-06-30 23:59）：策略生效时其时间窗口已结束，请检查时间条件或生效时间</div>
                 </div>
               </div>
