@@ -339,33 +339,38 @@ tr:hover td{background:#fafcff}
               <div class="condgroup">
                 <div class="cghead">条件组 1 <span class="muted" style="font-weight:400">用户同时满足本组内所有条件时补发</span></div>
                 <div class="frow">
-                  <label><span class="req">*</span>权益来源<span class="tip">?<span class="tiptext">用户通过什么方式命中本条件：通过商品购买 / 通过兑换码 / 不限来源（仅看是否持有指定权益）。</span></span></label>
+                  <label><span class="req">*</span>权益来源<span class="tip">?<span class="tiptext">用户通过什么方式命中本条件：通过商品购买 / 通过兑换码 / 不限来源（仅看是否持有指定权益）/ 无条件（所有用户）。</span></span></label>
                   <div class="fctl">
                     <div class="radio-group">
                       <label><input type="radio" name="src1" value="good" checked onchange="onSrc(1,'good')">通过商品购买获得</label>
                       <label><input type="radio" name="src1" value="redeem" onchange="onSrc(1,'redeem')">通过兑换码获得</label>
                       <label><input type="radio" name="src1" value="any" onchange="onSrc(1,'any')">不限来源（仅看是否持有权益）</label>
+                      <label><input type="radio" name="src1" value="none" onchange="onSrc(1,'none')">无条件</label>
                     </div>
                   </div>
                 </div>
                 <div class="frow" id="fr-good1">
                   <label><span class="req">*</span>指定商品</label>
                   <div class="fctl">
-                    <select style="width:420px"><option selected>初中数学系统课·三年畅学（skuGroupGood #SKG-8821）</option><option>初中数学系统课·一年（#SKG-8802）</option></select>
-                    <div class="fhint">提交时校验商品存在性；仅统计支付成功订单。</div>
+                    <select multiple size="3" style="width:420px"><option selected>初中数学系统课·三年畅学（skuGroupGood #SKG-8821）</option><option selected>初中数学系统课·一年（#SKG-8802）</option><option>初中物理系统课·一年（#SKG-8901）</option></select>
+                    <div class="fhint">可多选商品；提交时校验商品存在性，仅统计支付成功订单。</div>
                   </div>
                 </div>
                 <div class="frow" id="fr-redeem1" style="display:none">
                   <label><span class="req">*</span>兑换码批次</label>
-                  <div class="fctl"><input type="text" style="width:420px" placeholder="批次 ID，可多个，回车分隔" value="RB-0625-MATH"></div>
+                  <div class="fctl"><input type="text" style="width:420px" placeholder="批次 ID，可多个，回车分隔" value="RB-0625-MATH, RB-0625-PHY"><div class="fhint">可多选批次，回车或逗号分隔。</div></div>
                 </div>
                 <div class="frow" id="fr-depend1" style="display:none">
-                  <label><span class="req">*</span>依赖权益<span class="tip">?<span class="tiptext">「不限来源」时，用户必须持有的权益。选择商品/兑换码来源时，命中依据就是该商品订单 / 兑换码本身，无需再指定依赖权益。</span></span></label>
+                  <label><span class="req">*</span>依赖权益<span class="tip">?<span class="tiptext">「不限来源」时，用户必须持有的权益，可多选。选择商品/兑换码来源时，命中依据就是该商品订单 / 兑换码本身，无需再指定依赖权益。</span></span></label>
                   <div class="fctl">
-                    <select style="width:420px"><option selected>初中数学 · 函数专题 v1（specialCourse #MA-FN-V1）</option></select>
+                    <select multiple size="3" style="width:420px"><option selected>初中数学 · 函数专题 v1（specialCourse #MA-FN-V1）</option><option>初中数学 · 几何专题 v1（specialCourse #MA-GE-V1）</option></select>
+                    <div class="fhint">可多选依赖权益；与「至少持有数」配合使用。</div>
                   </div>
                 </div>
-                <div class="frow">
+                <div class="frow" id="fr-uncond1" style="display:none">
+                  <div class="fctl"><div class="fhint" style="background:#fff8e6;border:1px solid #ffe1a0;border-radius:6px;padding:10px">无条件：所有用户都可以得到补发的权益，不再限定来源、依赖权益或时间条件。请谨慎使用并确认影响面。</div></div>
+                </div>
+                <div class="frow" id="fr-time1">
                   <label><span class="req">*</span>时间条件<span class="tip">?<span class="tiptext">仅命中"在所选时间范围内获得该来源权益"的用户。「获得时间」以什么为准见下方「时间基准」：商品按订单支付时间、兑换码按兑换时间、不限来源按权益到账时间。</span></span></label>
                   <div class="fctl">
                     <div class="radio-group">
@@ -379,7 +384,7 @@ tr:hover td{background:#fafcff}
                     </div>
                   </div>
                 </div>
-                <div class="frow" style="background:#eef7f1;border-radius:8px;padding:10px 0 10px 0;margin:0 -2px">
+                <div class="frow" id="fr-basis1" style="background:#eef7f1;border-radius:8px;padding:10px 0 10px 0;margin:0 -2px">
                   <label style="padding-top:8px"><span class="req">*</span>时间基准<span class="tip">?<span class="tiptext">【本期新增】判断"获得时间"以什么为准。修复前系统只看权益到账时间，即便指定了商品/兑换码来源；修复后按来源自动推荐正确基准。</span></span></label>
                   <div class="fctl">
                     <div class="radio-group" id="basis1">
@@ -437,7 +442,7 @@ tr:hover td{background:#fafcff}
           <div class="spacer"></div>
           <button class="btn" onclick="openDryrun()">🔍 预演 <span class="badge-beta">P1</span></button>
           <button class="btn" onclick="copyRule()">⧉ 复制为新策略</button>
-          <button class="btn" onclick="toast('已停用：停止新增补发，已发放权益不受影响')">停用</button>
+          <button class="btn" onclick="openStop('r2')">停用</button>
           <button class="btn danger" onclick="openRecall('r2')">召回</button>
           <button class="btn" onclick="nav('list')">返回列表</button>
         </div>
@@ -559,7 +564,8 @@ tr:hover td{background:#fafcff}
       <div class="anno" style="display:block">PRD §3 / §6.4：展示影响范围 + 必填召回原因；确认后创建主动召回任务，不再等待用户活跃。</div>
       <div class="dangerbox">
         <b>该操作将撤销基于本策略发放的 11,942 条权益，影响 11,942 名用户</b><br>
-        召回任务将立即执行（预计 19 分钟完成），撤销后同步清理用户缓存并广播权益变更，用户无需重新登录即失去该权益。召回为终态，不可恢复。
+        召回任务将立即执行（预计 19 分钟完成），撤销后同步清理用户缓存并广播权益变更，用户无需重新登录即失去该权益。召回为终态，不可恢复。<br>
+        <b style="color:var(--danger)">召回已包含停用：</b>确认后策略立即停止新增补发，同时撤销全部已发放权益，无需再单独执行停用。
       </div>
       <div class="frow" style="margin:0">
         <label style="width:90px"><span class="req">*</span>召回原因</label>
@@ -571,6 +577,45 @@ tr:hover td{background:#fafcff}
     <div class="mfoot">
       <button class="btn" onclick="closeM('m-recall')">取消</button>
       <button class="btn danger" onclick="doRecall()">确认召回</button>
+    </div>
+  </div>
+</div>
+
+<!-- stop confirm -->
+<div class="mask" id="m-stop">
+  <div class="modal">
+    <div class="mhead">停用策略 · 操作确认<span class="x" onclick="closeM('m-stop')">✕</span></div>
+    <div class="mbody">
+      <div class="anno" style="display:block">PRD §4.1 / §6.4：停用为可逆操作，需二次确认并记录审计日志。</div>
+      <div class="dangerbox">
+        <b>确认停用该策略？</b><br>
+        停用后<b>仅停止新增补发</b>，已发放给用户的权益<b>不受影响、不会撤销</b>。<br>
+        如需同时撤销已发放的权益，请改用<b>「召回」</b>（召回已包含停用）。<br>
+        已停用的策略可再次「启用」。
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('m-stop')">取消</button>
+      <button class="btn danger" onclick="doStop()">确认停用</button>
+    </div>
+  </div>
+</div>
+
+<!-- enable confirm -->
+<div class="mask" id="m-enable">
+  <div class="modal">
+    <div class="mhead">启用策略 · 操作确认<span class="x" onclick="closeM('m-enable')">✕</span></div>
+    <div class="mbody">
+      <div class="anno" style="display:block">PRD §4.1 / §6.4：重新启用需二次确认，将恢复新增补发。</div>
+      <div class="dangerbox" style="background:#eef7f1;border-color:#bfe3cd;color:#1f5136">
+        <b>确认重新启用该策略？</b><br>
+        启用后策略将恢复对命中用户的<b>新增补发</b>；历史已停用期间的用户会在启用后被重新扫描并补发。<br>
+        建议启用前先做一次影响面预估，确认命中范围符合预期。
+      </div>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeM('m-enable')">取消</button>
+      <button class="btn primary" onclick="doEnable()">确认启用</button>
     </div>
   </div>
 </div>
@@ -668,8 +713,8 @@ function ops(r){
   const b=[];
   b.push(`<button class="btn sm link" onclick="openDetail('${r.id}')">任务/日志</button>`);
   if(r.status==='scheduled'){b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="toast('已取消待生效，策略记录保留')">取消</button>`)}
-  if(r.status==='active'){b.push(`<button class="btn sm link" onclick="toast('已停用')">停用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
-  if(r.status==='stopped'){b.push(`<button class="btn sm link" onclick="toast('重新启用需重新确认影响面')">启用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
+  if(r.status==='active'){b.push(`<button class="btn sm link" onclick="openStop('${r.id}')">停用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
+  if(r.status==='stopped'){b.push(`<button class="btn sm link" onclick="openEnable('${r.id}')">启用</button>`);b.push(`<button class="btn sm link" style="color:var(--danger)" onclick="openRecall('${r.id}')">召回</button>`)}
   b.push(`<button class="btn sm link" onclick="copyRule()">复制</button>`);
   return b.join('');
 }
@@ -740,6 +785,11 @@ function onSrc(n,v){
   document.getElementById('fr-redeem'+n).style.display=v==='redeem'?'flex':'none';
   // 依赖权益仅「不限来源」时展示；选商品/兑换码时命中依据即为商品订单/兑换码本身
   document.getElementById('fr-depend'+n).style.display=v==='any'?'flex':'none';
+  // 无条件：所有用户命中，隐藏来源/依赖权益/时间条件/时间基准，仅展示提示
+  document.getElementById('fr-uncond'+n).style.display=v==='none'?'flex':'none';
+  document.getElementById('fr-time'+n).style.display=v==='none'?'none':'flex';
+  document.getElementById('fr-basis'+n).style.display=v==='none'?'none':'flex';
+  if(v==='none')return;
   const basis=document.getElementById('basis'+n);
   if(v==='good')basis.innerHTML='<label><input type="radio" name="basis1" value="orderPaid" checked onchange="onBasis(&quot;good&quot;,this.value)">订单支付时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired" onchange="onBasis(&quot;good&quot;,this.value)">权益到账时间</label>';
   if(v==='redeem')basis.innerHTML='<label><input type="radio" name="basis1" value="redeemAt" checked onchange="onBasis(&quot;redeem&quot;,this.value)">兑换码兑换时间（推荐）</label><label><input type="radio" name="basis1" value="authAcquired" onchange="onBasis(&quot;redeem&quot;,this.value)">权益到账时间</label>';
@@ -792,6 +842,10 @@ function confirmSubmit(){
 function openM(id){document.getElementById(id).classList.add('open')}
 function closeM(id){document.getElementById(id).classList.remove('open')}
 function openRecall(id){openM('m-recall')}
+function openStop(id){openM('m-stop')}
+function doStop(){closeM('m-stop');toast('已停用：停止新增补发，已发放权益不受影响；如需撤销请用召回');}
+function openEnable(id){openM('m-enable')}
+function doEnable(){closeM('m-enable');toast('已重新启用：恢复新增补发，将重新扫描命中用户');}
 function doRecall(){
   const r=document.getElementById('recall-reason').value.trim();
   if(!r){toast('召回原因必填（写入审计日志）');return}
