@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 用户信息 · 内容权限（含生命周期审计抽屉）v3</title>
+<title>原型｜运营后台 · 用户信息 · 内容权限（含生命周期审计抽屉）v5.4</title>
 <style>
   * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
   body { background:#f0f2f5; color:#303133; font-size:13px; }
@@ -46,7 +46,7 @@
   .filter-actions { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
   table.grid { width:100%; border-collapse:collapse; font-size:12px; }
   #pane-personal, #pane-archived { overflow-x:auto; }
-  #pane-personal table.grid { min-width:1450px; }
+  #pane-personal table.grid { min-width:1650px; }
   table.grid th { background:#f5f7fa; color:#606266; text-align:left; padding:8px; border-bottom:1px solid #ebeef5; white-space:nowrap; }
   table.grid td { padding:8px; border-bottom:1px solid #ebeef5; vertical-align:top; }
   table.grid td.nowrap, table.grid td:last-child { white-space:nowrap; }
@@ -164,7 +164,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v3 · PRD-授权全生命周期审计日志 §4</span>
+  <span class="tag-proto">交互原型 v5.4 · PRD-授权全生命周期审计日志 §4</span>
 </div>
 
 <div class="pagemap">
@@ -258,7 +258,7 @@
         </div>
         <table class="grid" id="tbl-personal">
           <thead><tr>
-            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据</th><th>创建时间</th><th>操作</th>
+            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据</th><th>凭据说明</th><th>创建时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
         </table>
@@ -292,7 +292,7 @@
         <div class="anno">📌 PRD §4.2 归档不换体验：筛选=线上现状；每行同样有「生命周期」，事件流全量保留（archive 事件）。</div>
         <table class="grid">
           <thead><tr>
-            <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>归档时间</th><th>操作</th>
+            <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>凭据</th><th>凭据说明</th><th>归档时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-archived"></tbody>
         </table>
@@ -439,6 +439,21 @@ const CRED_TITLE = { third_order:"三方平台原始订单号（抖店/京东等
   work_order:"客服工单号（工单系统单号，新规范必填；一期不跳转，二期拼工单外链）",
   send_rule:"补发规则 ID（send_rule 表主键 uuid，规则名见事件原因说明；一期不跳转，二期跳规则详情）",
   device:"脱敏设备标识 omvd（合规要求禁止可读设备号；一期不跳转，二期跳平板管理）" };
+/* “凭据说明”列：复用注册表 Base 的 sourceId 填写说明口径 */
+const CRED_DESC = {
+  order:"go-order 订单表主键；在订单管理-订单详情查看",
+  third_order:"三方平台原始订单号（抖店/京东/拼多多等）",
+  redeem_code:"兑换码记录 ID（redeemCode 服务主键，不是码面文字）",
+  voucher:"体验券/体验机会记录 ID",
+  business_auth:"businessAuthId（B端授权接口查询主键；具体格式待B端摸底）",
+  activity:"活动/任务/彩票的业务记录 ID（不是来源代号）",
+  auth:"前驱授权 ID（userauth 授权记录 ID）",
+  work_order:"客服工单系统单号",
+  send_rule:"补发规则 ID（send_rule 表主键）",
+  device:"脱敏设备标识 omvd 或平板 SN 记录 ID",
+  none:"该来源无业务单据；依据见生命周期中的原因说明"
+};
+function credDescCell(t){ return `<span style="color:#606266">${CRED_DESC[t]||"按来源注册表口径填写"}</span>`; }
 
 function credCell(t, id, drawerCtx){
   if (t === 'none') return `<span class="cred-none" title="该来源无凭据，原因见事件的原因说明">无凭据 ⓘ</span>`;
@@ -715,7 +730,7 @@ function rowHtml(id, a){
     <td class="nowrap">${a.type}</td>
     <td class="nowrap"><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td class="nowrap">${a.start.slice(0,10)}</td><td class="nowrap">${a.end.slice(0,10)}</td><td class="nowrap">${a.remain}</td>
-    <td>${a.src}</td><td>${credCell(a.credT, a.credId)}</td>
+    <td>${a.src}</td><td>${credCell(a.credT, a.credId)}</td><td>${credDescCell(a.credT)}</td>
     <td class="nowrap">${a.created.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
@@ -724,7 +739,7 @@ function archRowHtml(id, a){
   return `<tr>
     <td><b>${a.name}</b><div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
     <td>${a.type}</td><td><span class="st ${a.state}">${a.stateTxt}</span></td>
-    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.src}</td>
+    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.src}</td><td>${credCell(a.credT,a.credId)}</td><td>${credDescCell(a.credT)}</td>
     <td>${a.archivedAt.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td>
   </tr>`;
@@ -779,9 +794,9 @@ function renderTables(){
   const only = document.getElementById('selOnly').checked;
   let entries = Object.entries(AUTHS).filter(([,a])=>!a.archived).filter(personalFilter);
   if (only) entries = entries.filter(([id])=>selected.has(id));
-  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="11">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
+  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="12">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
   const arch = Object.entries(AUTHS).filter(([,a])=>a.archived).filter(archFilter);
-  document.getElementById('tbody-archived').innerHTML = arch.map(([id,a])=>archRowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="8">无符合筛选条件的记录</td></tr>`;
+  document.getElementById('tbody-archived').innerHTML = arch.map(([id,a])=>archRowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="10">无符合筛选条件的记录</td></tr>`;
   updateSelUI();
 }
 function toggleSel(id, on){ on?selected.add(id):selected.delete(id); updateSelUI(); }
@@ -804,21 +819,21 @@ function renderSummary(){
       const detailRows = r.details.map(id=>{
         const a=AUTHS[id];
         return `<tr>
-          <td>${id}</td><td>${a.src}</td><td>${credCell(a.credT,a.credId)}</td>
+          <td>${id}</td><td>${a.src}</td><td>${credCell(a.credT,a.credId)}</td><td>${credDescCell(a.credT)}</td>
           <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.total}</td><td>${a.remain}</td>
           <td><span class="st ${a.state}">${a.stateTxt}</span></td><td>${a.creator}</td><td>${a.created.slice(0,10)}</td><td>${a.reason}</td>
           <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td></tr>`;
       }).join('');
       const attachRows = (r.attach||[]).map(at=>`<tr style="background:#fdfaf3">
           <td><span style="color:#909399">—</span><div style="color:#e6a23c;font-size:11px">附加权益·无独立授权记录</div></td>
-          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td>
+          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td><td>飞书Base「关联规则 attach_rule」的规则编号</td>
           <td colspan="4" style="color:#909399">与本体授权 ${at.host} 同起止（${at.name}）</td>
           <td><span class="st using">随本体生效</span></td><td>—</td><td>—</td><td>由授权 ${at.host} 按规则 ${at.rule} 附加</td>
           <td><a onclick="openRuleAudit('${at.rule}')">查看关联规则</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
       return `<div class="sum-row" id="sr-${gi}-${ri}" onclick="toggleSum(${gi},${ri})">
           <span class="arr">▶</span><span>${r.name}${r.attach?` <span style="color:#e6a23c;font-size:11px">（含 ${r.attach.length} 条附加权益）</span>`:''}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
         <div class="sum-detail" id="sd-${gi}-${ri}">
-          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
+          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据</th><th>凭据说明</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
           <tbody>${detailRows}${attachRows}</tbody></table>
           ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则当前配置（飞书Base「关联规则 attach_rule」）+ Base自带记录修改历史。本期不新建配置审计后端表。</div>`:''}</div>`;
     }).join('');
@@ -883,7 +898,8 @@ function openDrawer(id, chainFocus){
       const noStatusDiff = ['grant','grant_supplement','grant_delayed','activate'].includes(e.et);
       const diffs = (e.diff||[]).filter(d=>(d[1]!==""||d[2]!=="") && !(noStatusDiff && d[0]==='状态')).map(d=>
         `<span style="color:#909399">${d[0]}:</span> ${d[1]&&d[1]!=="—"?`<span class="old">${d[1]}</span>→`:""}<span class="new">${d[2]||d[1]}</span>`).join('　');
-      const credHtml = e.cred ? `<div style="margin-top:4px">凭据：${credCell(e.cred.t, e.cred.id, {root:id})}</div>` : "";
+      const credHtml = e.cred ? `<div style="margin-top:4px">凭据：${credCell(e.cred.t, e.cred.id, {root:id})}</div>
+        <div style="margin-top:3px;color:#606266">凭据说明：${CRED_DESC[e.cred.t]||"按来源注册表口径填写"}</div>` : "";
       const techHtml = e.tech ? `<details class="tech"><summary>技术详情（研发排查用）</summary><div class="tech-body">` +
         Object.entries(e.tech).map(([k,v])=>`<div><span style="color:#909399">${k}：</span>${v}</div>`).join('') + `</div></details>` : "";
       return `<div class="ev ${e.cls}">
@@ -996,9 +1012,9 @@ function setState(s){
   const pb = document.getElementById('tbody-personal');
   document.getElementById('errBanner').style.display = 'none';
   if (s==='normal'){ renderTables(); }
-  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
-  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11">该用户暂无授权记录</td></tr>`; }
-  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
+  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
+  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12">该用户暂无授权记录</td></tr>`; }
+  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
 }
 function toggleAnno(){
   document.body.classList.toggle('anno-on');
