@@ -185,7 +185,7 @@
     <a onclick="openDrawer('A-010');togglePM()">⑬ 抽屉：无凭据来源 case</a>
     <a onclick="openDrawer('A-011');togglePM()">⑭ 抽屉：设备凭据 case</a>
     <a onclick="gotoTab('summary');setTimeout(()=>toggleSum(0,0),100);togglePM()">⑮ 附加权益（case16：不进表怎么记）</a>
-    <a onclick="openRuleAudit('R-001');togglePM()">⑯ 关联规则（飞书Base+记录历史）</a>
+    <a onclick="openRuleAudit('R-ATT-01');togglePM()">⑯ 关联规则（飞书Base+记录历史）</a>
     <a onclick="openSourceIdSamples();togglePM()">⑰ source_id 现状语义样例（全类型）</a>
   </div>
 </div>
@@ -465,15 +465,15 @@ function credCell(t, id, drawerCtx){
   }
   return `<span class="cred-text" title="${CRED_TITLE[t]||''}">${CRED_NAME[t]} ${id}</span>`;
 }
-/* ============ 关联规则（飞书Base attach_rule + Base记录历史）假数据与弹窗 ============ */
+/* ============ 关联规则（飞书Base attach_rule + Base记录历史）真实数据与弹窗 ============
+   数据源：backend-userauth/internal/enums/target.go 的 AUTO_ADD_MAPPING 常量，已初始化到飞书Base「关联规则 attach_rule」表（19条真实规则）。
+   变更历史为示例（Base自带记录修改历史承接），规则内容为线上真实映射。 */
 const RULE_AUDIT = {
- "R-001": { name:"初中数学多版本课关联规则", type:"关联规则（attach_rule）", events:[
-   { time:"2026-11-10 14:22", action:"修改", op:"王工（内容平台）",
-     before:"适用版本：人教版、北师大版", after:"适用版本：人教版、北师大版、沪教版",
-     reason:"沪教版课程上线，纳入多版本关联" },
-   { time:"2025-03-02 10:05", action:"新增", op:"陈璐（内容平台）",
-     before:"—", after:"本体：初中数学（人教版）→ 附加：北师大版；随本体起止",
-     reason:"多版本课上线，配置初版关联规则" },
+ "R-ATT-01": { name:"初中数学重难点培优课·跨版本自动附加", type:"关联规则（attach_rule）", events:[
+   { time:"（示例·以Base记录修改历史为准）", action:"当前配置", op:"内容平台 / 待认领",
+     before:"本体：specialCourse#73f2d910…（初中数学重难点培优课·人教版）",
+     after:"附加：其他 11 个版本（北师大/沪科/苏科/青岛/鲁教/冀教/北京/湘教/华师大/浙教/沪教，常量 AUTO_MIDDLE_MATH_FOCUS）；生效方式=随本体起止",
+     reason:"初始化自线上真实配置 AUTO_ADD_MAPPING（target.go:515）" },
  ]},
 };
 function openRuleAudit(rid){
@@ -584,7 +584,7 @@ const AUTHS = {
 /* ============ 全部权益总时长：分组汇总（对齐线上） ============ */
 const SUMMARY = [
  { cat:"同步课", rows:[
-   { name:"初中数学", remain:"412 天", deadline:"2027-08-27 23:59:59", details:["A-001","A-009","A-011"], attach:[{name:"初中数学（北师大版）", rule:"R-001", host:"A-001"},{name:"初中数学（沪教版）", rule:"R-001", host:"A-001"}] },
+   { name:"初中数学", remain:"412 天", deadline:"2027-08-27 23:59:59", details:["A-001","A-009","A-011"], attach:[{name:"初中数学重难点培优课·北师大版", rule:"R-ATT-01", host:"A-001"},{name:"初中数学重难点培优课·沪科版", rule:"R-ATT-01", host:"A-001"}] },
    { name:"初中英语", remain:"37 天", deadline:"2026-08-17 23:59:59", details:["A-002"] },
    { name:"初中语文", remain:"3 天", deadline:"2026-12-14 23:59:59", details:["A-008"] },
    { name:"高中数学", remain:"80 天", deadline:"2027-01-24 23:59:59", details:["A-004"] },
