@@ -582,8 +582,8 @@ const CRED_NAME = { order:"订单", redeem_code:"兑换码", voucher:"体验券"
   business_auth:"B端授权", activity:"活动记录", auth:"前驱授权", work_order:"工单",
   send_rule:"补发规则", device:"设备", none:"—" };
 const SOURCE_HELP = {
-  buy:"凭据 ID 为洋葱订单号，可跳转订单管理-订单详情。",
-  doudian:"凭据 ID 为该三方订单对应的洋葱订单号；平台原始订单号继续保留在“来源 ID（原值）”。",
+  buy:"凭据 ID 为洋葱订单号，可跳转订单管理-订单详情。三方通用兑换链路先生成洋葱订单再发权益，来源类型同为 buy、来源 ID 即洋葱订单号。",
+  doudian:"历史抖店直发链路：来源 ID 是平台父单号，非洋葱订单号；未唯一映射到洋葱订单前凭据显示“—（上线前未标准化）”且不可跳转（父单可能对应多个洋葱单，禁止猜取）。",
   shadow:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
   admin:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
   award:"来源 ID 为本次批量奖励操作 ID（bonusId；未传时由 userauth 自动生成 UUID），并作为审计 batch_id 聚合整批。",
@@ -707,7 +707,7 @@ const SOURCE_ID_SAMPLES = [
   ["B端统一来源键","businessAuth","sourceId=school_2026fall","source_id=BusinessAuthDetail.sourceId；credential_id=businessAuthId（通常不同，格式待B端摸底）"],
   ["设备号+用户ID拼接（历史）","huaweiEduKitBindUser0318","device123:user_abc（历史原值）","新口径归 device：credential_id 改用脱敏 omvd 或 SN记录ID，禁止可读设备号"],
   ["活动业务记录ID（按来源不同）","present / subtask / teacherAuth 等","lotteryId / subtaskId / 认证记录ID","只注册来源和 ID 语义；每次运行产生的业务记录 ID 不逐条登记"],
-  ["三方平台单号","doudian 等","D20261120887","来源 ID 保留平台原始单号；标准凭据改填对应洋葱订单号并跳订单详情"],
+  ["三方平台父单号（历史直发）","doudian 等历史直发链路","6928…8871","保留原值；仅当唯一映射到洋葱订单时新事件才写 order 凭据（父单可对应多个洋葱单，禁止猜取）。通用兑换链路的 source_id 本就是洋葱订单ID（source_type=buy）"],
   ["补发规则ID","新课程补发 / 规则补发","sr_67ea5749…4b0c","归 send_rule；新口径相同，存量中文补发来源可能没有规则ID"],
 ];
 function openSourceIdSamples(){
@@ -737,8 +737,10 @@ const AUTHS = {
    start:"2026-11-05 00:00:00", end:"2027-01-24 23:59:59", remain:"80 天", total:"80天", src:"授权转换(auth)", sourceId:"A-000X", credT:"auth", credId:"A-000X", created:"2026-11-05 11:00:00", creator:"周敏", reason:"初升高转换", archived:false },
  "A-005": { name:"小学数学 培优课", type:"培优课", subject:"小学数学", state:"used", stateTxt:"已使用",
    start:"2024-07-01 00:00:00", end:"2025-06-30 23:59:59", remain:"—", total:"365天", src:"兑换码兑换(redeem)", sourceId:"rc_67ea…102f", credT:"redeem_code", credId:"rc_67ea…102f", created:"2024-07-01 08:30:00", creator:"system", reason:"兑换码兑换", archived:false },
- "A-006": { name:"初中数学 培优课", type:"培优课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"抖店订单(doudian)", sourceId:"D20261120887", credT:"order", credId:"O202611200887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换", archived:false },
+ "A-006": { name:"初中数学 培优课（抖店购买·通用兑换链路）", type:"培优课", subject:"初中数学", state:"using", stateTxt:"使用中",
+   start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"购买获得(buy)", sourceId:"O202611200887", sourceIdTip:"通用三方兑换链路：先生成洋葱订单，source_id 即洋葱订单ID（yc_order_id）；抖店父单号留在三方通用表", credT:"order", credId:"O202611200887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换（抖店）", archived:false },
+ "A-022": { name:"初中化学 培优课（抖店历史直发）", type:"培优课", subject:"初中化学", state:"using", stateTxt:"使用中",
+   start:"2026-05-08 00:00:00", end:"2027-05-07 23:59:59", remain:"296 天", total:"365天", src:"抖店售卖(doudian)", sourceId:"6928…8871（平台父单号）", sourceIdTip:"历史抖店定金直发链路：source_id=平台父单号，非洋葱订单号；父单可能对应多个洋葱单，未唯一映射不写标准凭据", credT:"none", credId:"", created:"2026-05-08 11:20:00", creator:"system", reason:"抖店直发（历史链路）", archived:false },
  "A-007": { name:"初中全科 同步课 VIP", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
    start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", sourceId:"school_2026fall", sourceIdTip:"BusinessAuthDetail.sourceId（写入userauth的统一来源键）", credT:"business_auth", credId:"businessAuthId=67ea…4b0c", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
  "A-008": { name:"初中语文 同步课 VIP（批量奖励14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
@@ -855,6 +857,10 @@ const EVENTS = {
    remarks:[
      {t:"2024-07-01 08:30", c:"create ｜ 兑换码兑换发放（creator: system）"},
      {t:"2025-06-30 23:59", c:"（无记录——过期为覆盖式更新，未留痕，这正是审计要解决的问题）"}
+   ]},
+ "A-022": { chain:null, legacy:true, events:[],
+   remarks:[
+     {t:"2026-05-08 11:20", c:"create ｜ 抖店定金直发（历史链路，source_id=平台父单号 6928…8871，未生成洋葱订单映射）"}
    ]},
  "A-006": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-11-20 09:00:00", op:"系统（三方订单服务）",
