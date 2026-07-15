@@ -3,39 +3,66 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 用户信息 · 内容权限（含生命周期审计抽屉）v5.4</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v7.0</title>
 <style>
-  * { margin:0; padding:0; box-sizing:border-box; font-family:-apple-system,"PingFang SC","Microsoft YaHei",sans-serif; }
-  body { background:#f0f2f5; color:#303133; font-size:13px; }
-  a { color:#409eff; text-decoration:none; cursor:pointer; }
-  .topbar { background:#20222a; color:#fff; height:48px; display:flex; align-items:center; padding:0 16px; gap:16px; position:sticky; top:0; z-index:50; }
-  .topbar .logo { font-weight:700; font-size:15px; }
-  .topbar .crumb { color:#9aa0ab; font-size:12px; }
+  :root {
+    --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
+    --surface:#fff; --canvas:#f4f5f8; --nav:#151a24; --accent:#2456d6; --accent-ink:#1a44ad;
+    --accent-soft:#eef3fe; --danger:#c2453d; --danger-soft:#fbf0ef;
+    --ok:#1d7a4f; --ok-soft:#ecf6f0; --warn:#a3661c; --warn-soft:#fbf4e9;
+    --info:#3663c9; --info-soft:#eef3fe; --gray-soft:#f1f2f5;
+    --shadow:0 12px 32px rgba(21,26,36,.10);
+    --r-lg:12px; --r-md:8px; --r-sm:5px;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  html { -webkit-font-smoothing:antialiased; }
+  body { background:var(--canvas); color:var(--ink); font-size:13px; line-height:1.55;
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro SC","PingFang SC","Microsoft YaHei",sans-serif; }
+  a { color:var(--accent); text-decoration:none; cursor:pointer; font-weight:500; }
+  a:hover { color:var(--accent-ink); }
+  b { font-weight:600; }
+  button, input, select, textarea { font:inherit; }
+  button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible, [contenteditable]:focus-visible {
+    outline:2px solid rgba(36,86,214,.35); outline-offset:1px;
+  }
+  ::selection { background:rgba(36,86,214,.14); }
+  .topbar { background:var(--nav); color:#fff; height:56px; display:flex; align-items:center; padding:0 22px; gap:18px; position:sticky; top:0; z-index:50; box-shadow:0 1px 0 rgba(255,255,255,.08); }
+  .topbar .logo { font-weight:650; font-size:15px; letter-spacing:.02em; }
+  .topbar .crumb { color:#98a2b3; font-size:12px; }
   .topbar .spacer { flex:1; }
-  .tag-proto { background:#e6a23c; color:#fff; border-radius:3px; padding:2px 8px; font-size:11px; }
-  .layout { display:flex; min-height:calc(100vh - 48px); }
-  .sidebar { width:180px; background:#2b2f3a; color:#bfcbd9; padding:8px 0; flex-shrink:0; }
-  .sidebar .menu-item { padding:10px 20px; font-size:13px; cursor:pointer; }
-  .sidebar .menu-item.active { color:#409eff; background:#20222a; border-left:3px solid #409eff; }
-  .main { flex:1; padding:16px; min-width:0; }
-  .card { background:#fff; border-radius:6px; padding:16px; box-shadow:0 1px 4px rgba(0,0,0,.06); }
+  .tag-proto { background:#344054; color:#d0d5dd; border:1px solid #475467; border-radius:5px; padding:3px 9px; font-size:11px; }
+  .layout { display:flex; min-height:calc(100vh - 56px); }
+  .sidebar { width:196px; background:var(--nav); color:#98a2b3; padding:16px 10px; flex-shrink:0; }
+  .sidebar .menu-item { padding:9px 12px; margin:2px 0; border-radius:6px; font-size:13px; cursor:pointer; transition:background .18s,color .18s; }
+  .sidebar .menu-item:hover { color:#fff; background:#1d2939; }
+  .sidebar .menu-item.active { color:#fff; background:#1d2939; box-shadow:inset 3px 0 0 #84adff; }
+  .sidebar .menu-item.sub { padding-left:28px; font-size:12px; }
+  .main { flex:1; padding:22px; min-width:0; max-width:1760px; margin:0 auto; }
+  .card { background:var(--surface); border-radius:10px; padding:20px; border:1px solid var(--line); box-shadow:0 1px 2px rgba(16,24,40,.03); }
   .userhead { display:flex; gap:24px; align-items:center; margin-bottom:12px; flex-wrap:wrap; }
   .userhead .avatar { width:44px; height:44px; border-radius:50%; background:#409eff; color:#fff; display:flex; align-items:center; justify-content:center; font-size:18px; }
   .userhead .kv { font-size:12px; color:#606266; }
   .userhead .kv b { color:#303133; font-size:13px; }
-  .tabs { display:flex; border-bottom:2px solid #e4e7ed; margin:8px 0 12px; }
+  .tabs { display:flex; border-bottom:1px solid var(--line); margin:14px 0 16px; }
   .tab { padding:9px 18px; cursor:pointer; font-size:13px; color:#606266; border-bottom:2px solid transparent; margin-bottom:-2px; }
-  .tab.active { color:#409eff; border-bottom-color:#409eff; font-weight:600; }
-  .subtabs { display:flex; gap:8px; margin-bottom:12px; align-items:center; flex-wrap:wrap; }
-  .subtab { padding:6px 14px; border:1px solid #dcdfe6; border-radius:4px; cursor:pointer; font-size:12px; background:#fff; }
-  .subtab.active { background:#ecf5ff; border-color:#409eff; color:#409eff; font-weight:600; }
-  .btn { display:inline-block; padding:6px 14px; border-radius:4px; border:1px solid #dcdfe6; background:#fff; cursor:pointer; font-size:12px; }
-  .btn.primary { background:#409eff; border-color:#409eff; color:#fff; }
-  .btn.danger { background:#fff; border-color:#f56c6c; color:#f56c6c; }
-  .btn.mini { padding:3px 10px; font-size:12px; }
-  .btn:disabled { opacity:.45; cursor:not-allowed; }
+  .tab.active { color:var(--accent); border-bottom-color:var(--accent); font-weight:600; }
+  .subtabs { display:flex; gap:4px; margin-bottom:16px; align-items:center; flex-wrap:wrap; background:var(--gray-soft); border-radius:9px; padding:4px; width:fit-content; }
+  .subtabs > span[style] { display:none; }
+  .subtab { padding:6px 14px; border-radius:6px; cursor:pointer; font-size:12.5px; color:var(--muted); transition:.18s ease; }
+  .subtab:hover { color:var(--ink); }
+  .subtab.active { background:#fff; color:var(--ink); font-weight:600; box-shadow:0 1px 3px rgba(21,26,36,.10); }
+  .toolbar-right { display:flex; gap:8px; margin-left:auto; }
+  .btn { display:inline-flex; align-items:center; justify-content:center; gap:5px; padding:7px 14px; border-radius:7px; border:1px solid #d5d9e0; background:#fff; color:var(--ink-2); cursor:pointer; font-size:12px; font-weight:500; transition:transform .12s,background .15s,border .15s,box-shadow .15s; }
+  .btn:hover { background:#f7f8fa; border-color:var(--subtle); }
+  .btn:active { transform:translateY(1px) scale(.99); }
+  .btn.primary { background:var(--accent); border-color:var(--accent); color:#fff; box-shadow:0 1px 2px rgba(36,86,214,.28); }
+  .btn.primary:hover { background:var(--accent-ink); border-color:var(--accent-ink); }
+  .btn.danger { background:#fff; border-color:#e6b6b2; color:var(--danger); }
+  .btn.danger:hover { background:var(--danger-soft); border-color:var(--danger); }
+  .btn.mini { padding:4px 11px; font-size:12px; }
+  .btn:disabled { opacity:.45; cursor:not-allowed; box-shadow:none; }
   /* 筛选区（对齐线上：两行栅格） */
-  .filters { display:grid; grid-template-columns:repeat(3,minmax(220px,1fr)); gap:8px 14px; margin-bottom:12px; }
+  .filters { display:grid; grid-template-columns:repeat(3,minmax(220px,1fr)); gap:10px 16px; margin-bottom:14px; padding:16px 18px; border-radius:var(--r-md); background:#f8f9fb; border:1px solid var(--line-soft); }
   .f-item { display:flex; align-items:center; gap:6px; font-size:12px; color:#606266; }
   .f-item .f-lab { white-space:nowrap; }
   .f-item select,.f-item input { flex:1; padding:6px 8px; border:1px solid #dcdfe6; border-radius:4px; font-size:12px; background:#fff; min-width:0; }
@@ -44,21 +71,31 @@
   .chip { background:#f0f2f5; border-radius:3px; padding:1px 6px; font-size:11px; color:#606266; }
   .chip .x { color:#909399; margin-left:3px; cursor:pointer; }
   .filter-actions { display:flex; gap:8px; align-items:center; margin-bottom:12px; }
-  table.grid { width:100%; border-collapse:collapse; font-size:12px; }
-  #pane-personal, #pane-archived { overflow-x:auto; }
-  #pane-personal table.grid { min-width:1650px; }
-  table.grid th { background:#f5f7fa; color:#606266; text-align:left; padding:8px; border-bottom:1px solid #ebeef5; white-space:nowrap; }
-  table.grid td { padding:8px; border-bottom:1px solid #ebeef5; vertical-align:top; }
+  table.grid { width:100%; border-collapse:separate; border-spacing:0; font-size:12px; }
+  #pane-personal, #pane-archived { overflow:visible; }
+  .table-scroll { overflow:auto; border:1px solid var(--line); border-radius:8px; max-height:calc(100vh - 280px); }
+  #pane-personal table.grid { min-width:1540px; }
+  table.grid th { position:sticky; top:0; z-index:8; background:#f6f7fa; color:var(--ink-2); text-align:left; padding:10px 12px; border-bottom:1px solid #dcdfe6; white-space:nowrap; font-weight:600; font-size:12px; letter-spacing:.01em; }
+  table.grid td { padding:11px 12px; border-bottom:1px solid var(--line-soft); vertical-align:top; background:#fff; font-variant-numeric:tabular-nums; }
   table.grid td.nowrap, table.grid td:last-child { white-space:nowrap; }
-  table.grid tr:hover td { background:#f5f7fa; }
-  .st { display:inline-block; padding:1px 8px; border-radius:10px; font-size:11px; }
-  .st.using { background:#f0f9eb; color:#67c23a; } .st.unused{ background:#ecf5ff; color:#409eff; }
-  .st.used { background:#f4f4f5; color:#909399; } .st.canceled{ background:#fef0f0; color:#f56c6c; }
-  .st.freeze { background:#fdf6ec; color:#e6a23c; }
-  .lc-btn { color:#409eff; cursor:pointer; white-space:nowrap; }
+  table.grid tr:hover td { background:#f7f9fd; }
+  .st { display:inline-flex; align-items:center; gap:5px; padding:1px 9px 1px 7px; border-radius:20px; font-size:11px; font-weight:500; }
+  .st:before { content:""; width:5px; height:5px; border-radius:50%; background:currentColor; }
+  .st.using { background:var(--ok-soft); color:var(--ok); } .st.unused{ background:var(--info-soft); color:var(--info); }
+  .st.used { background:var(--gray-soft); color:var(--muted); } .st.canceled{ background:var(--danger-soft); color:var(--danger); }
+  .st.freeze { background:var(--warn-soft); color:var(--warn); }
+  .lc-btn { color:var(--accent); cursor:pointer; white-space:nowrap; font-weight:500; }
   .lc-btn:before { content:"◷ "; }
-  .cred-text { color:#606266; cursor:help; border-bottom:1px dotted #c0c4cc; }
-  .cred-none { color:#909399; cursor:help; }
+  .lc-btn:hover { color:var(--accent-ink); }
+  .cred-text { color:var(--ink-2); }
+  .cred-none { color:var(--subtle); cursor:help; }
+  .source-cell { display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
+  .info-btn { width:17px; height:17px; border-radius:50%; border:1px solid #98a2b3; color:#667085; background:#fff; display:inline-flex; align-items:center; justify-content:center; cursor:pointer; font:600 10px/1 Georgia,serif; padding:0; }
+  .info-btn:hover { color:var(--accent); border-color:var(--accent); background:var(--accent-soft); }
+  .source-popover { position:fixed; z-index:260; width:300px; padding:12px 14px; background:#101828; color:#fff; border-radius:8px; box-shadow:var(--shadow); display:none; font-size:12px; }
+  .source-popover.open { display:block; }
+  .source-popover b { display:block; margin-bottom:4px; }
+  .source-popover .sub { color:#d0d5dd; }
   /* 总时长 tab */
   .cat-title { font-size:15px; font-weight:700; margin:16px 0 8px; }
   .sum-row { display:grid; grid-template-columns:24px 1fr 220px 260px; align-items:center; padding:10px 8px; border-bottom:1px solid #ebeef5; cursor:pointer; font-size:13px; }
@@ -69,60 +106,71 @@
   .sum-detail { background:#fafbfc; padding:8px 8px 12px 32px; display:none; overflow:auto; }
   .sum-detail.open { display:block; }
   .sum-detail table.grid { font-size:11px; }
-  /* 抽屉 */
-  .drawer-mask { position:fixed; inset:0; background:rgba(0,0,0,.35); z-index:98; display:none; }
-  .drawer { position:fixed; top:0; right:-640px; width:620px; max-width:94vw; height:100vh; background:#fff; z-index:99; box-shadow:-4px 0 16px rgba(0,0,0,.15); transition:right .25s; display:flex; flex-direction:column; }
+  /* 抽屉（v7 重设计：弱化框线、强化事件标题层级） */
+  .drawer-mask { position:fixed; inset:0; background:rgba(21,26,36,.44); backdrop-filter:blur(2px); z-index:98; display:none; }
+  .drawer { position:fixed; top:0; right:-780px; width:740px; max-width:94vw; height:100dvh; background:#fff; z-index:99; box-shadow:-20px 0 56px rgba(21,26,36,.18); transition:right .28s cubic-bezier(.3,.8,.4,1); display:flex; flex-direction:column; }
   .drawer.open { right:0; } .drawer-mask.open { display:block; }
-  .drawer-head { padding:14px 18px; border-bottom:1px solid #ebeef5; display:flex; align-items:center; gap:10px; }
-  .drawer-head h3 { font-size:15px; flex:1; }
-  .drawer-close { cursor:pointer; font-size:18px; color:#909399; }
-  .drawer-body { flex:1; overflow:auto; padding:16px 18px; }
-  .authid-chip { font-size:11px; color:#606266; background:#f5f7fa; border:1px solid #ebeef5; border-radius:4px; padding:2px 8px; cursor:pointer; }
-  .nowcard { background:#f5f7fa; border:1px solid #ebeef5; border-radius:6px; padding:10px 12px; margin-bottom:14px; font-size:12px; display:grid; grid-template-columns:1fr 1fr; gap:4px 16px; }
-  .nowcard .full { grid-column:1/3; color:#909399; }
-  .chain { background:#ecf5ff; border:1px solid #d9ecff; border-radius:6px; padding:8px 12px; margin-bottom:14px; font-size:12px; display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
-  .chain .node { padding:2px 8px; border-radius:4px; background:#fff; border:1px solid #b3d8ff; cursor:pointer; }
-  .chain .node.cur { background:#409eff; color:#fff; border-color:#409eff; cursor:default; }
-  .chain .arr { color:#909399; }
-  .tl { position:relative; padding-left:24px; }
-  .tl:before { content:""; position:absolute; left:7px; top:4px; bottom:4px; width:2px; background:#e4e7ed; }
-  .ev { position:relative; margin-bottom:16px; }
-  .ev:before { content:""; position:absolute; left:-22px; top:4px; width:10px; height:10px; border-radius:50%; background:#409eff; border:2px solid #fff; box-shadow:0 0 0 2px #409eff33; }
-  .ev.death:before { background:#f56c6c; box-shadow:0 0 0 2px #f56c6c33; }
-  .ev.birth:before { background:#67c23a; box-shadow:0 0 0 2px #67c23a33; }
-  .ev.post:before { background:#909399; box-shadow:0 0 0 2px #90939933; }
-  .ev .ev-head { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
-  .badge { display:inline-block; padding:1px 8px; border-radius:3px; font-size:11px; color:#fff; background:#409eff; }
-  .badge.birth{ background:#67c23a; } .badge.death{ background:#f56c6c; } .badge.post{ background:#909399; }
-  .ev .t { color:#909399; font-size:11px; }
-  .ev .who { font-size:12px; color:#606266; }
-  .ev .body { margin-top:4px; background:#fafafa; border:1px solid #f0f0f0; border-radius:4px; padding:8px 10px; font-size:12px; }
-  .diff { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:4px; }
-  .diff .old { background:#fef0f0; color:#f56c6c; padding:1px 6px; border-radius:3px; text-decoration:line-through; }
-  .diff .new { background:#f0f9eb; color:#67c23a; padding:1px 6px; border-radius:3px; }
-  .cred { color:#409eff; cursor:pointer; }
-  details.tech { margin-top:6px; }
-  details.tech summary { font-size:11px; color:#909399; cursor:pointer; user-select:none; }
-  details.tech .tech-body { margin-top:4px; background:#f5f7fa; border-radius:4px; padding:6px 8px; font-size:11px; color:#606266; display:grid; grid-template-columns:1fr 1fr; gap:2px 12px; }
-  .empty { text-align:center; color:#909399; padding:36px 12px; }
-  .empty .ic { font-size:34px; margin-bottom:8px; }
-  .hist { background:#fdf6ec; border:1px solid #faecd8; border-radius:6px; padding:10px 12px; margin-top:14px; font-size:12px; }
-  .hist h4 { font-size:12px; color:#e6a23c; margin-bottom:6px; }
-  .hist .r { color:#606266; padding:3px 0; border-bottom:1px dashed #f3e3c8; }
+  .drawer-head { padding:20px 26px 16px; border-bottom:1px solid var(--line); display:flex; align-items:center; gap:12px; background:#fff; }
+  .drawer-head h3 { font-size:18px; line-height:1.3; flex:1; letter-spacing:-.015em; font-weight:650; }
+  .drawer-kicker { color:var(--muted); font-size:11px; font-weight:600; letter-spacing:.1em; margin-bottom:3px; }
+  .drawer-close { cursor:pointer; font-size:18px; color:var(--subtle); padding:4px; border-radius:6px; transition:.15s; }
+  .drawer-close:hover { color:var(--ink); background:var(--gray-soft); }
+  .drawer-body { flex:1; overflow:auto; padding:22px 26px 40px; background:#fafbfc; }
+  .authid-chip { font-size:11px; color:var(--muted); background:var(--gray-soft); border-radius:5px; padding:3px 9px; cursor:pointer; font-variant-numeric:tabular-nums; transition:.15s; }
+  .authid-chip:hover { background:var(--accent-soft); color:var(--accent); }
+  .nowcard { background:linear-gradient(180deg,#fff, #fcfdfe); border:1px solid var(--line); border-radius:var(--r-lg); margin-bottom:20px; font-size:12px; display:grid; grid-template-columns:1.1fr 1fr 1.2fr 1.2fr; overflow:hidden; box-shadow:0 1px 3px rgba(21,26,36,.04); }
+  .nowcard .metric { padding:16px 18px; border-right:1px solid var(--line-soft); min-width:0; }
+  .nowcard .metric:last-child { border-right:0; }
+  .nowcard .metric-label { color:var(--subtle); font-size:11px; margin-bottom:6px; letter-spacing:.02em; }
+  .nowcard .metric-value { color:var(--ink); font-weight:650; font-size:14px; font-variant-numeric:tabular-nums; overflow-wrap:anywhere; letter-spacing:-.01em; }
+  .nowcard .metric-value .st { font-size:12px; }
+  .chain { background:var(--accent-soft); border:1px solid #d9e4fb; border-radius:var(--r-md); padding:11px 14px; margin-bottom:20px; font-size:12px; display:flex; align-items:center; gap:7px; flex-wrap:wrap; }
+  .chain .node { padding:3px 10px; border-radius:14px; background:#fff; border:1px solid #c3d4f7; cursor:pointer; transition:.15s; }
+  .chain .node:hover { border-color:var(--accent); color:var(--accent); }
+  .chain .node.cur { background:var(--accent); color:#fff; border-color:var(--accent); cursor:default; font-weight:500; }
+  .chain .arr { color:var(--subtle); }
+  .section-title { font-size:12px; font-weight:650; color:var(--muted); margin:2px 0 14px; letter-spacing:.06em; }
+  .tl { position:relative; padding-left:26px; }
+  .tl:before { content:""; position:absolute; left:6px; top:10px; bottom:10px; width:2px; background:var(--line); border-radius:2px; }
+  .ev { position:relative; padding:2px 0 22px; }
+  .ev:last-child { padding-bottom:4px; }
+  .ev:before { content:""; position:absolute; left:-24px; top:5px; width:10px; height:10px; border-radius:50%; background:var(--info); border:2.5px solid #fafbfc; box-shadow:0 0 0 2px var(--info); z-index:1; }
+  .ev.death:before { background:var(--danger); box-shadow:0 0 0 2px var(--danger); }
+  .ev.birth:before { background:var(--ok); box-shadow:0 0 0 2px var(--ok); }
+  .ev.post:before { background:var(--subtle); box-shadow:0 0 0 2px var(--subtle); }
+  .ev .ev-head { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; }
+  .ev .ev-title { font-size:14px; font-weight:650; color:var(--ink); letter-spacing:-.01em; }
+  .ev.birth .ev-title { color:var(--ok); } .ev.death .ev-title { color:var(--danger); } .ev.post .ev-title { color:var(--muted); }
+  .ev .t { color:var(--subtle); font-size:11px; font-variant-numeric:tabular-nums; margin-left:auto; }
+  .ev .body { margin-top:6px; color:var(--ink-2); font-size:12.5px; line-height:1.65; max-width:62ch; }
+  .event-meta { display:flex; align-items:center; gap:6px 14px; color:var(--subtle); margin-top:7px; flex-wrap:wrap; font-size:11.5px; }
+  .event-meta .m-cred { background:var(--gray-soft); border-radius:4px; padding:1px 7px; color:var(--ink-2); }
+  .diff { display:flex; gap:6px; align-items:center; flex-wrap:wrap; margin-top:7px; font-size:11.5px; }
+  .diff .old { background:var(--danger-soft); color:var(--danger); padding:1px 7px; border-radius:4px; text-decoration:line-through; }
+  .diff .new { background:var(--ok-soft); color:var(--ok); padding:1px 7px; border-radius:4px; }
+  .badge { display:inline-block; padding:1px 9px; border-radius:4px; font-size:11px; color:#fff; background:var(--info); font-weight:500; }
+  .badge.birth{ background:var(--ok); } .badge.death{ background:var(--danger); } .badge.post{ background:var(--subtle); }
+  .cred { color:var(--accent); cursor:pointer; }
+  .empty { text-align:center; color:var(--muted); padding:40px 12px; }
+  .empty .ic { font-size:32px; margin-bottom:10px; opacity:.6; }
+  .hist { background:var(--warn-soft); border:1px solid #f0e2c8; border-radius:var(--r-md); padding:12px 14px; margin-top:16px; font-size:12px; }
+  .hist h4 { font-size:12px; color:var(--warn); margin-bottom:6px; }
+  .hist .r { color:var(--ink-2); padding:4px 0; border-bottom:1px dashed #ecdcbd; }
+  .hist .r:last-child { border-bottom:0; }
   /* 弹窗 */
-  .modal-mask { position:fixed; inset:0; background:rgba(0,0,0,.4); z-index:150; display:none; align-items:flex-start; justify-content:center; padding-top:6vh; }
+  .modal-mask { position:fixed; inset:0; background:rgba(21,26,36,.46); backdrop-filter:blur(2px); z-index:150; display:none; align-items:flex-start; justify-content:center; padding-top:5vh; }
   .modal-mask.open { display:flex; }
-  .modal { background:#fff; border-radius:8px; width:580px; max-width:94vw; max-height:85vh; overflow:auto; box-shadow:0 8px 32px rgba(0,0,0,.25); }
-  .modal-head { padding:14px 18px; border-bottom:1px solid #ebeef5; display:flex; align-items:center; }
-  .modal-head h3 { font-size:15px; flex:1; }
-  .modal-body { padding:16px 18px; }
-  .modal-foot { padding:12px 18px; border-top:1px solid #ebeef5; text-align:right; }
+  .modal { background:#fff; border-radius:14px; width:620px; max-width:94vw; max-height:88vh; overflow:auto; box-shadow:0 24px 72px rgba(21,26,36,.26); }
+  .modal-head { padding:16px 22px; border-bottom:1px solid var(--line-soft); display:flex; align-items:center; }
+  .modal-head h3 { font-size:15px; flex:1; font-weight:650; letter-spacing:-.01em; }
+  .modal-body { padding:18px 22px; }
+  .modal-foot { padding:14px 22px; border-top:1px solid var(--line-soft); text-align:right; background:#fbfcfd; border-radius:0 0 14px 14px; }
   .modal-foot .btn { margin-left:8px; }
   .frow { display:flex; margin-bottom:12px; align-items:flex-start; }
   .frow .lab { width:118px; flex-shrink:0; font-size:12px; color:#606266; padding-top:7px; }
   .frow .lab .req { color:#f56c6c; margin-right:2px; }
   .frow .ctl { flex:1; }
-  .frow select,.frow input[type=text],.frow input[type=date],.frow textarea { width:100%; padding:7px 8px; border:1px solid #dcdfe6; border-radius:4px; font-size:12px; }
+  .frow select,.frow input[type=text],.frow input[type=date],.frow textarea { width:100%; padding:8px 9px; border:1px solid #d0d5dd; border-radius:6px; font-size:12px; }
   .frow textarea { min-height:56px; resize:vertical; }
   .frow .tip { font-size:11px; color:#909399; margin-top:3px; }
   .frow .err { font-size:11px; color:#f56c6c; margin-top:3px; display:none; }
@@ -132,6 +180,24 @@
   .new-tag { display:inline-block; background:#fef0f0; color:#f56c6c; border:1px solid #fbc4c4; border-radius:3px; font-size:10px; padding:0 4px; margin-left:4px; vertical-align:1px; }
   .old-tag { display:inline-block; background:#f0f9eb; color:#67c23a; border:1px solid #c9e9b6; border-radius:3px; font-size:10px; padding:0 4px; margin-left:4px; vertical-align:1px; }
   .batch-preview { background:#fdf6ec; border:1px solid #faecd8; border-radius:4px; padding:8px 10px; font-size:12px; color:#8a6d3b; margin-bottom:12px; }
+  .basis-switch { display:inline-flex; padding:3px; border:1px solid #d0d5dd; border-radius:7px; background:#f9fafb; margin-bottom:8px; }
+  .basis-switch button { border:0; background:transparent; color:#667085; padding:5px 10px; border-radius:5px; cursor:pointer; }
+  .basis-switch button.active { background:#fff; color:var(--accent); box-shadow:0 1px 3px rgba(16,24,40,.12); font-weight:600; }
+  .rich-editor { min-height:92px; padding:10px 11px; border:1px solid #d0d5dd; border-radius:7px 7px 0 0; background:#fff; color:#344054; }
+  .rich-editor:empty:before { content:attr(data-placeholder); color:#98a2b3; pointer-events:none; }
+  .paste-zone { border:1px dashed #98a2b3; border-top:0; border-radius:0 0 7px 7px; padding:10px; color:#667085; background:#f9fafb; cursor:pointer; }
+  .paste-zone:hover { border-color:var(--accent); color:var(--accent); background:var(--accent-soft); }
+  .attachment-list { display:flex; gap:8px; flex-wrap:wrap; margin-top:8px; }
+  .attachment-chip { display:flex; align-items:center; gap:6px; padding:5px 8px; border:1px solid #d0d5dd; border-radius:5px; background:#fff; color:#475467; }
+  .demo-fill { display:flex; gap:6px; margin-bottom:12px; align-items:center; color:#667085; font-size:11px; }
+  .demo-fill .btn { padding:4px 8px; }
+  .page-title { display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:16px; }
+  .page-title h2 { font-size:20px; letter-spacing:-.02em; line-height:1.35; }
+  .page-title p { color:#667085; margin-top:4px; }
+  .stat-strip { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin:14px 0 18px; }
+  .stat { border:1px solid var(--line); border-radius:8px; padding:12px 14px; background:#fff; }
+  .stat b { display:block; font-size:19px; font-variant-numeric:tabular-nums; }
+  .stat span { color:#667085; font-size:11px; }
   .jump-box { background:#ecf5ff; border:1px solid #d9ecff; border-radius:6px; padding:12px; font-size:12px; }
   .jump-box b { display:block; margin-bottom:4px; }
   /* 批量选择工具条 */
@@ -162,9 +228,9 @@
 <body>
 <div class="topbar">
   <span class="logo">运营平台</span>
-  <span class="crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
+  <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v5.4 · PRD-授权全生命周期审计日志 §4</span>
+  <span class="tag-proto">交互原型 v7.0 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -187,22 +253,24 @@
     <a onclick="gotoTab('summary');setTimeout(()=>toggleSum(0,0),100);togglePM()">⑮ 附加权益（case16：不进表怎么记）</a>
     <a onclick="openRuleAudit('R-ATT-01');togglePM()">⑯ 关联规则（飞书Base+记录历史）</a>
     <a onclick="openSourceIdSamples();togglePM()">⑰ source_id 现状语义样例（全类型）</a>
+    <a onclick="showView('reward');togglePM()">⑱ 批量用户奖励（新增审计字段）</a>
   </div>
 </div>
 
 <div class="layout">
   <div class="sidebar">
     <div class="menu-item">封控管理</div>
-    <div class="menu-item active">用户管理</div>
-    <div class="menu-item" style="padding-left:34px;color:#409eff">· 用户信息</div>
-    <div class="menu-item" style="padding-left:34px">· 服务期管理</div>
+    <div class="menu-item active" id="menu-user-root" onclick="showView('user')">用户管理</div>
+    <div class="menu-item sub active" id="menu-user" onclick="showView('user')">用户信息</div>
+    <div class="menu-item sub">服务期管理</div>
+    <div class="menu-item sub" id="menu-reward" onclick="showView('reward')">批量用户奖励</div>
     <div class="menu-item">订单管理</div>
     <div class="menu-item">退款管理</div>
     <div class="menu-item">营销工具</div>
   </div>
 
   <div class="main">
-    <div class="card">
+    <div class="card" id="view-user">
       <div class="userhead">
         <div class="avatar">王</div>
         <div><b style="font-size:15px">老王家的娃</b><div class="kv">用户ID：u_58f2…91ab ｜ 洋葱ID：8823 1027</div></div>
@@ -223,13 +291,16 @@
 
       <div class="anno">📌 PRD §4.1 改动总览：三个子 tab 线上查询交互全保留；列表增强（生命周期按钮+凭据展示升级）；新增生命周期抽屉；添加权益/撤销表单增强。</div>
 
-      <div class="subtabs">
-        <div class="subtab active" id="stab-personal" onclick="gotoTab('personal')">个人权益管理</div>
-        <div class="subtab" id="stab-summary" onclick="gotoTab('summary')">全部权益总时长</div>
-        <div class="subtab" id="stab-archived" onclick="gotoTab('archived')">归档权益管理</div>
-        <span style="flex:1"></span>
-        <button class="btn">更新用户权益</button>
-        <button class="btn primary" onclick="openAddModal()">添加权益</button>
+      <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:16px">
+        <div class="subtabs" style="margin-bottom:0">
+          <div class="subtab active" id="stab-personal" onclick="gotoTab('personal')">个人权益管理</div>
+          <div class="subtab" id="stab-summary" onclick="gotoTab('summary')">全部权益总时长</div>
+          <div class="subtab" id="stab-archived" onclick="gotoTab('archived')">归档权益管理</div>
+        </div>
+        <div class="toolbar-right">
+          <button class="btn">更新用户权益</button>
+          <button class="btn primary" onclick="openAddModal()">添加权益</button>
+        </div>
       </div>
 
       <div class="err-banner" id="errBanner">⚠ 授权服务查询失败（timeout），请稍后重试。<button class="btn mini" onclick="setState('normal')">重试</button></div>
@@ -256,12 +327,12 @@
           <span id="selCount" style="color:#409eff">已选 0 条</span>
           <span title="请先选中『仅查看已选中』按钮，确认撤销内容无误后可点击"><button class="btn danger mini" id="batchBtn" disabled onclick="openCancelModal(null,true)">批量撤销</button></span>
         </div>
-        <table class="grid" id="tbl-personal">
+        <div class="table-scroll"><table class="grid" id="tbl-personal">
           <thead><tr>
-            <th></th><th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>凭据</th><th>凭据说明</th><th>创建时间</th><th>操作</th>
+            <th></th><th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源 ID（原值）</th><th>凭据</th><th>创建时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
-        </table>
+        </table></div>
       </div>
 
       <!-- ② 全部权益总时长（对齐线上：筛选+分组+展开明细） -->
@@ -290,11 +361,36 @@
         </div>
         <div class="filter-actions"><button class="btn primary mini" onclick="renderTables()">查询</button><button class="btn mini" onclick="resetArchFilter()">重置</button></div>
         <div class="anno">📌 PRD §4.2 归档不换体验：筛选=线上现状；每行同样有「生命周期」，事件流全量保留（archive 事件）。</div>
-        <table class="grid">
+        <div class="table-scroll"><table class="grid">
           <thead><tr>
-            <th>授权名称</th><th>类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>凭据</th><th>凭据说明</th><th>归档时间</th><th>操作</th>
+            <th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>来源 ID（原值）</th><th>凭据</th><th>归档时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-archived"></tbody>
+        </table></div>
+      </div>
+    </div>
+
+    <div class="card" id="view-reward" style="display:none">
+      <div class="page-title">
+        <div><h2>批量用户奖励</h2><p>批量发放记录与撤回入口；每位用户的每条授权同步写入生命周期审计。</p></div>
+        <button class="btn primary" onclick="openRewardModal()">＋ 添加奖励</button>
+      </div>
+      <div class="stat-strip">
+        <div class="stat"><b>5</b><span>今日发放批次</span></div>
+        <div class="stat"><b>37</b><span>涉及用户</span></div>
+        <div class="stat"><b>1,158 天</b><span>授权总时长</span></div>
+        <div class="stat"><b>0</b><span>失败待处理</span></div>
+      </div>
+      <div class="filters">
+        <div class="f-item"><span class="f-lab">原因说明:</span><input id="rf-reason" placeholder="搜索原因说明"></div>
+        <div class="f-item"><span class="f-lab">原因分类:</span><select id="rf-code"><option value="">全部</option><option>运营发放</option><option>客服处理</option><option>测试账号</option></select></div>
+        <div class="f-item"><span class="f-lab">操作人:</span><input id="rf-operator" placeholder="姓名"></div>
+      </div>
+      <div class="filter-actions"><button class="btn primary mini" onclick="renderRewardTable()">查询</button><button class="btn mini" onclick="resetRewardFilter()">重置</button></div>
+      <div class="table-scroll" style="max-height:calc(100vh - 330px)">
+        <table class="grid" style="min-width:1260px">
+          <thead><tr><th>批次号</th><th>授权内容</th><th>原因分类</th><th>原因说明</th><th>用户数</th><th>单用户时长</th><th>业务群</th><th>操作人</th><th>操作时间</th><th>操作</th></tr></thead>
+          <tbody id="tbody-reward"></tbody>
         </table>
       </div>
     </div>
@@ -305,7 +401,7 @@
 <div class="drawer-mask" id="mask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-head">
-    <h3 id="d-title">生命周期</h3>
+    <div style="flex:1"><div class="drawer-kicker">授权生命周期</div><h3 id="d-title">权益名称</h3></div>
     <span class="authid-chip" id="d-authid" onclick="copyAuthId()" title="点击复制">授权 ID：—</span>
     <span class="drawer-close" onclick="closeDrawer()">✕</span>
   </div>
@@ -346,10 +442,17 @@
       <div class="frow" id="f-reason-text"><div class="lab"><span class="req">*</span>原因说明<span class="new-tag">升格必填</span></div><div class="ctl">
         <textarea id="add-rtext" placeholder="5~200 字，写清给谁、因何补偿/发放（线上『增加原因』字段升格：必填+落审计）"></textarea>
         <div class="err">原因说明须 5~200 字，且不能是纯数字或重复字符</div></div></div>
-      <div class="frow" id="f-ticket"><div class="lab"><span class="req">*</span>关联工单号<span class="new-tag">新增</span></div><div class="ctl">
-        <input type="text" id="add-ticket" placeholder="WO- 开头的客服工单号；确无工单选下方声明">
-        <label style="font-size:11px;color:#909399;display:block;margin-top:4px"><input type="checkbox" id="add-noticket" onchange="document.getElementById('add-ticket').disabled=this.checked"> 无工单（将触发二次确认并留痕）</label>
-        <div class="err">工单号格式不正确（WO-xxxxx），或勾选"无工单"</div></div></div>
+      <div class="frow" id="f-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
+        <div class="demo-fill"><span>快速查看：</span><button class="btn" onclick="fillBasisDemo('add','ticket')">有工单示例</button><button class="btn" onclick="fillBasisDemo('add','evidence')">无工单示例</button></div>
+        <div class="basis-switch"><button id="add-mode-ticket" class="active" onclick="setBasisMode('add','ticket')">关联工单</button><button id="add-mode-evidence" onclick="setBasisMode('add','evidence')">无工单·图文依据</button></div>
+        <div id="add-ticket-pane"><input type="text" id="add-ticket" placeholder="请输入客服工单号，如 WO-88121"></div>
+        <div id="add-evidence-pane" style="display:none">
+          <div class="rich-editor" id="add-evidence-text" contenteditable="true" data-placeholder="必填文字说明：写清邮件/大象沟通结论及操作依据"></div>
+          <div class="paste-zone" id="add-paste" onclick="addMockAttachment('add')">粘贴邮件或大象截图，或点击添加示例截图
+            <div class="attachment-list" id="add-attachments"></div>
+          </div>
+        </div>
+        <div class="err">关联工单模式须填写有效工单号；无工单模式须同时提供文字说明和至少 1 张截图</div></div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（登录态自动带出，不可修改）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
@@ -372,9 +475,17 @@
       <div class="frow" id="f-c-text"><div class="lab"><span class="req">*</span>原因说明<span class="old-tag">线上已有·升格必填</span></div><div class="ctl">
         <textarea id="c-rtext" placeholder="5~200 字（线上『撤销理由』输入框升格：必填+落审计）"></textarea>
         <div class="err">原因说明须 5~200 字</div></div></div>
-      <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>关联工单号<span class="new-tag">新增</span></div><div class="ctl">
-        <input type="text" id="c-ticket" placeholder="WO- 开头">
-        <div class="err">工单号格式不正确</div></div></div>
+      <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
+        <div class="demo-fill"><span>快速查看：</span><button class="btn" onclick="fillBasisDemo('cancel','ticket')">有工单示例</button><button class="btn" onclick="fillBasisDemo('cancel','evidence')">无工单示例</button></div>
+        <div class="basis-switch"><button id="cancel-mode-ticket" class="active" onclick="setBasisMode('cancel','ticket')">关联工单</button><button id="cancel-mode-evidence" onclick="setBasisMode('cancel','evidence')">无工单·图文依据</button></div>
+        <div id="cancel-ticket-pane"><input type="text" id="c-ticket" placeholder="请输入客服工单号，如 WO-99217"></div>
+        <div id="cancel-evidence-pane" style="display:none">
+          <div class="rich-editor" id="cancel-evidence-text" contenteditable="true" data-placeholder="必填文字说明：写清邮件/大象沟通结论及撤销依据"></div>
+          <div class="paste-zone" id="cancel-paste" onclick="addMockAttachment('cancel')">粘贴邮件或大象截图，或点击添加示例截图
+            <div class="attachment-list" id="cancel-attachments"></div>
+          </div>
+        </div>
+        <div class="err">关联工单模式须填写有效工单号；无工单模式须同时提供文字说明和至少 1 张截图</div></div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
@@ -384,12 +495,49 @@
   </div>
 </div>
 
+<!-- 批量用户奖励：沿用线上表单并补齐审计上下文 -->
+<div class="modal-mask" id="rewardMask">
+  <div class="modal" style="width:720px">
+    <div class="modal-head"><h3>添加批量用户奖励</h3><span class="drawer-close" onclick="closeModal('rewardMask')">✕</span></div>
+    <div class="modal-body">
+      <div class="frow"><div class="lab"><span class="req">*</span>账号输入形式<span class="old-tag">线上已有</span></div><div class="ctl"><label><input type="radio" checked> 用户名</label>　<label><input type="radio"> 手机号</label>　<label><input type="radio"> UserID</label></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>批量用户账号<span class="old-tag">线上已有</span></div><div class="ctl"><textarea id="reward-users" style="min-height:88px">user_88201
+user_88202
+user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个；提交后按用户逐条写 grant 事件，共享同一 batch_id。</div></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>所属业务群<span class="old-tag">线上已有</span></div><div class="ctl"><select id="reward-group"><option>教师与学校业务群</option><option>用户增长业务群</option><option>客户服务业务群</option></select></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>奖励内容<span class="old-tag">线上已有</span></div><div class="ctl"><select id="reward-target"><option>培优课｜初中数学｜30 天</option><option>VIP｜小学全科｜7 天</option></select></div></div>
+      <div class="frow" id="f-reward-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增</span></div><div class="ctl"><select id="reward-code"><option value="">请选择</option><option>运营发放</option><option>客服处理</option><option>测试账号</option></select><div class="err">请选择原因分类</div></div></div>
+      <div class="frow" id="f-reward-text"><div class="lab"><span class="req">*</span>原因说明<span class="new-tag">升格必填</span></div><div class="ctl"><textarea id="reward-text" placeholder="写清本批奖励对象、原因和授权内容"></textarea><div class="err">原因说明须 5~200 字</div></div></div>
+      <div class="frow" id="f-reward-basis"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
+        <div class="basis-switch"><button id="reward-mode-ticket" class="active" onclick="setBasisMode('reward','ticket')">关联工单</button><button id="reward-mode-evidence" onclick="setBasisMode('reward','evidence')">无工单·图文依据</button></div>
+        <div id="reward-ticket-pane"><input type="text" id="reward-ticket" value="WO-20260715-32"></div>
+        <div id="reward-evidence-pane" style="display:none">
+          <div class="rich-editor" id="reward-evidence-text" contenteditable="true" data-placeholder="必填文字说明：写清邮件/大象审批结论"></div>
+          <div class="paste-zone" onclick="addMockAttachment('reward')">粘贴邮件或大象截图，或点击添加示例截图<div class="attachment-list" id="reward-attachments"></div></div>
+        </div>
+        <div class="err">请提供有效工单，或同时提供文字说明和截图</div>
+      </div></div>
+      <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">张怡婷 · 教师与学校业务群（登录态自动带出，不可修改）</div></div></div>
+    </div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('rewardMask')">取消</button><button class="btn primary" onclick="submitReward()">提交并写入审计</button></div>
+  </div>
+</div>
+
 <!-- 关联规则查看（数据源：飞书Base「关联规则 attach_rule」+ Base记录历史） -->
 <div class="modal-mask" id="ruleMask">
   <div class="modal" style="width:640px">
     <div class="modal-head"><h3 id="rule-title">关联规则</h3><span class="drawer-close" onclick="closeModal('ruleMask')">✕</span></div>
     <div class="modal-body" id="rule-body"></div>
     <div class="modal-foot"><button class="btn primary" onclick="closeModal('ruleMask')">知道了</button></div>
+  </div>
+</div>
+
+<!-- 无工单图文依据预览 -->
+<div class="modal-mask" id="evidenceMask">
+  <div class="modal" style="width:560px">
+    <div class="modal-head"><h3>图文操作依据</h3><span class="drawer-close" onclick="closeModal('evidenceMask')">✕</span></div>
+    <div class="modal-body" id="evidence-body"></div>
+    <div class="modal-foot"><button class="btn primary" onclick="closeModal('evidenceMask')">关闭</button></div>
   </div>
 </div>
 
@@ -411,7 +559,7 @@
   </div>
 </div>
 
-<div class="debugbar" id="debugbar">
+<div class="debugbar" id="debugbar" style="display:none">
   <h5>原型调试（五态 / 标注） <span style="float:right;cursor:pointer" onclick="minDebug(true)">—</span></h5>
   <div class="row">
     <button id="db-normal" class="on" onclick="setState('normal')">正常</button>
@@ -422,48 +570,73 @@
   <div class="row"><button id="db-anno" onclick="toggleAnno()">标注模式：关</button></div>
   <div style="color:#9aa0ab;font-size:11px">审计起点 = 2026-10-01（演示值）</div>
 </div>
-<div class="debug-min" id="debugmin" onclick="minDebug(false)">⚙</div>
+<div class="debug-min" id="debugmin" style="display:flex" onclick="minDebug(false)">⚙</div>
 <div class="toast" id="toast"></div>
+<div class="source-popover" id="sourcePopover"></div>
 
 <script>
-/* ============ 凭据展示规则（PRD §4.2 一期口径）============
-   订单=可点击跳转示意；前驱授权=可点击、抽屉内锚定事件流；
-   其余=纯文字"类型中文名+编号"（hover 说明是什么 ID）；无凭据=灰字提示 */
-const CRED_NAME = { order:"订单", third_order:"三方订单", redeem_code:"兑换码", voucher:"体验券",
-  business_auth:"B端授权", activity:"活动", auth:"前驱授权", work_order:"工单", send_rule:"补发规则", device:"设备", none:"无凭据" };
-const CRED_TITLE = { third_order:"三方平台原始订单号（抖店/京东等平台单号原值；一期不跳转，二期跳三方订单详情）",
-  redeem_code:"兑换码记录 ID（redeemCode 服务主键；一期不跳转，二期跳兑换码记录）",
-  voucher:"体验券/体验机会记录 ID（一期不跳转）",
-  business_auth:"businessAuthId（B端授权接口查询主键；代码确认必传 string，但具体格式以 B端真实主键为准，待接口摸底，不能默认 uuid）",
-  activity:"活动记录 ID（单次发放的业务记录ID）；注意 source_type 的活动来源代号来自注册表，来源代号不是 credential_id",
-  work_order:"客服工单号（工单系统单号，新规范必填；一期不跳转，二期拼工单外链）",
-  send_rule:"补发规则 ID（send_rule 表主键 uuid，规则名见事件原因说明；一期不跳转，二期跳规则详情）",
-  device:"脱敏设备标识 omvd（合规要求禁止可读设备号；一期不跳转，二期跳平板管理）" };
-/* “凭据说明”列：复用注册表 Base 的 sourceId 填写说明口径 */
-const CRED_DESC = {
-  order:"go-order 订单表主键；在订单管理-订单详情查看",
-  third_order:"三方平台原始订单号（抖店/京东/拼多多等）",
-  redeem_code:"兑换码记录 ID（redeemCode 服务主键，不是码面文字）",
-  voucher:"体验券/体验机会记录 ID",
-  business_auth:"businessAuthId（B端授权接口查询主键；具体格式待B端摸底）",
-  activity:"活动/任务/彩票的业务记录 ID（不是来源代号）",
-  auth:"前驱授权 ID（userauth 授权记录 ID）",
-  work_order:"客服工单系统单号",
-  send_rule:"补发规则 ID（send_rule 表主键）",
-  device:"脱敏设备标识 omvd 或平板 SN 记录 ID",
-  none:"该来源无业务单据；依据见生命周期中的原因说明"
+/* ============ 来源 / 凭据展示规则（PRD §4.2） ============
+   原来源类型、原 source_id 永久保留；标准凭据只承接上线后事件。
+   凭据说明不再单列，改为点击来源类型旁的 i 查看。 */
+const CRED_NAME = { order:"订单", redeem_code:"兑换码", voucher:"体验券",
+  business_auth:"B端授权", activity:"活动记录", auth:"前驱授权", work_order:"工单",
+  send_rule:"补发规则", device:"设备", none:"—" };
+const SOURCE_HELP = {
+  buy:"凭据 ID 为洋葱订单号，可跳转订单管理-订单详情。",
+  doudian:"凭据 ID 为该三方订单对应的洋葱订单号；平台原始订单号继续保留在“来源 ID（原值）”。",
+  shadow:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
+  admin:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
+  award:"来源 ID 为本次批量奖励操作 ID（bonusId；未传时由 userauth 自动生成 UUID），并作为审计 batch_id 聚合整批。",
+  auth:"凭据 ID 为前驱授权 ID。",
+  unfreeze:"凭据 ID 为退款取消前的原授权 ID。",
+  redeem:"凭据 ID 为兑换码记录 ID，不是用户输入的码面文字。",
+  trialVouchers:"凭据 ID 为体验券记录 ID。",
+  trialChance:"凭据 ID 为体验机会计数记录 ID。",
+  present:"凭据 ID 为彩票/抽奖业务记录的 lotteryId；不是来源代号 present。",
+  subtask:"凭据 ID 为任务系统的 subtaskId；不是统一活动 ID。",
+  teacherAuth:"凭据 ID 为教师认证业务记录 ID。",
+  businessAuth:"凭据 ID 为 B 端授权记录 businessAuthId。",
+  entryTripVip:"凭据 ID 为对应渠道业务记录 ID。",
+  integral:"凭据 ID 为积分兑换业务记录 ID。",
+  send_rule:"凭据 ID 为补发规则记录 ID。",
+  school:"凭据 ID 为脱敏设备标识 omvd 或平板 SN 记录 ID。",
+  teacherLevelUp:"历史来源无业务凭据；上线后系统事件必须写清原因说明。",
+  parentsReward:"历史来源没有可靠业务单据；保留原来源 ID，不反推标准凭据。"
 };
-function credDescCell(t){ return `<span style="color:#606266">${CRED_DESC[t]||"按来源注册表口径填写"}</span>`; }
+function sourceCodeOf(a){
+  if (a.sourceCode) return a.sourceCode;
+  const match=(a.src||"").match(/\(([^)]+)\)$/);
+  return match ? match[1] : (a.src||"");
+}
+function sourceCell(a){
+  const code=sourceCodeOf(a);
+  const help=SOURCE_HELP[code] || "凭据口径以飞书《授权来源与审计枚举注册表》中该来源的登记信息为准。";
+  return `<span class="source-cell">${a.src}<button class="info-btn" aria-label="查看凭据说明" onclick="showSourceHelp(event,'${escapeAttr(a.src)}','${escapeAttr(help)}')">i</button></span>`;
+}
+function showSourceHelp(event, title, help){
+  event.stopPropagation();
+  const pop=document.getElementById('sourcePopover');
+  const rect=event.currentTarget.getBoundingClientRect();
+  pop.innerHTML=`<b>${title}</b><div class="sub">${help}</div>`;
+  pop.style.left=Math.min(rect.left,window.innerWidth-320)+'px';
+  pop.style.top=(rect.bottom+8)+'px';
+  pop.classList.add('open');
+}
+function escapeAttr(s){ return String(s||"").replace(/\\/g,"\\\\").replace(/'/g,"&#39;").replace(/"/g,"&quot;"); }
+document.addEventListener('click',()=>document.getElementById('sourcePopover')?.classList.remove('open'));
 
 function credCell(t, id, drawerCtx){
-  if (t === 'none') return `<span class="cred-none" title="该来源无凭据，原因见事件的原因说明">无凭据 ⓘ</span>`;
-  if (t === 'order') return `<a onclick="openCred('order','${id}')">${CRED_NAME[t]} ${id} ↗</a>`;
+  if (!id || t === 'none') return `<span class="cred-none">—</span>`;
+  if (t === 'order') return `<a onclick="openCred('order','${id}')">订单 ${id} ↗</a>`;
   if (t === 'auth') {
-    // drawerCtx = {root, focus}：抽屉内锚定切换；列表里打开抽屉并锚定
-    if (drawerCtx) return `<a onclick="switchChain('${drawerCtx.root}','${id}')">${CRED_NAME[t]} ${id}（点击查看该授权事件流）</a>`;
-    return `<a onclick="openDrawerByAuthRef('${id}')">${CRED_NAME[t]} ${id}（点击查看该授权事件流）</a>`;
+    if (drawerCtx) return `<a onclick="switchChain('${drawerCtx.root}','${id}')">前驱授权 ${id}</a>`;
+    return `<a onclick="openDrawerByAuthRef('${id}')">前驱授权 ${id}</a>`;
   }
-  return `<span class="cred-text" title="${CRED_TITLE[t]||''}">${CRED_NAME[t]} ${id}</span>`;
+  return `<span class="cred-text">${CRED_NAME[t]||t} ${id}</span>`;
+}
+function authCredentialCell(a){
+  const credential=credCell(a.credT,a.credId);
+  return a.evidenceId ? `${credential}<div style="margin-top:3px"><a onclick="openEvidence('${a.evidenceId}')">查看图文依据</a></div>` : credential;
 }
 /* ============ 关联规则（飞书Base attach_rule + Base记录历史）真实数据与弹窗 ============
    数据源：backend-userauth/internal/enums/target.go 的 AUTO_ADD_MAPPING 常量，已初始化到飞书Base「关联规则 attach_rule」表（19条真实规则）。
@@ -499,16 +672,31 @@ function openRuleAudit(rid){
 function openCred(type, id){
   document.getElementById('cred-body').innerHTML = `<div class="jump-box">
     <b>订单 ${id}</b>跳转目标：运营后台-订单管理-订单详情页（带单号定位，现有页面+带参跳转）
-    <div style="margin-top:8px;color:#909399">一期唯一开通点击跳转的凭据类型（PRD §4.2）</div></div>`;
+    <div style="margin-top:8px;color:#667085">购买与三方订单统一使用洋葱订单号跳转；平台原始单号保留在列表的「来源 ID（原值）」列。</div></div>`;
   document.getElementById('credMask').classList.add('open');
+}
+
+const EVIDENCE_DATA = {
+  "EV-20261210-0042": { time:"2026-12-10 16:18", operator:"李思思 · 客服一部", text:"用户在大象反馈课程连续无法播放。产品值班确认故障影响 2 天，同意补偿初中化学 VIP 30 天。", files:["大象沟通截图.png","产品确认截图.png"] },
+  "EV-20261211-0016": { time:"2026-12-11 09:34", operator:"李思思 · 客服一部", text:"邮件确认该用户已在另一批次获得相同奖励，本条属于重复发放，按邮件结论撤销。", files:["奖励复核邮件.png"] }
+};
+function openEvidence(id){
+  const e=EVIDENCE_DATA[id];
+  if(!e){ toast('未找到图文依据'); return; }
+  document.getElementById('evidence-body').innerHTML=`<div class="jump-box"><b>${id}</b>
+    <div style="color:#667085;margin-bottom:10px">${e.time} ｜ ${e.operator}</div>
+    <div style="background:#fff;border:1px solid #e4e7ec;border-radius:7px;padding:10px">${e.text}</div>
+    <div class="attachment-list">${e.files.map(f=>`<div class="attachment-chip">▧ ${f}</div>`).join('')}</div></div>`;
+  document.getElementById('evidenceMask').classList.add('open');
 }
 
 /* source_id 存量语义全覆盖：来自 source.go 注释与注册表初始化 */
 const SOURCE_ID_SAMPLES = [
   ["订单ID","buy / 公域订单补发","5f8e02cd…91a4","新口径 credential_id 与 source_id 相同：洋葱订单号"],
   ["兑换码记录ID","redeem","rc_67ea…102f","新口径相同：redeemCode 服务记录主键（不是码面文字）"],
-  ["操作者ID（历史）","admin / award","shadowUser_04af…","历史 source_id 是人，不是单据；新口径 credential_id 改填客服工单号"],
-  ["彩票ID","present","lottery_2027NY_0088","新口径归 activity，credential_id 填抽奖/彩票业务记录ID"],
+  ["操作者ID（历史）","admin / shadow","shadowUser_04af…","source_id 保留原值；有工单填 credential_id，无工单写图文依据"],
+  ["批量奖励操作ID","award","UUID（bonusId）","source_id 同时作为审计 batch_id；工单/图文依据另记"],
+  ["彩票ID","present","lotteryId（由抽奖业务运行时传入）","新口径归 activity；登记的是 ID 语义，不登记每一个 lotteryId 实例"],
   ["机会计数记录ID","trialChance","chance_88021","新口径归 voucher，credential_id 与 source_id 相同"],
   ["前驱授权ID","auth / unfreeze / 转换","3374defd-5ebe-49ea…","新口径归 auth，credential_id 与 source_id 相同，可在抽屉锚定事件流"],
   ["无 sourceId","teacherLevelUp / vip / freeTime","（空）","归 none；reason_text 强制写清发放依据，新业务禁用"],
@@ -518,8 +706,8 @@ const SOURCE_ID_SAMPLES = [
   ["体验券记录ID","trialVouchers","tv_3301","归 voucher，credential_id 与 source_id 相同"],
   ["B端统一来源键","businessAuth","sourceId=school_2026fall","source_id=BusinessAuthDetail.sourceId；credential_id=businessAuthId（通常不同，格式待B端摸底）"],
   ["设备号+用户ID拼接（历史）","huaweiEduKitBindUser0318","device123:user_abc（历史原值）","新口径归 device：credential_id 改用脱敏 omvd 或 SN记录ID，禁止可读设备号"],
-  ["活动记录ID/空/自由文本（历史）","各中文活动串","act_88291f… /（空）","source_type=注册来源代号；credential_id=规范化活动业务记录ID；存量需逐来源治理"],
-  ["三方平台单号","doudian 等","D20261120887","归 third_order，credential_id 与 source_id 相同"],
+  ["活动业务记录ID（按来源不同）","present / subtask / teacherAuth 等","lotteryId / subtaskId / 认证记录ID","只注册来源和 ID 语义；每次运行产生的业务记录 ID 不逐条登记"],
+  ["三方平台单号","doudian 等","D20261120887","来源 ID 保留平台原始单号；标准凭据改填对应洋葱订单号并跳订单详情"],
   ["补发规则ID","新课程补发 / 规则补发","sr_67ea5749…4b0c","归 send_rule；新口径相同，存量中文补发来源可能没有规则ID"],
 ];
 function openSourceIdSamples(){
@@ -550,11 +738,11 @@ const AUTHS = {
  "A-005": { name:"小学数学 培优课", type:"培优课", subject:"小学数学", state:"used", stateTxt:"已使用",
    start:"2024-07-01 00:00:00", end:"2025-06-30 23:59:59", remain:"—", total:"365天", src:"兑换码兑换(redeem)", sourceId:"rc_67ea…102f", credT:"redeem_code", credId:"rc_67ea…102f", created:"2024-07-01 08:30:00", creator:"system", reason:"兑换码兑换", archived:false },
  "A-006": { name:"初中数学 培优课", type:"培优课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"抖店订单(doudian)", sourceId:"D20261120887", credT:"third_order", credId:"D20261120887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换", archived:false },
+   start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"抖店订单(doudian)", sourceId:"D20261120887", credT:"order", credId:"O202611200887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换", archived:false },
  "A-007": { name:"初中全科 同步课 VIP", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
    start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", sourceId:"school_2026fall", sourceIdTip:"BusinessAuthDetail.sourceId（写入userauth的统一来源键）", credT:"business_auth", credId:"businessAuthId=67ea…4b0c", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
- "A-008": { name:"初中语文 同步课 VIP（14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
-   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"2026新年活动(mkt_2026ny01)", sourceId:"act_88291f…3d", credT:"activity", credId:"act_88291f…3d", created:"2026-12-01 00:10:00", creator:"system", reason:"新年活动", archived:false },
+ "A-008": { name:"初中语文 同步课 VIP（批量奖励14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
+   start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"后台批量发放奖励(award)", sourceId:"67ea5749-40b1-4b0c-8831-981fca220018", sourceIdTip:"本次批量奖励的 bonusId；同时作为审计 batch_id", credT:"work_order", credId:"WO-20261201-03", created:"2026-12-01 00:10:00", creator:"张怡婷", reason:"学校名单漏发补偿", archived:false },
  "A-009": { name:"初中数学 同步课 VIP（新学科扩容）", type:"同步课", subject:"初中数学", state:"unused", stateTxt:"未使用",
    start:"—", end:"—", remain:"排队中", total:"90天", src:"新课程补发", sourceId:"sr_67ea5749…4b0c", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
  "A-010": { name:"教师版 全科 VIP", type:"同步课", subject:"教师全科", state:"using", stateTxt:"使用中",
@@ -562,7 +750,7 @@ const AUTHS = {
  "A-011": { name:"初中数学 同步课 VIP（平板权益）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
    start:"2026-10-05 00:00:00", end:"2046-10-04 23:59:59", remain:"7200+ 天", total:"20年", src:"一口价平板激活(school)", sourceId:"device123:user_58f2（历史拼接）", sourceIdTip:"存量设备号+用户ID拼接；新凭据改用脱敏omvd", credT:"device", credId:"omvd-8f3…a2", created:"2026-10-05 14:00:00", creator:"system", reason:"平板激活", archived:false },
  "A-012": { name:"初中数学 同步课 VIP（抽奖7天）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-12-02 00:00:00", end:"2026-12-08 23:59:59", remain:"5 天", total:"7天", src:"彩票抽取(present)", sourceId:"lottery_2026NY_0088", sourceIdTip:"彩票/抽奖业务记录ID（lotteryId）", credT:"activity", credId:"lottery_2026NY_0088", created:"2026-12-02 09:00:00", creator:"system", reason:"彩票抽取", archived:false },
+   start:"2026-12-02 00:00:00", end:"2026-12-08 23:59:59", remain:"5 天", total:"7天", src:"彩票抽取(present)", sourceId:"LTY-2026NY-0088", sourceIdTip:"抽奖业务传入的 lotteryId（原型格式示例）", credT:"activity", credId:"LTY-2026NY-0088", created:"2026-12-02 09:00:00", creator:"system", reason:"彩票抽取", archived:false },
  "A-013": { name:"初中英语 同步课 VIP（体验机会）", type:"同步课", subject:"初中英语", state:"unused", stateTxt:"未使用",
    start:"—", end:"—", remain:"排队中", total:"5天", src:"体验机会兑换(trialChance)", sourceId:"chance_88021", sourceIdTip:"体验机会计数记录ID", credT:"voucher", credId:"chance_88021", created:"2026-12-03 10:00:00", creator:"system", reason:"体验机会兑换", archived:false },
  "A-014": { name:"初中生物 同步课 VIP（任务奖励）", type:"同步课", subject:"初中生物", state:"using", stateTxt:"使用中",
@@ -577,6 +765,10 @@ const AUTHS = {
    start:"2026-12-08 00:00:00", end:"2026-12-10 23:59:59", remain:"2 天", total:"3天", src:"积分兑换(integral)", sourceId:"integral_bill_99182", sourceIdTip:"积分兑换/账单记录ID", credT:"redeem_code", credId:"integral_bill_99182", created:"2026-12-08 16:00:00", creator:"积分商城", reason:"积分商品兑换", archived:false },
  "A-019": { name:"退款取消恢复 VIP", type:"同步课", subject:"初中物理", state:"unused", stateTxt:"未使用",
    start:"—", end:"—", remain:"排队中", total:"20天", src:"授权解冻(unfreeze)", sourceId:"A-OLD-778", sourceIdTip:"原授权ID（退款取消后解冻新建授权）", credT:"auth", credId:"A-OLD-778", created:"2026-12-09 17:00:00", creator:"system", reason:"退款取消解冻", archived:false },
+ "A-020": { name:"初中化学 同步课 VIP（无工单补偿）", type:"同步课", subject:"初中化学", state:"using", stateTxt:"使用中",
+   start:"2026-12-10 16:20:00", end:"2027-01-08 23:59:59", remain:"29 天", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_04af…25cc", sourceIdTip:"存量来源ID保留操作人ID；本次操作依据为图文记录", credT:"none", credId:"", evidenceId:"EV-20261210-0042", created:"2026-12-10 16:20:00", creator:"李思思", reason:"无工单图文补偿", archived:false },
+ "A-021": { name:"小学英语 同步课 VIP（无工单撤销）", type:"同步课", subject:"小学英语", state:"canceled", stateTxt:"已取消",
+   start:"2026-11-12 10:00:00", end:"2026-12-11 09:36:00", remain:"—", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_7b9c…8a11", sourceIdTip:"来源ID保留原操作者ID；撤销依据为图文记录", credT:"none", credId:"", evidenceId:"EV-20261211-0016", created:"2026-11-12 10:00:00", creator:"王晴", reason:"无工单图文撤销", archived:false },
  "A-101": { name:"初中化学 体验课（7天）", type:"同步课", subject:"初中化学", state:"canceled", stateTxt:"已取消",
    start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", total:"7天", src:"体验券兑换(trialVouchers)", sourceId:"tv_3301", credT:"voucher", credId:"tv_3301", created:"2026-10-03 12:00:00", creator:"system", reason:"体验券兑换", archived:true, archivedAt:"2026-12-01 02:10:00" },
 };
@@ -595,7 +787,7 @@ const SUMMARY = [
  ]},
 ];
 
-/* ============ 事件流（中文标签；tech=技术详情折叠） ============ */
+/* ============ 事件流（运营页面只展示业务字段；tech 数据仅作为原型内部样例，不渲染） ============ */
 const EVENTS = {
  "A-001": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-12 10:03:22", op:"系统（订单服务）",
@@ -666,9 +858,9 @@ const EVENTS = {
    ]},
  "A-006": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-11-20 09:00:00", op:"系统（三方订单服务）",
-     body:"抖店订单同步后兑换权益，授予 +180 天。",
-     diff:[["状态","—","未使用"]], cred:{t:"third_order", id:"D20261120887"},
-     tech:{"事件编号":"E-9501","事件序号":"1","调用方服务":"growth-order-thirdparty","请求 ID":"r-88ac…"} },
+     body:"抖店订单 D20261120887 同步并生成洋葱订单 O202611200887 后兑换权益，授予 +180 天。",
+     diff:[["状态","—","未使用"]], cred:{t:"order", id:"O202611200887"},
+     tech:{"事件编号":"E-9501","事件序号":"1","来源ID":"D20261120887","调用方服务":"growth-order-thirdparty"} },
    { et:"activate", cls:"", label:"生效", time:"2026-11-20 09:00:04", op:"系统（自动生效）",
      body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
      tech:{"事件编号":"E-9502","事件序号":"2"} }
@@ -680,10 +872,10 @@ const EVENTS = {
      tech:{"事件编号":"E-9601","事件序号":"1","调用方服务":"B端服务","调用接口":"BusinessAuth.Distribute","批次号":"B-SCHOOL-0915"} }
  ]},
  "A-008": { chain:null, events:[
-   { et:"grant", cls:"birth", label:"发放", time:"2026-12-01 00:10:00", op:"系统（活动服务）",
-     body:"原因：运营发放 ｜ 2026 新年活动批量发放（该活动已在来源注册表登记）。",
-     diff:[["状态","—","使用中"]], cred:{t:"activity", id:"act_88291f…3d"},
-     tech:{"事件编号":"E-9701","事件序号":"1","活动记录 ID":"act_88291f…3d","批次号":"B-2026NY01-003","调用方服务":"活动服务"} }
+   { et:"grant", cls:"birth", label:"批量奖励", time:"2026-12-01 00:10:00", op:"张怡婷（教师与学校业务群）",
+     body:"原因：客服处理 ｜ 学校名单漏发统一补偿，批量奖励初中语文 14 天。",
+     diff:[["状态","—","使用中"]], cred:{t:"work_order", id:"WO-20261201-03"},
+     tech:{"事件编号":"E-9701","事件序号":"1","批次号":"BR-20261201-0003","调用方服务":"shadow"} }
  ]},
  "A-009": { chain:null, events:[
    { et:"grant_supplement", cls:"birth", label:"补发", time:"2026-12-05 03:00:00", op:"系统（补发规则引擎）",
@@ -702,6 +894,22 @@ const EVENTS = {
      body:"原因：一口价平板激活 ｜ 平板激活时按预设配置发放课程权益（20 年）。设备标识按合规要求脱敏展示。",
      diff:[["状态","—","使用中"]], cred:{t:"device", id:"omvd-8f3…a2"},
      tech:{"事件编号":"E-9A01","事件序号":"1","调用方服务":"device 平板管理","受益范围":"设备"} }
+ ]},
+ "A-020": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-12-10 16:20:00", op:"李思思（客服一部）",
+     body:"原因：客服补偿 ｜ 用户通过大象反馈课程无法播放，经产品确认补偿 30 天。",
+     diff:[["状态","—","使用中"]], cred:null, evidence:"EV-20261210-0042",
+     tech:{"事件编号":"E-9B01","事件序号":"1","调用方服务":"shadow"} }
+ ]},
+ "A-021": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-11-12 10:00:00", op:"王晴（运营二组）",
+     body:"原因：运营发放 ｜ 体验活动补发 30 天。",
+     diff:[["状态","—","使用中"]], cred:{t:"work_order", id:"WO-20261112-18"},
+     tech:{"事件编号":"E-9C01","事件序号":"1"} },
+   { et:"revoke", cls:"death", label:"撤销", time:"2026-12-11 09:36:00", op:"李思思（客服一部）",
+     body:"原因：客服处理 ｜ 邮件确认该奖励重复发放，按邮件截图撤回。",
+     diff:[["状态","使用中","已取消"]], cred:null, evidence:"EV-20261211-0016",
+     tech:{"事件编号":"E-9C02","事件序号":"2"} }
  ]},
  "A-101": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-03 12:00:00", op:"系统（活动服务）",
@@ -730,7 +938,7 @@ function rowHtml(id, a){
     <td class="nowrap">${a.type}</td>
     <td class="nowrap"><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td class="nowrap">${a.start.slice(0,10)}</td><td class="nowrap">${a.end.slice(0,10)}</td><td class="nowrap">${a.remain}</td>
-    <td>${a.src}</td><td>${credCell(a.credT, a.credId)}</td><td>${credDescCell(a.credT)}</td>
+    <td>${sourceCell(a)}</td><td class="nowrap">${a.sourceId||"—"}</td><td>${authCredentialCell(a)}</td>
     <td class="nowrap">${a.created.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
@@ -739,7 +947,7 @@ function archRowHtml(id, a){
   return `<tr>
     <td><b>${a.name}</b><div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
     <td>${a.type}</td><td><span class="st ${a.state}">${a.stateTxt}</span></td>
-    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.src}</td><td>${credCell(a.credT,a.credId)}</td><td>${credDescCell(a.credT)}</td>
+    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${sourceCell(a)}</td><td>${a.sourceId||"—"}</td><td>${authCredentialCell(a)}</td>
     <td>${a.archivedAt.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td>
   </tr>`;
@@ -819,21 +1027,21 @@ function renderSummary(){
       const detailRows = r.details.map(id=>{
         const a=AUTHS[id];
         return `<tr>
-          <td>${id}</td><td>${a.src}</td><td>${credCell(a.credT,a.credId)}</td><td>${credDescCell(a.credT)}</td>
+          <td>${id}</td><td>${sourceCell(a)}</td><td>${a.sourceId||"—"}</td><td>${authCredentialCell(a)}</td>
           <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.total}</td><td>${a.remain}</td>
           <td><span class="st ${a.state}">${a.stateTxt}</span></td><td>${a.creator}</td><td>${a.created.slice(0,10)}</td><td>${a.reason}</td>
           <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td></tr>`;
       }).join('');
       const attachRows = (r.attach||[]).map(at=>`<tr style="background:#fdfaf3">
           <td><span style="color:#909399">—</span><div style="color:#e6a23c;font-size:11px">附加权益·无独立授权记录</div></td>
-          <td>关联规则附加</td><td><span class="cred-text" title="关联规则编号（当前值见飞书Base「关联规则 attach_rule」；变更前后/操作人/时间见Base记录修改历史）">规则 ${at.rule}</span></td><td>飞书Base「关联规则 attach_rule」的规则编号</td>
+          <td>关联规则附加</td><td>—</td><td><span class="cred-text">规则 ${at.rule}</span></td>
           <td colspan="4" style="color:#909399">与本体授权 ${at.host} 同起止（${at.name}）</td>
           <td><span class="st using">随本体生效</span></td><td>—</td><td>—</td><td>由授权 ${at.host} 按规则 ${at.rule} 附加</td>
           <td><a onclick="openRuleAudit('${at.rule}')">查看关联规则</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
       return `<div class="sum-row" id="sr-${gi}-${ri}" onclick="toggleSum(${gi},${ri})">
           <span class="arr">▶</span><span>${r.name}${r.attach?` <span style="color:#e6a23c;font-size:11px">（含 ${r.attach.length} 条附加权益）</span>`:''}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
         <div class="sum-detail" id="sd-${gi}-${ri}">
-          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>凭据</th><th>凭据说明</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
+          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>来源ID（原值）</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
           <tbody>${detailRows}${attachRows}</tbody></table>
           ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则当前配置（飞书Base「关联规则 attach_rule」）+ Base自带记录修改历史。本期不新建配置审计后端表。</div>`:''}</div>`;
     }).join('');
@@ -857,24 +1065,25 @@ function openDrawer(id, chainFocus){
     diff:[["状态","—",a.stateTxt]], cred:{t:a.credT,id:a.credId},
     tech:{"事件编号":`E-${id.replace(/\\D/g,'')}01`,"事件序号":"1","来源ID（source_id）":a.sourceId||"（空）"}
   }]};
-  document.getElementById('d-title').textContent = "生命周期 · " + (a.name || id);
+  document.getElementById('d-title').textContent = a.name || id;
   document.getElementById('d-authid').textContent = "授权 ID：" + id;
   let html = "";
-  html += `<div class="anno">📌 PRD §4.3：中文名主体（3.1 总表"前端可见中文名"口径）；技术标识收进「技术详情」折叠区；当前状态卡=授权主表，时间线=审计事件表。</div>`;
+  html += `<div class="anno">📌 PRD §4.3：当前状态来自授权主表；时间线来自审计事件表。技术排查字段不在运营界面展示。</div>`;
 
   if (AUTHS[id]) {
     html += `<div class="nowcard">
-      <div>当前状态：<span class="st ${a.state}">${a.stateTxt}</span></div>
-      <div>剩余时长：${a.remain||"—"}</div>
-      <div>生效时间：${a.start}</div><div>截止时间：${a.end}</div>
+      <div class="metric"><div class="metric-label">当前状态</div><div class="metric-value"><span class="st ${a.state}">${a.stateTxt}</span></div></div>
+      <div class="metric"><div class="metric-label">剩余时长</div><div class="metric-value">${a.remain||"—"}</div></div>
+      <div class="metric"><div class="metric-label">生效时间</div><div class="metric-value">${a.start}</div></div>
+      <div class="metric"><div class="metric-label">截止时间</div><div class="metric-value">${a.end}</div></div>
     </div>`;
   }
 
   if (data.chain) {
     const focus = chainFocus || id;
-    html += `<div class="chain">🔗 转换链：` + data.chain.map(n =>
+    html += `<div class="chain"><b>转换链</b>` + data.chain.map(n =>
       `<span class="node ${n.id===focus?'cur':''}" onclick="switchChain('${id}','${n.id}')">${n.name}</span>`
-    ).join('<span class="arr">→</span>') + `<span style="color:#909399">（点击节点切换查看对应事件流）</span></div>`;
+    ).join('<span class="arr">→</span>') + `</div>`;
   }
 
   let evs = data.events;
@@ -894,24 +1103,22 @@ function openDrawer(id, chainFocus){
   } else if (!evs.length) {
     html += `<div class="empty"><div class="ic">⏳</div>暂无事件</div>`;
   } else {
-    html += `<div class="tl">` + [...evs].reverse().map(e=>{
+    html += `<div class="section-title">事件记录 · ${evs.length} 条</div><div class="tl">` + [...evs].reverse().map(e=>{
       const noStatusDiff = ['grant','grant_supplement','grant_delayed','activate'].includes(e.et);
       const diffs = (e.diff||[]).filter(d=>(d[1]!==""||d[2]!=="") && !(noStatusDiff && d[0]==='状态')).map(d=>
-        `<span style="color:#909399">${d[0]}:</span> ${d[1]&&d[1]!=="—"?`<span class="old">${d[1]}</span>→`:""}<span class="new">${d[2]||d[1]}</span>`).join('　');
-      const credHtml = e.cred ? `<div style="margin-top:4px">凭据：${credCell(e.cred.t, e.cred.id, {root:id})}</div>
-        <div style="margin-top:3px;color:#606266">凭据说明：${CRED_DESC[e.cred.t]||"按来源注册表口径填写"}</div>` : "";
-      const techHtml = e.tech ? `<details class="tech"><summary>技术详情（研发排查用）</summary><div class="tech-body">` +
-        Object.entries(e.tech).map(([k,v])=>`<div><span style="color:#909399">${k}：</span>${v}</div>`).join('') + `</div></details>` : "";
+        `<span style="color:var(--subtle)">${d[0]}</span> ${d[1]&&d[1]!=="—"?`<span class="old">${d[1]}</span>→`:""}<span class="new">${d[2]||d[1]}</span>`).join('　');
+      const credHtml = e.cred ? `<span class="m-cred">凭据 ${credCell(e.cred.t, e.cred.id, {root:id})}</span>` : "";
+      const evidenceHtml = e.evidence ? `<span><a onclick="openEvidence('${e.evidence}')">查看图文操作依据</a></span>` : "";
+      const afterSt = eventAfterStatus(e);
+      const stChip = afterSt.includes('状态不变') ? "" : `<span class="st ${statusClass(afterSt)}">${afterSt}</span>`;
       return `<div class="ev ${e.cls}">
-        <div class="ev-head"><span class="badge ${e.cls}">${e.label}</span><span class="t">${e.time}</span></div>
-        <div class="who">操作人：${e.op}</div>
-        <div class="body">${e.body}
-          <div style="margin-top:5px;color:#606266">事件后状态：<span class="st ${statusClass(eventAfterStatus(e))}">${eventAfterStatus(e)}</span></div>
-          ${diffs?`<div class="diff">${diffs}</div>`:""}
-          ${credHtml}${techHtml}
-        </div></div>`;
+        <div class="ev-head"><span class="ev-title">${e.label}</span>${stChip}<span class="t">${e.time}</span></div>
+        <div class="body">${e.body}</div>
+        ${diffs?`<div class="diff">${diffs}</div>`:""}
+        <div class="event-meta"><span>${e.op}</span>${credHtml}${evidenceHtml}</div>
+      </div>`;
     }).join('') + `</div>`;
-    html += `<div style="text-align:center;color:#c0c4cc;font-size:11px;margin-top:4px">— 已展示全部 ${evs.length} 条事件（审计从 2026-10-01 起记录） —</div>`;
+    html += `<div style="text-align:center;color:var(--subtle);font-size:11px;margin-top:8px">已展示全部 ${evs.length} 条事件 · 审计从 2026-10-01 起记录</div>`;
   }
 
   document.getElementById('d-body').innerHTML = html;
@@ -945,7 +1152,76 @@ function statusClass(txt){
   return 'used';
 }
 
-/* ============ 表单 ============ */
+/* ============ 批量用户奖励 ============ */
+const REWARD_BATCHES = [
+  {id:"BR-20260715-0005",target:"培优课｜初中数学",code:"运营发放",reason:"暑期教师体验活动补发",users:22,days:30,group:"教师与学校业务群",operator:"张怡婷",time:"2026-07-15 10:28",basis:"WO-20260715-32"},
+  {id:"BR-20260715-0004",target:"VIP｜小学全科",code:"客服处理",reason:"学校名单漏发统一补偿",users:5,days:9,group:"客户服务业务群",operator:"常瑶",time:"2026-07-15 09:42",basis:"EV-20260715-0009"},
+  {id:"BR-20260714-0018",target:"培优课｜初中语文",code:"测试账号",reason:"新课程发布前内部验收",users:10,days:3,group:"教师与学校业务群",operator:"张怡婷",time:"2026-07-14 18:12",basis:"WO-20260714-77"}
+];
+function renderRewardTable(){
+  const reason=val('rf-reason'), code=val('rf-code'), op=val('rf-operator');
+  const rows=REWARD_BATCHES.filter(r=>(!reason||r.reason.includes(reason))&&(!code||r.code===code)&&(!op||r.operator.includes(op)));
+  document.getElementById('tbody-reward').innerHTML=rows.map(r=>`<tr>
+    <td><b>${r.id}</b><div style="color:#667085;font-size:11px">每条 grant 共享此 batch_id</div></td>
+    <td>${r.target}</td><td>${r.code}</td><td>${r.reason}</td><td><a>${r.users}</a></td><td>${r.days} 天</td>
+    <td>${r.group}</td><td>${r.operator}</td><td>${r.time}</td><td><a onclick="toast('打开批次 ${r.id} 的授权明细')">查看明细</a> · <a onclick="toast('撤回将逐条写 revoke 事件并生成新批次号')">撤回</a></td>
+  </tr>`).join('')||`<tr class="loading-row"><td colspan="10">无符合条件的奖励批次</td></tr>`;
+}
+function resetRewardFilter(){ ['rf-reason','rf-code','rf-operator'].forEach(id=>document.getElementById(id).value=''); renderRewardTable(); }
+function openRewardModal(){ document.getElementById('rewardMask').classList.add('open'); }
+function submitReward(){
+  let ok=true;
+  ok=mark('f-reward-code',!document.getElementById('reward-code').value)&&ok;
+  ok=mark('f-reward-text',!validText(document.getElementById('reward-text').value))&&ok;
+  ok=mark('f-reward-basis',!validBasis('reward'))&&ok;
+  if(!ok)return;
+  closeModal('rewardMask');
+  toast('批量奖励已提交：逐用户写入发放事件，共享同一 batch_id');
+}
+
+/* ============ 表单 / 操作依据 ============ */
+const basisMode={add:'ticket',cancel:'ticket',reward:'ticket'};
+const attachmentCount={add:0,cancel:0,reward:0};
+function setBasisMode(prefix, mode){
+  basisMode[prefix]=mode;
+  document.getElementById(prefix+'-mode-ticket').classList.toggle('active',mode==='ticket');
+  document.getElementById(prefix+'-mode-evidence').classList.toggle('active',mode==='evidence');
+  document.getElementById(prefix+'-ticket-pane').style.display=mode==='ticket'?'':'none';
+  document.getElementById(prefix+'-evidence-pane').style.display=mode==='evidence'?'':'none';
+}
+function addMockAttachment(prefix, name){
+  attachmentCount[prefix]+=1;
+  const list=document.getElementById(prefix+'-attachments');
+  const file=name||`${prefix==='cancel'?'邮件':'大象'}截图_${attachmentCount[prefix]}.png`;
+  list.insertAdjacentHTML('beforeend',`<span class="attachment-chip">▧ ${file}</span>`);
+}
+function fillBasisDemo(prefix, mode){
+  setBasisMode(prefix,mode);
+  const ticketId=prefix==='cancel'?'c-ticket':prefix+'-ticket';
+  if(mode==='ticket'){
+    document.getElementById(ticketId).value=prefix==='cancel'?'WO-99217':'WO-88121';
+  }else{
+    const editor=document.getElementById(prefix+'-evidence-text');
+    editor.textContent=prefix==='cancel'?'邮件确认该权益重复发放，需撤销；截图包含审批结论。':'大象沟通确认用户受课程故障影响，同意补偿 30 天；截图包含产品确认结论。';
+    if(!attachmentCount[prefix]) addMockAttachment(prefix,prefix==='cancel'?'奖励复核邮件.png':'大象沟通截图.png');
+  }
+}
+function validBasis(prefix){
+  if(basisMode[prefix]==='ticket'){
+    const id=prefix==='cancel'?'c-ticket':prefix+'-ticket';
+    return validTicket(document.getElementById(id).value,false);
+  }
+  const editor=document.getElementById(prefix+'-evidence-text');
+  return validText(editor.textContent||'') && attachmentCount[prefix]>0;
+}
+function bindPaste(prefix){
+  const editor=document.getElementById(prefix+'-evidence-text');
+  if(!editor)return;
+  editor.addEventListener('paste',event=>{
+    const images=[...(event.clipboardData?.items||[])].filter(item=>item.type.startsWith('image/'));
+    images.forEach((_,i)=>addMockAttachment(prefix,`粘贴截图_${attachmentCount[prefix]+i+1}.png`));
+  });
+}
 function toggleDurType(){
   const v = document.getElementById('add-dur-type').value;
   document.getElementById('f-days').style.display = v==='fixed'?'flex':'none';
@@ -982,9 +1258,8 @@ function submitAdd(){
   let ok = true;
   ok = mark('f-reason-code', !document.getElementById('add-rcode').value) && ok;
   ok = mark('f-reason-text', !validText(document.getElementById('add-rtext').value)) && ok;
-  ok = mark('f-ticket', !validTicket(document.getElementById('add-ticket').value, document.getElementById('add-noticket').checked)) && ok;
+  ok = mark('f-ticket', !validBasis('add')) && ok;
   if(!ok) return;
-  if(document.getElementById('add-noticket').checked && !confirm('您选择了「无工单」发放。\n该操作将被完整留痕（操作人/原因/无工单声明），并可能进入抽查名单。\n确认继续？')) return;
   closeModal('addMask');
   toast('已发放并同步记入生命周期（"发放"事件），列表与抽屉即时可见');
 }
@@ -992,7 +1267,7 @@ function submitCancel(){
   let ok = true;
   ok = mark('f-c-code', !document.getElementById('c-rcode').value) && ok;
   ok = mark('f-c-text', !validText(document.getElementById('c-rtext').value)) && ok;
-  ok = mark('f-c-ticket', !validTicket(document.getElementById('c-ticket').value, false)) && ok;
+  ok = mark('f-c-ticket', !validBasis('cancel')) && ok;
   if(!ok) return;
   closeModal('cancelMask');
   selected.clear(); document.getElementById('selPage').checked=false; document.getElementById('selOnly').checked=false;
@@ -1001,7 +1276,17 @@ function submitCancel(){
 }
 
 /* ============ tab / 五态 / 其它 ============ */
+function showView(view){
+  const isUser=view==='user';
+  document.getElementById('view-user').style.display=isUser?'':'none';
+  document.getElementById('view-reward').style.display=isUser?'none':'';
+  document.getElementById('menu-user').classList.toggle('active',isUser);
+  document.getElementById('menu-reward').classList.toggle('active',!isUser);
+  document.getElementById('top-crumb').innerHTML=isUser?'用户管理 / 用户信息 / <b style="color:#fff">内容权限</b>':'用户管理 / <b style="color:#fff">批量用户奖励</b>';
+  if(!isUser) renderRewardTable();
+}
 function gotoTab(t){
+  showView('user');
   ['personal','summary','archived'].forEach(x=>{
     document.getElementById('pane-'+x).style.display = (x===t?'':'none');
     document.getElementById('stab-'+x).classList.toggle('active', x===t);
@@ -1030,6 +1315,8 @@ function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg
 renderStateChips();
 renderTables();
 renderSummary();
+renderRewardTable();
+['add','cancel','reward'].forEach(bindPaste);
 </script>
 </body>
 </html>
