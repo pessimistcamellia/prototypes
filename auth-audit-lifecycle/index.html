@@ -582,23 +582,24 @@ const CRED_NAME = { order:"订单", redeem_code:"兑换码", voucher:"体验券"
   business_auth:"B端授权", activity:"活动记录", auth:"前驱授权", work_order:"工单",
   send_rule:"补发规则", device:"设备", none:"—" };
 const SOURCE_HELP = {
-  buy:"凭据 ID 为洋葱订单号，可跳转订单管理-订单详情。三方通用兑换链路先生成洋葱订单再发权益，来源类型同为 buy、来源 ID 即洋葱订单号。",
-  doudian:"来源 ID 为抖店平台单号；每笔三方订单都有对应洋葱订单，上线后事件的凭据 ID 统一填洋葱订单号并可跳订单详情。",
-  shadow:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
-  admin:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
-  award:"来源 ID = 本次批量奖励的批次号（bonusId），每批必有：页面不传时服务端自动生成，用于整批撤回与聚合。",
-  auth:"凭据 ID 为前驱授权 ID。",
-  unfreeze:"凭据 ID 为退款取消前的原授权 ID。",
-  redeem:"凭据 ID 为兑换码记录 ID，不是用户输入的码面文字。",
-  trialVouchers:"凭据 ID 为体验券记录 ID。",
-  trialChance:"凭据 ID 为体验机会计数记录 ID。",
-  present:"凭据 ID 与来源 ID 是同一个值：抽奖系统里这次中奖记录的编号（lotteryId），到抽奖活动后台按记录查询。",
-  subtask:"凭据 ID 与来源 ID 是同一个值：任务系统里这次完成任务记录的编号（subtaskId），到任务系统后台查询。",
-  teacherAuth:"凭据 ID 与来源 ID 是同一个值：教师认证系统里这条认证通过记录的编号，到教师认证后台查询。",
+  buy:"凭据 ID 为洋葱订单号，可跳转订单管理-订单详情。三方通用兑换链路先生成洋葱订单再发权益，来源 ID 即洋葱订单号。",
+  doudian:"来源 ID 为抖店平台单号（历史原值）；每笔三方订单都有对应洋葱订单，凭据 ID 统一用洋葱订单号（展示时按三方订单表实时关联，不改历史数据），可跳订单详情。",
+  shadow:"存量来源 ID 通常是操作人 ID；新操作凭据 ID 为工单号，无工单时提交邮件/大象截图与文字说明。",
+  admin:"存量来源 ID 通常是操作人 ID；新操作凭据 ID 为工单号，无工单时提交邮件/大象截图与文字说明。",
+  award:"来源 ID = 本次批量奖励的批次号（bonusId），每批必有：页面不传时服务端自动补一个（线上已有逻辑），用于整批定位与撤回；审计 batch_id 即此值。",
+  auth:"凭据 ID=来源 ID=前驱授权 ID（上一条授权的编号），点击可查看它的事件流。",
+  unfreeze:"解冻不是把原授权改回来：原授权作废、系统新建一条授权接续剩余时长。凭据 ID=原授权 ID，用于新旧两条记录互查。",
+  redeem:"凭据 ID=来源 ID=兑换码记录 ID（兑换码后台的记录编号，不是用户输入的码面文字）。",
+  trialVouchers:"凭据 ID=来源 ID=体验券记录 ID（用户详情-体验券记录 tab 可查）。",
+  trialChance:"凭据 ID=来源 ID=体验机会计数记录 ID。",
+  present:"凭据 ID=来源 ID，同一个值：抽奖系统里这次中奖记录的编号（lotteryId），到抽奖活动后台按记录查询。",
+  subtask:"凭据 ID=来源 ID，同一个值：任务系统里这次完成任务记录的编号（subtaskId），到任务系统后台查询。",
+  teacherAuth:"凭据 ID=来源 ID，同一个值：教师认证系统里这条认证通过记录的编号，到教师认证后台查询。",
   businessAuth:"凭据 ID 为 B 端授权记录 businessAuthId。",
-  entryTripVip:"凭据 ID 为对应渠道业务记录 ID。",
-  integral:"凭据 ID 为积分兑换业务记录 ID。",
-  send_rule:"凭据 ID 为补发规则记录 ID。",
+  entryTripVip:"凭据 ID=来源 ID=渠道工单 ID。",
+  integral:"凭据 ID=来源 ID=积分兑换记录 ID（积分商城的兑换记录编号）。",
+  send_rule:"凭据 ID=来源 ID=补发规则 ID（send_rule 规则主键，补发规则配置里可查）。",
+  "新课程补发":"凭据 ID=来源 ID=补发规则 ID（send_rule 规则主键，补发规则配置里可查）。",
   school:"凭据 ID 为脱敏设备标识 omvd 或平板 SN 记录 ID。",
   teacherLevelUp:"历史来源无业务凭据；上线后系统事件必须写清原因说明。",
   parentsReward:"历史来源没有可靠业务单据；保留原来源 ID，不反推标准凭据。"
@@ -610,7 +611,7 @@ function sourceCodeOf(a){
 }
 function sourceCell(a){
   const code=sourceCodeOf(a);
-  const help=SOURCE_HELP[code] || "凭据口径以飞书《授权来源与审计枚举注册表》中该来源的登记信息为准。";
+  const help=SOURCE_HELP[code] || "该来源的凭据 ID 口径请查《授权来源与审计枚举注册表》中本来源枚举那一行的说明（无需登记新内容）。";
   return `<span class="source-cell">${a.src}<button class="info-btn" aria-label="查看凭据说明" onclick="showSourceHelp(event,'${escapeAttr(a.src)}','${escapeAttr(help)}')">i</button></span>`;
 }
 function showSourceHelp(event, title, help){
@@ -740,7 +741,7 @@ const AUTHS = {
  "A-006": { name:"初中数学 培优课（抖店购买·通用兑换链路）", type:"培优课", subject:"初中数学", state:"using", stateTxt:"使用中",
    start:"2026-11-20 00:00:00", end:"2027-05-19 23:59:59", remain:"172 天", total:"180天", src:"购买获得(buy)", sourceId:"O202611200887", sourceIdTip:"通用三方兑换链路：先生成洋葱订单，source_id 即洋葱订单ID（yc_order_id）；抖店父单号留在三方通用表", credT:"order", credId:"O202611200887", created:"2026-11-20 09:00:00", creator:"system", reason:"三方订单兑换（抖店）", archived:false },
  "A-022": { name:"初中化学 培优课（抖店历史直发）", type:"培优课", subject:"初中化学", state:"using", stateTxt:"使用中",
-   start:"2026-05-08 00:00:00", end:"2027-05-07 23:59:59", remain:"296 天", total:"365天", src:"抖店售卖(doudian)", sourceId:"6928…8871（平台父单号）", sourceIdTip:"历史抖店定金直发链路：source_id=平台父单号，非洋葱订单号；父单可能对应多个洋葱单，未唯一映射不写标准凭据", credT:"none", credId:"", created:"2026-05-08 11:20:00", creator:"system", reason:"抖店直发（历史链路）", archived:false },
+   start:"2026-05-08 00:00:00", end:"2027-05-07 23:59:59", remain:"296 天", total:"365天", src:"抖店售卖(doudian)", sourceId:"6928…8871（平台单号）", sourceIdTip:"来源 ID 保留抖店平台单号原值；对应洋葱订单由三方订单表实时关联展示", credT:"order", credId:"O2026050801", created:"2026-05-08 11:20:00", creator:"system", reason:"抖店订单兑换（存量）", archived:false },
  "A-007": { name:"初中全科 同步课 VIP", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
    start:"2026-11-01 00:00:00", end:"2027-10-31 23:59:59", remain:"355 天", total:"365天", src:"B端进校(businessAuth)", sourceId:"school_2026fall", sourceIdTip:"BusinessAuthDetail.sourceId（写入userauth的统一来源键）", credT:"business_auth", credId:"businessAuthId=67ea…4b0c", created:"2026-11-01 08:00:00", creator:"赵强", reason:"进校开通", archived:false },
  "A-008": { name:"初中语文 同步课 VIP（批量奖励14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
@@ -858,10 +859,7 @@ const EVENTS = {
      {t:"2024-07-01 08:30", c:"create ｜ 兑换码兑换发放（creator: system）"},
      {t:"2025-06-30 23:59", c:"（无记录——过期为覆盖式更新，未留痕，这正是审计要解决的问题）"}
    ]},
- "A-022": { chain:null, legacy:true, events:[],
-   remarks:[
-     {t:"2026-05-08 11:20", c:"create ｜ 抖店定金直发（历史链路，source_id=平台父单号 6928…8871，未生成洋葱订单映射）"}
-   ]},
+ "A-022": { chain:null, legacy:true, events:[], remarks:[] },
  "A-006": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-11-20 09:00:00", op:"系统（三方订单服务）",
      body:"抖店订单 D20261120887 同步并生成洋葱订单 O202611200887 后兑换权益，授予 +180 天。",
@@ -1117,7 +1115,7 @@ function openDrawer(id, chainFocus){
       该授权早于审计上线时间（<b>2026-10-01</b>），无事件记录。<br>
       <span style="font-size:11px">这不是数据丢失——审计从上线当天开始记账，更早的历史看下方"历史备注"。</span></div>`;
     html += `<div class="hist"><h4>历史备注（上线前的既有备注，只读）</h4>` +
-      (data.remarks||[]).map(r=>`<div class="r">${r.t} ｜ ${r.c}</div>`).join('') + `</div>`;
+      ((data.remarks&&data.remarks.length)?data.remarks.map(r=>`<div class="r">${r.t} ｜ ${r.c}</div>`).join(''):`<div class="r">无历史备注记录（该来源的历史链路不写备注，备注表中无此授权的记录）</div>`) + `</div>`;
   } else if (!evs.length) {
     html += `<div class="empty"><div class="ic">⏳</div>暂无事件</div>`;
   } else {
@@ -1208,6 +1206,7 @@ function setBasisMode(prefix, mode){
 }
 function addMockAttachment(prefix, name){
   if(attachmentCount[prefix]>=5){ toast('最多上传 5 张截图'); return; }
+  if(attachmentCount[prefix]>=5){ toast('截图最多 5 张'); return; }
   attachmentCount[prefix]+=1;
   const list=document.getElementById(prefix+'-attachments');
   const file=name||`${prefix==='cancel'?'邮件':'大象'}截图_${attachmentCount[prefix]}.png`;
