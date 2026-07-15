@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 内容权限全生命周期审计 v7.0</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v8.0</title>
 <style>
   :root {
     --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
@@ -230,7 +230,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v7.0 · 生命周期审计</span>
+  <span class="tag-proto">交互原型 v8.0 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -254,6 +254,10 @@
     <a onclick="openRuleAudit('R-ATT-01');togglePM()">⑯ 关联规则（飞书Base+记录历史）</a>
     <a onclick="openSourceIdSamples();togglePM()">⑰ source_id 现状语义样例（全类型）</a>
     <a onclick="showView('reward');togglePM()">⑱ 批量用户奖励（新增审计字段）</a>
+    <a onclick="openDrawer('A-023');togglePM()">⑲ 抽屉：延迟登记（寒假班待激活）</a>
+    <a onclick="openDrawer('A-024');togglePM()">⑳ 抽屉：人工调整（客服延期）</a>
+    <a onclick="openDrawer('A-025');togglePM()">㉑ 抽屉：修复重建（新旧ID映射）</a>
+    <a onclick="openDrawer('A-026');togglePM()">㉒ 抽屉：对账补记+审计冲正</a>
   </div>
 </div>
 
@@ -313,14 +317,14 @@
           <div class="f-item"><span class="f-lab">授权类型:</span><select id="pf-type"><option value="">请选择授权类型</option><option>同步课</option><option>培优课</option><option>电子试卷</option><option>洋葱服务</option></select></div>
           <div class="f-item"><span class="f-lab">授权名称:</span><select id="pf-name"><option value="">请选择授权名称</option><option>初中数学</option><option>初中英语</option><option>初中物理</option><option>初中语文</option><option>初中全科</option><option>高中数学</option><option>小学数学</option><option>教师全科</option></select></div>
           <div class="f-item"><span class="f-lab">来源类型:</span><select id="pf-src"><option value="">请选择来源类型</option><option>购买获得</option><option>后台手动发放</option><option>兑换码兑换</option><option>授权转换</option><option>抖店订单</option><option>B端进校</option><option>活动发放</option><option>规则补发</option><option>教师升级赠送</option><option>一口价平板激活</option></select></div>
-          <div class="f-item"><span class="f-lab">来源ID:</span><input id="pf-srcid" placeholder="多个ID用;分隔"></div>
+          <div class="f-item"><span class="f-lab">来源/凭据ID:</span><input id="pf-srcid" placeholder="来源ID或凭据ID，多个用;分隔"></div>
           <div class="f-item"><span class="f-lab">创建日期:</span><input type="date" id="pf-d1" style="max-width:120px"><span class="date-sep">至</span><input type="date" id="pf-d2" style="max-width:120px"></div>
         </div>
         <div class="filter-actions">
           <button class="btn primary mini" onclick="renderTables()">查询</button><button class="btn mini" onclick="resetPersonalFilter()">重置</button>
           <span style="flex:1"></span><button class="btn mini" onclick="renderTables();toast('已刷新')">↻ 刷新</button>
         </div>
-        <div class="anno">📌 PRD §4.2：筛选与查询交互=线上现状全保留；新增①行复选框与批量撤销联动（线上已有，规格增强）②「生命周期」按钮③凭据列升级（一期仅订单可点击、前驱授权抽屉锚定，其余文字展示）。</div>
+        <div class="anno">📌 PRD §4.2：筛选与查询交互=线上现状全保留；新增①行复选框与批量撤销联动（线上已有，规格增强）②「生命周期」按钮③「来源/凭据ID」合并列（有凭据显示凭据：订单可点击/前驱授权抽屉锚定；无凭据回退来源ID原值；筛选同时匹配两者）。</div>
         <div class="sel-toolbar">
           <label><input type="checkbox" id="selPage" onchange="selectPage(this.checked)"> 选中当前页</label>
           <label><input type="checkbox" id="selOnly" onchange="renderTables()"> 仅查看已选中</label>
@@ -329,7 +333,7 @@
         </div>
         <div class="table-scroll"><table class="grid" id="tbl-personal">
           <thead><tr>
-            <th></th><th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源 ID（原值）</th><th>凭据</th><th>创建时间</th><th>操作</th>
+            <th></th><th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源/凭据ID</th><th>创建时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
         </table></div>
@@ -356,14 +360,14 @@
           <div class="f-item"><span class="f-lab">授权类型:</span><select id="af-type"><option value="">请选择授权类型</option><option>同步课</option><option>培优课</option></select></div>
           <div class="f-item"><span class="f-lab">授权名称:</span><input id="af-name" placeholder="请输入授权名称"></div>
           <div class="f-item"><span class="f-lab">来源类型:</span><input id="af-src" placeholder="请输入来源类型"></div>
-          <div class="f-item"><span class="f-lab">来源ID:</span><input id="af-srcid" placeholder="多个ID用;分隔"></div>
+          <div class="f-item"><span class="f-lab">来源/凭据ID:</span><input id="af-srcid" placeholder="来源ID或凭据ID，多个用;分隔"></div>
           <div class="f-item"><span class="f-lab">创建日期:</span><input type="date" id="af-d1" style="max-width:120px"><span class="date-sep">至</span><input type="date" id="af-d2" style="max-width:120px"></div>
         </div>
         <div class="filter-actions"><button class="btn primary mini" onclick="renderTables()">查询</button><button class="btn mini" onclick="resetArchFilter()">重置</button></div>
         <div class="anno">📌 PRD §4.2 归档不换体验：筛选=线上现状；每行同样有「生命周期」，事件流全量保留（archive 事件）。</div>
         <div class="table-scroll"><table class="grid">
           <thead><tr>
-            <th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>来源 ID（原值）</th><th>凭据</th><th>归档时间</th><th>操作</th>
+            <th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>来源类型</th><th>来源/凭据ID</th><th>归档时间</th><th>操作</th>
           </tr></thead>
           <tbody id="tbody-archived"></tbody>
         </table></div>
@@ -635,9 +639,13 @@ function credCell(t, id, drawerCtx){
   }
   return `<span class="cred-text">${CRED_NAME[t]||t} ${id}</span>`;
 }
+/* 「来源/凭据ID」合并列：有标准凭据显示凭据（订单/前驱授权可点击）；无标准凭据回退显示来源 ID 原值；两者皆无显示 — */
 function authCredentialCell(a){
-  const credential=credCell(a.credT,a.credId);
-  return a.evidenceId ? `${credential}<div style="margin-top:3px"><a onclick="openEvidence('${a.evidenceId}')">查看图文依据</a></div>` : credential;
+  let main;
+  if (a.credT && a.credT!=='none' && a.credId) main = credCell(a.credT, a.credId);
+  else if (a.sourceId) main = `<span class="cred-text" ${a.sourceIdTip?`title="${escapeAttr(a.sourceIdTip)}"`:''}>${a.sourceId}</span>`;
+  else main = `<span class="cred-none" title="该来源历史上无业务单据，依据见生命周期中的原因说明">—</span>`;
+  return a.evidenceId ? `${main}<div style="margin-top:3px"><a onclick="openEvidence('${a.evidenceId}')">查看图文依据</a></div>` : main;
 }
 /* ============ 关联规则（飞书Base attach_rule + Base记录历史）真实数据与弹窗 ============
    数据源：backend-userauth/internal/enums/target.go 的 AUTO_ADD_MAPPING 常量，已初始化到飞书Base「关联规则 attach_rule」表（19条真实规则）。
@@ -673,7 +681,7 @@ function openRuleAudit(rid){
 function openCred(type, id){
   document.getElementById('cred-body').innerHTML = `<div class="jump-box">
     <b>订单 ${id}</b>跳转目标：运营后台-订单管理-订单详情页（带单号定位，现有页面+带参跳转）
-    <div style="margin-top:8px;color:#667085">购买与三方订单统一使用洋葱订单号跳转；平台原始单号保留在列表的「来源 ID（原值）」列。</div></div>`;
+    <div style="margin-top:8px;color:#667085">购买与三方订单统一使用洋葱订单号跳转；平台原始单号保留在主表来源 ID 原值中（生命周期抽屉与来源/凭据ID筛选可查）。</div></div>`;
   document.getElementById('credMask').classList.add('open');
 }
 
@@ -772,6 +780,14 @@ const AUTHS = {
    start:"2026-12-10 16:20:00", end:"2027-01-08 23:59:59", remain:"29 天", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_04af…25cc", sourceIdTip:"存量来源ID保留操作人ID；本次操作依据为图文记录", credT:"none", credId:"", evidenceId:"EV-20261210-0042", created:"2026-12-10 16:20:00", creator:"李思思", reason:"无工单图文补偿", archived:false },
  "A-021": { name:"小学英语 同步课 VIP（无工单撤销）", type:"同步课", subject:"小学英语", state:"canceled", stateTxt:"已取消",
    start:"2026-11-12 10:00:00", end:"2026-12-11 09:36:00", remain:"—", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_7b9c…8a11", sourceIdTip:"来源ID保留原操作者ID；撤销依据为图文记录", credT:"none", credId:"", evidenceId:"EV-20261211-0016", created:"2026-11-12 10:00:00", creator:"王晴", reason:"无工单图文撤销", archived:false },
+ "A-023": { name:"初中英语 同步课 VIP（寒假班·延迟开通）", type:"同步课", subject:"初中英语", state:"unused", stateTxt:"待激活",
+   start:"—", end:"—", remain:"2027-01-15 开通", total:"60天", src:"购买获得(buy)", sourceId:"O2026122009", credT:"order", credId:"O2026122009", created:"2026-12-20 10:12:00", creator:"system", reason:"寒假班延迟开通订单", archived:false },
+ "A-024": { name:"初中物理 同步课 VIP（客服延期）", type:"同步课", subject:"初中物理", state:"using", stateTxt:"使用中",
+   start:"2026-11-01 00:00:00", end:"2026-12-08 23:59:59", remain:"9 天", total:"30+7天", src:"购买获得(buy)", sourceId:"O2026110155", credT:"order", credId:"O2026110155", created:"2026-11-01 09:00:00", creator:"—", reason:"订单购买（后经客服延期）", archived:false },
+ "A-025": { name:"小学数学 同步课 VIP（系统修复重建）", type:"同步课", subject:"小学数学", state:"using", stateTxt:"使用中",
+   start:"2026-11-15 00:00:00", end:"2027-11-14 23:59:59", remain:"330 天", total:"365天", src:"购买获得(buy)", sourceId:"O2026101877", credT:"auth", credId:"A-OLD-552", created:"2026-12-02 03:20:00", creator:"system", reason:"时间排布修复重建", archived:false },
+ "A-026": { name:"初中英语 同步课 VIP（3天体验·补记案例）", type:"同步课", subject:"初中英语", state:"used", stateTxt:"已使用",
+   start:"2026-11-25 00:00:00", end:"2026-11-27 23:59:59", remain:"—", total:"3天", src:"完成任务获得(subtask)", sourceId:"task_171888220043", credT:"activity", credId:"task_171888220043", created:"2026-11-25 08:00:00", creator:"system", reason:"任务奖励（到期事件曾漏记）", archived:false },
  "A-101": { name:"初中化学 体验课（7天）", type:"同步课", subject:"初中化学", state:"canceled", stateTxt:"已取消",
    start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", total:"7天", src:"体验券兑换(trialVouchers)", sourceId:"tv_3301", credT:"voucher", credId:"tv_3301", created:"2026-10-03 12:00:00", creator:"system", reason:"体验券兑换", archived:true, archivedAt:"2026-12-01 02:10:00" },
 };
@@ -927,6 +943,46 @@ const EVENTS = {
      diff:[["状态","使用中","已取消"]], cred:null, evidence:"EV-20261211-0016",
      tech:{"事件编号":"E-9C02","事件序号":"2"} }
  ]},
+ "A-023": { chain:null, events:[
+   { et:"grant_delayed", cls:"birth", label:"延迟登记", time:"2026-12-20 10:12:00", op:"系统（订单服务）",
+     body:"寒假班订单支付成功，权益登记为延迟开通：约定 2027-01-15 00:00 自动激活，届时另写「生效」事件。激活前用户不可学，客服可据此回答「付了钱为什么还不能学」。",
+     diff:[["状态","—","待激活"]], cred:{t:"order", id:"O2026122009"},
+     tech:{"事件编号":"E-9D01","事件序号":"1","激活截止":"2027-01-15"} }
+ ]},
+ "A-024": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-11-01 09:00:00", op:"系统（订单服务）",
+     body:"因订单支付成功发放，授予 +30 天。", diff:[["状态","—","未使用"]], cred:{t:"order", id:"O2026110155"},
+     tech:{"事件编号":"E-9E01","事件序号":"1"} },
+   { et:"activate", cls:"", label:"生效", time:"2026-11-01 09:00:03", op:"系统（自动生效）",
+     body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
+     tech:{"事件编号":"E-9E02","事件序号":"2"} },
+   { et:"adjust", cls:"", label:"人工调整", time:"2026-11-28 15:30:00", op:"李思思（客服一部）",
+     body:"原因：客服处理 ｜ 课程维护 7 天影响学习，按工单为用户延长截止时间 7 天。",
+     diff:[["截止时间","2026-12-01 23:59:59","2026-12-08 23:59:59"],["时长变化","","+7 天"]], cred:{t:"work_order", id:"WO-20261128-09"},
+     tech:{"事件编号":"E-9E03","事件序号":"3"} }
+ ]},
+ "A-025": { chain:null, events:[
+   { et:"repair", cls:"birth", label:"修复重建", time:"2026-12-02 03:20:00", op:"系统（数据修复任务）",
+     body:"原授权 A-OLD-552 时间排布计算错误，按修复方案物理删除并重建为本条（授权 ID 变更：A-OLD-552 → A-025，起止时间已修正）。原授权的历史事件通过本事件的新旧 ID 映射继续可查，溯源链不断。",
+     diff:[["状态","—","使用中"]], cred:{t:"auth", id:"A-OLD-552"},
+     tech:{"事件编号":"E-9F01","事件序号":"1","extras":"{old_auth_id:A-OLD-552,new_auth_id:A-025}"} }
+ ]},
+ "A-026": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-11-25 08:00:00", op:"系统（任务服务）",
+     body:"完成学习任务发放 3 天体验。", diff:[["状态","—","未使用"]], cred:{t:"activity", id:"task_171888220043"},
+     tech:{"事件编号":"E-9G01","事件序号":"1"} },
+   { et:"activate", cls:"", label:"生效", time:"2026-11-25 08:00:02", op:"系统（自动生效）",
+     body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
+     tech:{"事件编号":"E-9G02","事件序号":"2"} },
+   { et:"expire", cls:"death", label:"自然到期（对账补记）", time:"2026-11-27 23:59:59", op:"系统（对账任务补记）",
+     body:"零点批量到期的异步写入漏落库，次日对账任务发现缺口补记本条。发生时间按业务真实时刻（11-27 23:59:59）记录，落库时间为 11-28 02:00——两个时间分开存，补记不会「看起来像今天才过期」。",
+     diff:[["状态","使用中","已使用"]], cred:null,
+     tech:{"事件编号":"E-9G03","事件序号":"3","created_at":"2026-11-28 02:00:11"} },
+   { et:"correction", cls:"post", label:"审计冲正", time:"2026-11-28 10:40:00", op:"周敏（运营）",
+     body:"复核发现上一条补记事件把截止时间误写成 11-26，本条更正为 11-27 23:59:59 并指向被纠正的事件编号。错误事件本身保留不改——账本只增不改，错误和更正都留痕。",
+     diff:[["截止时间（更正）","2026-11-26 23:59:59","2026-11-27 23:59:59"]], cred:null,
+     tech:{"事件编号":"E-9G04","事件序号":"4","extras":"{corrects_event_id:E-9G03}"} }
+ ]},
  "A-101": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-03 12:00:00", op:"系统（活动服务）",
      body:"体验券兑换发放 +7 天。", diff:[["状态","—","使用中"]], cred:{t:"voucher", id:"TV-3301"},
@@ -954,7 +1010,7 @@ function rowHtml(id, a){
     <td class="nowrap">${a.type}</td>
     <td class="nowrap"><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td class="nowrap">${a.start.slice(0,10)}</td><td class="nowrap">${a.end.slice(0,10)}</td><td class="nowrap">${a.remain}</td>
-    <td>${sourceCell(a)}</td><td class="nowrap">${a.sourceId||"—"}</td><td>${authCredentialCell(a)}</td>
+    <td>${sourceCell(a)}</td><td>${authCredentialCell(a)}</td>
     <td class="nowrap">${a.created.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
@@ -963,7 +1019,7 @@ function archRowHtml(id, a){
   return `<tr>
     <td><b>${a.name}</b><div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
     <td>${a.type}</td><td><span class="st ${a.state}">${a.stateTxt}</span></td>
-    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${sourceCell(a)}</td><td>${a.sourceId||"—"}</td><td>${authCredentialCell(a)}</td>
+    <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${sourceCell(a)}</td><td>${authCredentialCell(a)}</td>
     <td>${a.archivedAt.slice(0,10)}</td>
     <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td>
   </tr>`;
@@ -984,10 +1040,11 @@ function dateOk(created, d1, d2){
   if (d2 && d > d2) return false;
   return true;
 }
+/* 来源/凭据ID筛选：同时匹配主表 source_id 原值与标准凭据 credential_id */
 function srcIdOk(a, raw){
   if (!raw) return true;
   const ids = raw.split(';').map(s=>s.trim()).filter(Boolean);
-  return ids.some(x => (a.sourceId||'').includes(x));
+  return ids.some(x => (a.sourceId||'').includes(x) || (a.credId||'').includes(x));
 }
 function personalFilter([id,a]){
   if (!stateSel.has(a.state)) return false;
@@ -1018,9 +1075,9 @@ function renderTables(){
   const only = document.getElementById('selOnly').checked;
   let entries = Object.entries(AUTHS).filter(([,a])=>!a.archived).filter(personalFilter);
   if (only) entries = entries.filter(([id])=>selected.has(id));
-  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="12">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
+  document.getElementById('tbody-personal').innerHTML = entries.map(([id,a])=>rowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="11">${only?'无已选中记录':'无符合筛选条件的记录'}</td></tr>`;
   const arch = Object.entries(AUTHS).filter(([,a])=>a.archived).filter(archFilter);
-  document.getElementById('tbody-archived').innerHTML = arch.map(([id,a])=>archRowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="10">无符合筛选条件的记录</td></tr>`;
+  document.getElementById('tbody-archived').innerHTML = arch.map(([id,a])=>archRowHtml(id,a)).join('') || `<tr class="loading-row"><td colspan="9">无符合筛选条件的记录</td></tr>`;
   updateSelUI();
 }
 function toggleSel(id, on){ on?selected.add(id):selected.delete(id); updateSelUI(); }
@@ -1043,21 +1100,21 @@ function renderSummary(){
       const detailRows = r.details.map(id=>{
         const a=AUTHS[id];
         return `<tr>
-          <td>${id}</td><td>${sourceCell(a)}</td><td>${a.sourceId||"—"}</td><td>${authCredentialCell(a)}</td>
+          <td>${id}</td><td>${sourceCell(a)}</td><td>${authCredentialCell(a)}</td>
           <td>${a.start.slice(0,10)}</td><td>${a.end.slice(0,10)}</td><td>${a.total}</td><td>${a.remain}</td>
           <td><span class="st ${a.state}">${a.stateTxt}</span></td><td>${a.creator}</td><td>${a.created.slice(0,10)}</td><td>${a.reason}</td>
           <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span></td></tr>`;
       }).join('');
       const attachRows = (r.attach||[]).map(at=>`<tr style="background:#fdfaf3">
           <td><span style="color:#909399">—</span><div style="color:#e6a23c;font-size:11px">附加权益·无独立授权记录</div></td>
-          <td>关联规则附加</td><td>—</td><td><span class="cred-text">规则 ${at.rule}</span></td>
+          <td>关联规则附加</td><td><span class="cred-text">规则 ${at.rule}</span></td>
           <td colspan="4" style="color:#909399">与本体授权 ${at.host} 同起止（${at.name}）</td>
           <td><span class="st using">随本体生效</span></td><td>—</td><td>—</td><td>由授权 ${at.host} 按规则 ${at.rule} 附加</td>
           <td><a onclick="openRuleAudit('${at.rule}')">查看关联规则</a> · <span class="lc-btn" onclick="openDrawer('${at.host}')">本体生命周期</span></td></tr>`).join('');
       return `<div class="sum-row" id="sr-${gi}-${ri}" onclick="toggleSum(${gi},${ri})">
           <span class="arr">▶</span><span>${r.name}${r.attach?` <span style="color:#e6a23c;font-size:11px">（含 ${r.attach.length} 条附加权益）</span>`:''}</span><span>${r.remain}</span><span>${r.deadline}</span></div>
         <div class="sum-detail" id="sd-${gi}-${ri}">
-          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>来源ID（原值）</th><th>凭据</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
+          <table class="grid"><thead><tr><th>授权ID</th><th>来源类型</th><th>来源/凭据ID</th><th>生效时间</th><th>截止时间</th><th>总时长</th><th>剩余时长</th><th>状态</th><th>创建人</th><th>创建时间</th><th>创建原因</th><th>操作</th></tr></thead>
           <tbody>${detailRows}${attachRows}</tbody></table>
           ${r.attach?`<div class="anno" style="display:block;margin-top:6px">📌 PRD §3.6 case16：附加权益是查询时按关联规则动态附带的（现状机制保留），无独立授权记录、不进授权审计事件表；它的可追溯性=本体授权的生命周期（主审计表）+ 关联规则当前配置（飞书Base「关联规则 attach_rule」）+ Base自带记录修改历史。本期不新建配置审计后端表。</div>`:''}</div>`;
     }).join('');
@@ -1315,9 +1372,9 @@ function setState(s){
   const pb = document.getElementById('tbody-personal');
   document.getElementById('errBanner').style.display = 'none';
   if (s==='normal'){ renderTables(); }
-  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
-  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12">该用户暂无授权记录</td></tr>`; }
-  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="12" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
+  else if (s==='loading'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11"><span class="spinner"></span>正在查询授权数据…</td></tr>`; }
+  else if (s==='empty'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11">该用户暂无授权记录</td></tr>`; }
+  else if (s==='error'){ pb.innerHTML = `<tr class="loading-row"><td colspan="11" style="color:#f56c6c">查询失败</td></tr>`; document.getElementById('errBanner').style.display='block'; }
 }
 function toggleAnno(){
   document.body.classList.toggle('anno-on');
