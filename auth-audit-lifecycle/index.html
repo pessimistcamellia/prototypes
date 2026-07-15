@@ -447,12 +447,12 @@
         <div class="basis-switch"><button id="add-mode-ticket" class="active" onclick="setBasisMode('add','ticket')">关联工单</button><button id="add-mode-evidence" onclick="setBasisMode('add','evidence')">无工单·图文依据</button></div>
         <div id="add-ticket-pane"><input type="text" id="add-ticket" placeholder="请输入客服工单号，如 WO-88121"></div>
         <div id="add-evidence-pane" style="display:none">
-          <div class="rich-editor" id="add-evidence-text" contenteditable="true" data-placeholder="必填文字说明：写清邮件/大象沟通结论及操作依据"></div>
-          <div class="paste-zone" id="add-paste" onclick="addMockAttachment('add')">粘贴邮件或大象截图，或点击添加示例截图
+          <div class="rich-editor" id="add-evidence-text" contenteditable="true" data-placeholder="必填文字说明（5~500 字）：写清邮件/大象沟通结论及操作依据"></div>
+          <div class="paste-zone" id="add-paste" onclick="addMockAttachment('add')">粘贴邮件或大象截图（1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp），或点击添加示例截图
             <div class="attachment-list" id="add-attachments"></div>
           </div>
         </div>
-        <div class="err">关联工单模式须填写有效工单号；无工单模式须同时提供文字说明和至少 1 张截图</div></div></div>
+        <div class="err">关联工单模式须填写有效工单号；无工单模式须提供 5~500 字文字说明和 1~5 张截图（单张 ≤10MB，png/jpg/jpeg/gif/webp）</div></div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（登录态自动带出，不可修改）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
@@ -480,12 +480,12 @@
         <div class="basis-switch"><button id="cancel-mode-ticket" class="active" onclick="setBasisMode('cancel','ticket')">关联工单</button><button id="cancel-mode-evidence" onclick="setBasisMode('cancel','evidence')">无工单·图文依据</button></div>
         <div id="cancel-ticket-pane"><input type="text" id="c-ticket" placeholder="请输入客服工单号，如 WO-99217"></div>
         <div id="cancel-evidence-pane" style="display:none">
-          <div class="rich-editor" id="cancel-evidence-text" contenteditable="true" data-placeholder="必填文字说明：写清邮件/大象沟通结论及撤销依据"></div>
-          <div class="paste-zone" id="cancel-paste" onclick="addMockAttachment('cancel')">粘贴邮件或大象截图，或点击添加示例截图
+          <div class="rich-editor" id="cancel-evidence-text" contenteditable="true" data-placeholder="必填文字说明（5~500 字）：写清邮件/大象沟通结论及撤销依据"></div>
+          <div class="paste-zone" id="cancel-paste" onclick="addMockAttachment('cancel')">粘贴邮件或大象截图（1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp），或点击添加示例截图
             <div class="attachment-list" id="cancel-attachments"></div>
           </div>
         </div>
-        <div class="err">关联工单模式须填写有效工单号；无工单模式须同时提供文字说明和至少 1 张截图</div></div></div>
+        <div class="err">关联工单模式须填写有效工单号；无工单模式须提供 5~500 字文字说明和 1~5 张截图（单张 ≤10MB，png/jpg/jpeg/gif/webp）</div></div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
@@ -512,14 +512,14 @@ user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个
         <div class="basis-switch"><button id="reward-mode-ticket" class="active" onclick="setBasisMode('reward','ticket')">关联工单</button><button id="reward-mode-evidence" onclick="setBasisMode('reward','evidence')">无工单·图文依据</button></div>
         <div id="reward-ticket-pane"><input type="text" id="reward-ticket" value="WO-20260715-32"></div>
         <div id="reward-evidence-pane" style="display:none">
-          <div class="rich-editor" id="reward-evidence-text" contenteditable="true" data-placeholder="必填文字说明：写清邮件/大象审批结论"></div>
-          <div class="paste-zone" onclick="addMockAttachment('reward')">粘贴邮件或大象截图，或点击添加示例截图<div class="attachment-list" id="reward-attachments"></div></div>
+          <div class="rich-editor" id="reward-evidence-text" contenteditable="true" data-placeholder="必填文字说明（5~500 字）：写清邮件/大象审批结论"></div>
+          <div class="paste-zone" onclick="addMockAttachment('reward')">粘贴邮件或大象截图（1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp），或点击添加示例截图<div class="attachment-list" id="reward-attachments"></div></div>
         </div>
-        <div class="err">请提供有效工单，或同时提供文字说明和截图</div>
+        <div class="err">请提供有效工单，或提供 5~500 字说明和 1~5 张截图（单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
       </div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">张怡婷 · 教师与学校业务群（登录态自动带出，不可修改）</div></div></div>
     </div>
-    <div class="modal-foot"><button class="btn" onclick="closeModal('rewardMask')">取消</button><button class="btn primary" onclick="submitReward()">提交并写入审计</button></div>
+    <div class="modal-foot"><button class="btn" onclick="closeModal('rewardMask')">取消</button><button class="btn primary" onclick="submitReward()">提交</button></div>
   </div>
 </div>
 
@@ -583,18 +583,18 @@ const CRED_NAME = { order:"订单", redeem_code:"兑换码", voucher:"体验券"
   send_rule:"补发规则", device:"设备", none:"—" };
 const SOURCE_HELP = {
   buy:"凭据 ID 为洋葱订单号，可跳转订单管理-订单详情。三方通用兑换链路先生成洋葱订单再发权益，来源类型同为 buy、来源 ID 即洋葱订单号。",
-  doudian:"历史抖店直发链路：来源 ID 是平台父单号，非洋葱订单号；未唯一映射到洋葱订单前凭据显示“—（上线前未标准化）”且不可跳转（父单可能对应多个洋葱单，禁止猜取）。",
+  doudian:"来源 ID 为抖店平台单号；每笔三方订单都有对应洋葱订单，上线后事件的凭据 ID 统一填洋葱订单号并可跳订单详情。",
   shadow:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
   admin:"存量来源 ID 通常是操作人 ID；新操作须提供工单号，或提交邮件/大象截图与文字说明。",
-  award:"来源 ID 为本次批量奖励操作 ID（bonusId；未传时由 userauth 自动生成 UUID），并作为审计 batch_id 聚合整批。",
+  award:"来源 ID = 本次批量奖励的批次号（bonusId），每批必有：页面不传时服务端自动生成，用于整批撤回与聚合。",
   auth:"凭据 ID 为前驱授权 ID。",
   unfreeze:"凭据 ID 为退款取消前的原授权 ID。",
   redeem:"凭据 ID 为兑换码记录 ID，不是用户输入的码面文字。",
   trialVouchers:"凭据 ID 为体验券记录 ID。",
   trialChance:"凭据 ID 为体验机会计数记录 ID。",
-  present:"凭据 ID 为彩票/抽奖业务记录的 lotteryId；不是来源代号 present。",
-  subtask:"凭据 ID 为任务系统的 subtaskId；不是统一活动 ID。",
-  teacherAuth:"凭据 ID 为教师认证业务记录 ID。",
+  present:"凭据 ID 与来源 ID 是同一个值：抽奖系统里这次中奖记录的编号（lotteryId），到抽奖活动后台按记录查询。",
+  subtask:"凭据 ID 与来源 ID 是同一个值：任务系统里这次完成任务记录的编号（subtaskId），到任务系统后台查询。",
+  teacherAuth:"凭据 ID 与来源 ID 是同一个值：教师认证系统里这条认证通过记录的编号，到教师认证后台查询。",
   businessAuth:"凭据 ID 为 B 端授权记录 businessAuthId。",
   entryTripVip:"凭据 ID 为对应渠道业务记录 ID。",
   integral:"凭据 ID 为积分兑换业务记录 ID。",
@@ -746,7 +746,7 @@ const AUTHS = {
  "A-008": { name:"初中语文 同步课 VIP（批量奖励14天）", type:"同步课", subject:"初中语文", state:"using", stateTxt:"使用中",
    start:"2026-12-01 00:00:00", end:"2026-12-14 23:59:59", remain:"3 天", total:"14天", src:"后台批量发放奖励(award)", sourceId:"67ea5749-40b1-4b0c-8831-981fca220018", sourceIdTip:"本次批量奖励的 bonusId；同时作为审计 batch_id", credT:"work_order", credId:"WO-20261201-03", created:"2026-12-01 00:10:00", creator:"张怡婷", reason:"学校名单漏发补偿", archived:false },
  "A-009": { name:"初中数学 同步课 VIP（新学科扩容）", type:"同步课", subject:"初中数学", state:"unused", stateTxt:"未使用",
-   start:"—", end:"—", remain:"排队中", total:"90天", src:"新课程补发", sourceId:"sr_67ea5749…4b0c", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
+   start:"—", end:"—", remain:"排队中", total:"90天", src:"新课程补发", sourceCode:"send_rule", sourceId:"sr_67ea5749…4b0c", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
  "A-010": { name:"教师版 全科 VIP", type:"同步课", subject:"教师全科", state:"using", stateTxt:"使用中",
    start:"2026-10-20 00:00:00", end:"2027-10-19 23:59:59", remain:"312 天", total:"365天", src:"教师升级赠送(teacherLevelUp)", sourceId:"", sourceIdTip:"历史无sourceId", credT:"none", credId:"", created:"2026-10-20 10:00:00", creator:"system", reason:"教师升级", archived:false },
  "A-011": { name:"初中数学 同步课 VIP（平板权益）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
@@ -763,8 +763,8 @@ const AUTHS = {
    start:"2026-12-06 00:00:00", end:"2027-01-05 23:59:59", remain:"30 天", total:"31天", src:"渠道赠送VIP(entryTripVip)", sourceId:"entry_2f91…77aa", sourceIdTip:"渠道工单ID", credT:"business_auth", credId:"entry_2f91…77aa", created:"2026-12-06 14:00:00", creator:"渠道系统", reason:"渠道工单赠送", archived:false },
  "A-017": { name:"教师认证赠送 VIP", type:"同步课", subject:"小学数学", state:"using", stateTxt:"使用中",
    start:"2026-12-07 00:00:00", end:"2027-12-06 23:59:59", remain:"365 天", total:"365天", src:"教师认证赠送(teacherAuth)", sourceId:"authcert_56c2…18f0", sourceIdTip:"教师认证记录UUID", credT:"activity", credId:"authcert_56c2…18f0", created:"2026-12-07 15:00:00", creator:"教师认证系统", reason:"教师认证通过", archived:false },
- "A-018": { name:"积分兑换 VIP（3天）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-12-08 00:00:00", end:"2026-12-10 23:59:59", remain:"2 天", total:"3天", src:"积分兑换(integral)", sourceId:"integral_bill_99182", sourceIdTip:"积分兑换/账单记录ID", credT:"redeem_code", credId:"integral_bill_99182", created:"2026-12-08 16:00:00", creator:"积分商城", reason:"积分商品兑换", archived:false },
+ "A-018": { name:"积分兑换 VIP（3天）", type:"同步课", subject:"初中数学", state:"canceled", stateTxt:"已取消",
+   start:"2026-12-08 00:00:00", end:"2026-12-09 10:12:00", remain:"—", total:"3天", src:"积分兑换(integral)", sourceId:"integral_bill_99182", sourceIdTip:"积分兑换/账单记录ID", credT:"redeem_code", credId:"integral_bill_99182", created:"2026-12-08 16:00:00", creator:"积分商城", reason:"积分商品兑换", archived:false },
  "A-019": { name:"退款取消恢复 VIP", type:"同步课", subject:"初中物理", state:"unused", stateTxt:"未使用",
    start:"—", end:"—", remain:"排队中", total:"20天", src:"授权解冻(unfreeze)", sourceId:"A-OLD-778", sourceIdTip:"原授权ID（退款取消后解冻新建授权）", credT:"auth", credId:"A-OLD-778", created:"2026-12-09 17:00:00", creator:"system", reason:"退款取消解冻", archived:false },
  "A-020": { name:"初中化学 同步课 VIP（无工单补偿）", type:"同步课", subject:"初中化学", state:"using", stateTxt:"使用中",
@@ -838,8 +838,8 @@ const EVENTS = {
      diff:[["状态","—","使用中"],["时长变化","","+150 天"]], cred:{t:"auth", id:"A-000W"},
      tech:{"事件编号":"E-8001","事件序号":"1","前驱授权 ID":"A-000W"} },
    { et:"exchange_out", cls:"death", label:"转换出", time:"2026-11-05 11:00:00", op:"周敏（运营）",
-     body:"原因：转换 ｜ 初升高转换：剩余 100 天转出至高中数学 VIP（A-004）。",
-     diff:[["状态","使用中","已取消"],["时长变化","","-100 天"]], cred:{t:"auth", id:"A-004"},
+     body:"原因：转换 ｜ 初升高转换：剩余 100 天转出至高中数学 VIP（A-004，见上方转换链）。",
+     diff:[["状态","使用中","已取消"],["时长变化","","-100 天"]], cred:null,
      tech:{"事件编号":"E-8003","事件序号":"3","前驱授权 ID":"A-004（去向）"} }
  ], "A-000W":[
    { et:"grant", cls:"birth", label:"发放", time:"2024-09-01 10:00:00", op:"系统（订单服务）",
@@ -849,8 +849,8 @@ const EVENTS = {
      body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
      tech:{"事件编号":"E-7002","事件序号":"2"} },
    { et:"exchange_out", cls:"death", label:"转换出", time:"2025-11-01 10:00:00", op:"陈璐（运营）",
-     body:"原因：转换 ｜ 小升初转换：剩余 150 天转出至初中数学 VIP（A-000X）。",
-     diff:[["状态","使用中","已取消"],["时长变化","","-150 天"]], cred:{t:"auth", id:"A-000X"},
+     body:"原因：转换 ｜ 小升初转换：剩余 150 天转出至初中数学 VIP（A-000X，见上方转换链）。",
+     diff:[["状态","使用中","已取消"],["时长变化","","-150 天"]], cred:null,
      tech:{"事件编号":"E-7003","事件序号":"3","前驱授权 ID":"A-000X（去向）"} }
  ]}},
  "A-005": { chain:null, legacy:true, events:[],
@@ -900,6 +900,18 @@ const EVENTS = {
      body:"原因：一口价平板激活 ｜ 平板激活时按预设配置发放课程权益（20 年）。设备标识按合规要求脱敏展示。",
      diff:[["状态","—","使用中"]], cred:{t:"device", id:"omvd-8f3…a2"},
      tech:{"事件编号":"E-9A01","事件序号":"1","调用方服务":"device 平板管理","受益范围":"设备"} }
+ ]},
+ "A-018": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-12-08 16:00:00", op:"系统（积分商城）",
+     body:"积分商品兑换发放 +3 天。", diff:[["状态","—","未使用"]], cred:{t:"redeem_code", id:"integral_bill_99182"},
+     tech:{"事件编号":"E-9D01","事件序号":"1"} },
+   { et:"activate", cls:"", label:"生效", time:"2026-12-08 16:00:03", op:"系统（自动生效）",
+     body:"本条权益自动开始生效、开始计时。", diff:[], cred:null,
+     tech:{"事件编号":"E-9D02","事件序号":"2"} },
+   { et:"revoke", cls:"death", label:"撤销", time:"2026-12-09 10:12:00", op:"李思思（客服一部）",
+     body:"原因：客服处理 ｜ 用户反馈误兑换，积分已退回，按工单撤销本条权益。",
+     diff:[["状态","使用中","已取消"]], cred:{t:"work_order", id:"WO-20261209-05"},
+     tech:{"事件编号":"E-9D03","事件序号":"3"} }
  ]},
  "A-020": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-12-10 16:20:00", op:"李思思（客服一部）",
@@ -1110,8 +1122,7 @@ function openDrawer(id, chainFocus){
     html += `<div class="empty"><div class="ic">⏳</div>暂无事件</div>`;
   } else {
     html += `<div class="section-title">事件记录 · ${evs.length} 条</div><div class="tl">` + [...evs].reverse().map(e=>{
-      const noStatusDiff = ['grant','grant_supplement','grant_delayed','activate'].includes(e.et);
-      const diffs = (e.diff||[]).filter(d=>(d[1]!==""||d[2]!=="") && !(noStatusDiff && d[0]==='状态')).map(d=>
+      const diffs = (e.diff||[]).filter(d=>(d[1]!==""||d[2]!=="") && d[0]!=='状态').map(d=>
         `<span style="color:var(--subtle)">${d[0]}</span> ${d[1]&&d[1]!=="—"?`<span class="old">${d[1]}</span>→`:""}<span class="new">${d[2]||d[1]}</span>`).join('　');
       const credHtml = e.cred ? `<span class="m-cred">凭据 ${credCell(e.cred.t, e.cred.id, {root:id})}</span>` : "";
       const evidenceHtml = e.evidence ? `<span><a onclick="openEvidence('${e.evidence}')">查看图文操作依据</a></span>` : "";
@@ -1196,6 +1207,7 @@ function setBasisMode(prefix, mode){
   document.getElementById(prefix+'-evidence-pane').style.display=mode==='evidence'?'':'none';
 }
 function addMockAttachment(prefix, name){
+  if(attachmentCount[prefix]>=5){ toast('最多上传 5 张截图'); return; }
   attachmentCount[prefix]+=1;
   const list=document.getElementById(prefix+'-attachments');
   const file=name||`${prefix==='cancel'?'邮件':'大象'}截图_${attachmentCount[prefix]}.png`;
@@ -1218,7 +1230,8 @@ function validBasis(prefix){
     return validTicket(document.getElementById(id).value,false);
   }
   const editor=document.getElementById(prefix+'-evidence-text');
-  return validText(editor.textContent||'') && attachmentCount[prefix]>0;
+  const txt=(editor.textContent||'').trim();
+  return txt.length>=5 && txt.length<=500 && !/^\d+$/.test(txt) && attachmentCount[prefix]>=1 && attachmentCount[prefix]<=5;
 }
 function bindPaste(prefix){
   const editor=document.getElementById(prefix+'-evidence-text');
