@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>新媒体激活页引导加企微 - 原型（含变更标注）</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', sans-serif; background: #f5f5f5; }
+.phone-frame { width: 375px; height: 812px; margin: 20px auto; background: #fff; border-radius: 40px; overflow: hidden; box-shadow: 0 20px 60px rgba(0,0,0,0.15); position: relative; border: 8px solid #1a1a1a; }
+.status-bar { height: 44px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 600; padding: 0 16px; }
+.page { display: none; height: calc(100% - 44px); overflow-y: auto; position: relative; background: #fff; }
+.page.active { display: block; }
+
+.nav-bar { height: 44px; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid #f0f0f0; background: #fff; }
+.nav-close { font-size: 18px; cursor: pointer; color: #333; width: 30px; }
+.nav-title { flex: 1; text-align: center; font-size: 17px; font-weight: 500; color: #000; }
+.nav-title .subtitle { font-size: 11px; color: #999; font-weight: 400; }
+.nav-more { font-size: 18px; color: #333; width: 30px; text-align: right; cursor: pointer; }
+
+.success-content { display: flex; flex-direction: column; align-items: center; justify-content: center; padding-top: 120px; }
+.success-icon { width: 72px; height: 72px; border-radius: 50%; background: #4caf50; display: flex; align-items: center; justify-content: center; margin-bottom: 24px; }
+.success-icon::after { content: '✓'; color: #fff; font-size: 36px; font-weight: bold; }
+.success-text { font-size: 16px; color: #333; text-align: center; line-height: 1.6; }
+
+.wechat-guide-area { position: absolute; bottom: 120px; left: 0; right: 0; padding: 0 30px; }
+.wechat-guide-btn { display: block; width: 100%; padding: 14px; background: #07c160; color: #fff; border: none; border-radius: 8px; font-size: 16px; font-weight: 500; cursor: pointer; text-align: center; }
+.wechat-guide-btn:active { background: #06ad56; }
+
+.wechat-page { background: #ededed; height: 100%; display: flex; flex-direction: column; }
+.wechat-nav { height: 44px; background: #ededed; display: flex; align-items: center; padding: 0 16px; border-bottom: 1px solid #d9d9d9; }
+.wechat-nav .back-btn { font-size: 18px; cursor: pointer; color: #333; width: 30px; }
+.wechat-nav .title { flex: 1; text-align: center; font-size: 16px; color: #333; font-weight: 500; }
+.wechat-add-content { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; }
+.wechat-add-content .teacher-card { display: flex; flex-direction: column; align-items: center; }
+.wechat-add-content .avatar { width: 80px; height: 80px; border-radius: 8px; background: #07c160; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 32px; font-weight: bold; margin-bottom: 16px; }
+.wechat-add-content h3 { font-size: 18px; color: #333; margin-bottom: 6px; }
+.wechat-add-content .corp-info { font-size: 13px; color: #999; margin-bottom: 6px; }
+.wechat-add-content .corp-badge { display: inline-flex; align-items: center; gap: 4px; padding: 3px 8px; background: #fff; border-radius: 4px; font-size: 12px; color: #576b95; margin-bottom: 30px; border: 1px solid #e8e8e8; }
+.wechat-add-content .add-btn { width: 200px; padding: 10px; background: #07c160; color: #fff; border: none; border-radius: 6px; font-size: 15px; cursor: pointer; }
+.wechat-add-content .add-btn:active { background: #06ad56; }
+
+.toast { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background: rgba(0,0,0,0.75); color: #fff; padding: 12px 24px; border-radius: 8px; font-size: 14px; z-index: 999; display: none; }
+.toast.show { display: block; animation: fadeInOut 2s ease; }
+@keyframes fadeInOut { 0%{opacity:0} 10%{opacity:1} 80%{opacity:1} 100%{opacity:0} }
+
+.demo-controls { position: fixed; bottom: 0; left: 50%; transform: translateX(-50%); width: 375px; background: #fff; border-top: 1px solid #eee; padding: 10px 16px; display: flex; gap: 8px; z-index: 100; }
+.demo-btn { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 6px; font-size: 11px; text-align: center; cursor: pointer; background: #fff; color: #333; }
+.demo-btn.active { border-color: #667eea; color: #667eea; background: #f0f0ff; }
+
+.non-newmedia-note { position: absolute; bottom: 60px; left: 20px; right: 20px; padding: 12px; background: #fff3e0; border-radius: 8px; border: 1px solid #ffe0b2; font-size: 12px; color: #e65100; line-height: 1.5; text-align: center; }
+</style>
+</head>
+<body>
+
+<div class="phone-frame">
+  <div class="status-bar">14:42</div>
+
+  <!-- Page 1: 新媒体渠道激活成功页（含新增企微引导按钮） -->
+  <div class="page active" id="page-activation" data-diff-page="激活成功页（新媒体渠道）">
+    <div class="nav-bar">
+      <div class="nav-close" onclick="showToast('关闭页面')">✕</div>
+      <div class="nav-title">
+        绑定课程权益
+        <div class="subtitle">base-h5.yangcong345.com</div>
+      </div>
+      <div class="nav-more">···</div>
+    </div>
+
+    <div class="success-content">
+      <div class="success-icon"></div>
+      <p class="success-text">绑定成功，请立即下载洋葱学园APP学习！</p>
+    </div>
+
+    <div class="wechat-guide-area" id="wechat-guide-area">
+      <button class="wechat-guide-btn" id="wechat-guide-btn" onclick="goToWechat()">添加助教老师去上课</button>
+    </div>
+  </div>
+
+  <!-- Page 2: 微信加好友页（流程新增环节） -->
+  <div class="page" id="page-wechat" data-diff-page="企微加好友页（微信内）">
+    <div class="wechat-page">
+      <div class="wechat-nav">
+        <div class="back-btn" onclick="goBack()">‹</div>
+        <div class="title">添加企业微信</div>
+        <div style="width:30px"></div>
+      </div>
+      <div class="wechat-add-content">
+        <div class="teacher-card" id="teacher-card">
+          <div class="avatar" id="wechat-avatar">助</div>
+          <h3 id="wechat-name">助教老师</h3>
+          <p class="corp-info" id="wechat-role">学员服务</p>
+          <div class="corp-badge" id="corp-badge">🏢 洋葱学园</div>
+        </div>
+        <button class="add-btn" id="wechat-add-btn" onclick="showToast('已发送添加请求')">添加到通讯录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page 3: 非新媒体渠道（当前线上已有激活成功页，无变化） -->
+  <div class="page" id="page-non-newmedia" data-diff-page="激活成功页（非新媒体渠道）">
+    <div class="nav-bar">
+      <div class="nav-close" onclick="showToast('关闭页面')">✕</div>
+      <div class="nav-title">
+        绑定课程权益
+        <div class="subtitle">base-h5.yangcong345.com</div>
+      </div>
+      <div class="nav-more">···</div>
+    </div>
+
+    <div class="success-content">
+      <div class="success-icon"></div>
+      <p class="success-text">绑定成功，请立即下载洋葱学园APP学习！</p>
+    </div>
+
+    <div class="non-newmedia-note">ℹ️ 非新媒体渠道：展示当前线上已有激活成功页，无企微引导按钮</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<!-- Demo Controls -->
+<div class="demo-controls">
+  <div class="demo-btn active" id="btn-scene1" onclick="switchScene('hit-assistant')">命中助教组商品ID</div>
+  <div class="demo-btn" id="btn-scene2" onclick="switchScene('miss-assistant')">未命中(默认私域)</div>
+  <div class="demo-btn" id="btn-scene3" onclick="switchScene('non-newmedia')">非新媒体渠道</div>
+</div>
+
+<script>
+let currentScene = 'hit-assistant';
+
+function switchScene(scene) {
+  currentScene = scene;
+  document.querySelectorAll('.demo-btn').forEach(b => b.classList.remove('active'));
+
+  if (scene === 'hit-assistant') {
+    document.getElementById('btn-scene1').classList.add('active');
+    showPage('page-activation');
+  } else if (scene === 'miss-assistant') {
+    document.getElementById('btn-scene2').classList.add('active');
+    showPage('page-activation');
+  } else {
+    document.getElementById('btn-scene3').classList.add('active');
+    showPage('page-non-newmedia');
+  }
+}
+
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+}
+
+function goToWechat() {
+  showPage('page-wechat');
+  if (currentScene === 'hit-assistant') {
+    document.getElementById('wechat-avatar').textContent = '助';
+    document.getElementById('wechat-name').textContent = '助教老师';
+    document.getElementById('wechat-role').textContent = '学员服务 · 助教';
+  } else {
+    document.getElementById('wechat-avatar').textContent = '私';
+    document.getElementById('wechat-name').textContent = '私域老师';
+    document.getElementById('wechat-role').textContent = '学员运营 · 班主任';
+  }
+}
+
+function goBack() {
+  showPage('page-activation');
+}
+
+function showToast(msg) {
+  const toast = document.getElementById('toast');
+  toast.textContent = msg;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 2000);
+}
+
+// 供变更标注层跳页使用
+window.DIFF_HOOKS = { showPage: showPage };
+</script>
+
+<!-- ======================================================================
+     以下为「变更标注层」：数据（DIFF_CHANGESET）+ 引擎（IIFE），可整体复制
+     到任意单文件 HTML 原型中复用。引擎零依赖，不影响原型自身逻辑。
+     ====================================================================== -->
+<script>
+window.DIFF_CHANGESET = {
+  meta: {
+    version: "v1.3",
+    baseline: "线上版本（激活成功页无企微引导）",
+    prdTitle: "PRD-新媒体激活页引导加企微",
+    prdUrl: "https://guanghe.feishu.cn/docx/QastdWJ88oXXAlxoFaqcEcQXn2R",
+    prdType: "feishu",
+    sddTitle: "SDD-新媒体激活页引导加企微",
+    sddUrl: "./sdd.html",
+    sddType: "html"
+  },
+  changes: [
+    {
+      id: "chg-channel-logic",
+      level: "page",
+      page: "page-activation",
+      module: "渠道判定逻辑",
+      target: "#page-activation",
+      type: "logic",
+      title: "新增页面展示条件：渠道判定",
+      desc: "激活成功页新增判定逻辑：sellfrom 以 xinmeiti 开头时才展示企微引导按钮。判定为单条件（v1.3 由多条件简化而来），覆盖所有三方订单激活链接。",
+      before: "所有渠道激活成功页样式一致，无条件分支",
+      after: "sellfrom 以 xinmeiti 开头 → 展示企微引导；否则保持线上样式",
+      prd: { section: "8.1 渠道判定逻辑", blockId: "doxcnpAKgXKQoLikic0kACymTRv" },
+      sdd: { reqId: "REQ-001", anchor: "REQ-001" }
+    },
+    {
+      id: "chg-guide-module",
+      level: "module",
+      page: "page-activation",
+      module: "企微引导按钮",
+      target: "#wechat-guide-area",
+      type: "new",
+      title: "新增模块：企微引导按钮区",
+      desc: "在绑定成功提示文案下方新增企微引导按钮，引导用户添加企微老师。此前该区域为空白。",
+      before: "（线上无此模块）",
+      after: "绑定成功文案下方展示绿色引导按钮",
+      prd: { section: "8.2 激活页企微引导按钮", blockId: "doxcnz2qJ9JouwlLb9Lj7yYc9If" },
+      sdd: { reqId: "REQ-002", anchor: "REQ-002" }
+    },
+    {
+      id: "chg-btn-copy",
+      level: "field",
+      page: "page-activation",
+      module: "企微引导按钮",
+      target: "#wechat-guide-btn",
+      type: "copy",
+      title: "文案变更：按钮文案统一",
+      desc: "v1.1 起统一按钮文案为「添加助教老师去上课」，不再按命中组展示差异化文案。",
+      before: "按命中组展示不同文案（助教/私域各一套）",
+      after: "统一为「添加助教老师去上课」",
+      prd: { section: "8.2 激活页企微引导按钮（交互说明）", blockId: "doxcnz2qJ9JouwlLb9Lj7yYc9If" },
+      sdd: { reqId: "REQ-003", anchor: "REQ-003" }
+    },
+    {
+      id: "chg-btn-flow",
+      level: "field",
+      page: "page-activation",
+      module: "企微引导按钮",
+      target: "#wechat-guide-btn",
+      type: "flow",
+      title: "流程变更：点击直接拉起微信",
+      desc: "点击按钮后按商品匹配规则直接拉起微信跳转企微加好友页，用户无需保存二维码再扫码（v1.1 前方案为出码弹窗）。",
+      before: "展示二维码弹窗 → 用户保存 → 微信扫码",
+      after: "点击 → 直接拉起微信加好友页（获客链接为现有能力）",
+      prd: { section: "8.2 激活页企微引导按钮（交互说明）", blockId: "doxcnz2qJ9JouwlLb9Lj7yYc9If" },
+      sdd: { reqId: "REQ-004", anchor: "REQ-004" }
+    },
+    {
+      id: "chg-fallback",
+      level: "module",
+      page: "page-activation",
+      module: "异常与兜底提示",
+      target: "#wechat-guide-area",
+      type: "new",
+      title: "新增：跳转异常兜底提示",
+      desc: "新增两类兜底 Toast：跳转失败时提示「跳转失败，请稍后重试」；微信未安装或版本不支持时提示「请确保已安装最新版微信」。",
+      before: "（线上无此逻辑）",
+      after: "两类异常场景均有 Toast 提示",
+      prd: { section: "8.4 异常与兜底处理", blockId: "doxcnAZxuarS6lyGpEmskU43JO8" },
+      sdd: { reqId: "REQ-007", anchor: "REQ-007" }
+    },
+    {
+      id: "chg-wechat-page",
+      level: "page",
+      page: "page-wechat",
+      module: "整页（流程新增环节）",
+      target: "#page-wechat",
+      type: "flow",
+      title: "流程新增页面：企微加好友页",
+      desc: "本页为业务流程中的新增环节（用户点击引导按钮后到达）。页面本身为微信原生能力，无需开发，仅作流程示意。",
+      before: "激活流程在成功页即终止",
+      after: "成功页 → 拉起微信 → 企微加好友页 → 添加老师",
+      prd: { section: "六、业务流程图", blockId: "doxcnsEzNlRLKGUl3gaF2U4cyac" },
+      sdd: { reqId: "REQ-004", anchor: "REQ-004" }
+    },
+    {
+      id: "chg-match-rule",
+      level: "module",
+      page: "page-wechat",
+      module: "商品-企微匹配规则",
+      target: "#teacher-card",
+      type: "enum",
+      title: "口径变更：跳转对象匹配规则",
+      desc: "跳转到哪位老师由「商品编号是否命中助教组指定商品 ID 列表（共 10 个）」决定；未命中默认私域老师。v1.1 由「按商品类型映射」改为「命中指定商品 ID」。",
+      before: "按商品类型映射企微类型",
+      after: "命中助教组 10 个商品 ID → 助教老师；未命中 → 默认私域老师",
+      prd: { section: "8.3 商品-企微类型匹配规则", blockId: "doxcn2RCn3BUFUyRhsWSB4lrjxd" },
+      sdd: { reqId: "REQ-005", anchor: "REQ-005" }
+    },
+    {
+      id: "chg-link-mode",
+      level: "field",
+      page: "page-wechat",
+      module: "商品-企微匹配规则",
+      target: "#wechat-add-btn",
+      type: "modify",
+      title: "方案变更：活码改为获客链接",
+      desc: "v1.2 起由「企微活码（扫码添加）」改为「企微获客链接（点击直达加好友页）」。两条获客链接已配置，人员调整由运营在企微平台维护，无需开发。",
+      before: "企微活码，用户扫码添加",
+      after: "企微获客链接，点击直达加好友页",
+      prd: { section: "8.3 当前使用的企微获客链接", blockId: "doxcnCb1XxUs9tqr3n0RAD26aHd" },
+      sdd: { reqId: "REQ-006", anchor: "REQ-006" }
+    },
+    {
+      id: "chg-non-newmedia",
+      level: "page",
+      page: "page-non-newmedia",
+      module: "渠道判定逻辑",
+      target: "#page-non-newmedia",
+      type: "logic",
+      title: "口径说明：本页保持线上样式",
+      desc: "sellfrom 不以 xinmeiti 开头的渠道，激活成功页保持当前线上样式，无任何 UI 变化。列出本页是为明确判定口径的「否」分支。",
+      before: "—",
+      after: "非新媒体渠道不受本需求影响",
+      prd: { section: "8.1 渠道判定逻辑", blockId: "doxcnpAKgXKQoLikic0kACymTRv" },
+      sdd: { reqId: "REQ-001", anchor: "REQ-001" }
+    }
+  ]
+};
+</script>
+
+<script>
+/* ============ 原型变更标注引擎 diff-annotator v1 （零依赖，可整段复用） ============ */
+(function () {
+  const CS = window.DIFF_CHANGESET;
+  if (!CS || !CS.changes || !CS.changes.length) return;
+
+  const TYPE_META = {
+    new:    { label: "新增",     color: "#16a34a" },
+    modify: { label: "修改",     color: "#ea580c" },
+    copy:   { label: "文案变更", color: "#2563eb" },
+    enum:   { label: "枚举/口径", color: "#9333ea" },
+    logic:  { label: "逻辑变更", color: "#dc2626" },
+    flow:   { label: "流程变更", color: "#0d9488" },
+    remove: { label: "删除",     color: "#6b7280" }
+  };
+  const LS_KEY = "diff-annotator:" + location.pathname;
+
+  // ---------- 样式 ----------
+  const style = document.createElement("style");
+  style.textContent = `
+  .da-launcher { position: fixed; top: 16px; right: 16px; z-index: 9000; background: #111827; color: #fff; border: none; border-radius: 999px; padding: 10px 18px; font-size: 14px; font-weight: 600; cursor: pointer; box-shadow: 0 4px 16px rgba(0,0,0,.25); display: flex; align-items: center; gap: 8px; }
+  .da-launcher .da-count { background: #ef4444; border-radius: 999px; font-size: 12px; padding: 1px 8px; }
+  .da-panel { position: fixed; top: 64px; right: 16px; width: 320px; max-height: calc(100vh - 96px); overflow-y: auto; background: #fff; border-radius: 14px; box-shadow: 0 12px 40px rgba(0,0,0,.22); z-index: 9000; display: none; font-size: 13px; }
+  .da-panel.open { display: block; }
+  .da-panel-head { padding: 14px 16px 10px; border-bottom: 1px solid #f1f5f9; }
+  .da-panel-head h4 { font-size: 15px; color: #111827; margin-bottom: 4px; }
+  .da-panel-head .da-meta { font-size: 12px; color: #6b7280; line-height: 1.6; }
+  .da-panel-head a { color: #2563eb; text-decoration: none; }
+  .da-bulk { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid #f1f5f9; }
+  .da-bulk button { flex: 1; padding: 6px; border: 1px solid #e5e7eb; background: #fff; border-radius: 8px; font-size: 12px; cursor: pointer; color: #374151; }
+  .da-bulk button:hover { background: #f9fafb; }
+  .da-hint { padding: 8px 16px; font-size: 12px; color: #9ca3af; }
+  .da-group { padding: 8px 16px 4px; }
+  .da-group-title { font-size: 12px; font-weight: 700; color: #6b7280; margin: 6px 0; text-transform: none; }
+  .da-mod-row { display: flex; align-items: flex-start; gap: 8px; padding: 7px 8px; border-radius: 8px; cursor: pointer; }
+  .da-mod-row:hover { background: #f8fafc; }
+  .da-mod-row input { margin-top: 3px; accent-color: #111827; cursor: pointer; }
+  .da-mod-info { flex: 1; }
+  .da-mod-name { color: #111827; font-weight: 500; }
+  .da-mod-tags { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 4px; }
+  .da-chip { display: inline-block; font-size: 10px; color: #fff; border-radius: 4px; padding: 1px 6px; }
+  .da-goto { font-size: 11px; color: #2563eb; cursor: pointer; white-space: nowrap; margin-top: 2px; }
+  .da-badge { position: absolute; z-index: 800; color: #fff; font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px 4px 4px 0; cursor: pointer; box-shadow: 0 2px 6px rgba(0,0,0,.25); line-height: 1.5; white-space: nowrap; }
+  .da-highlight { outline: 2px dashed transparent; outline-offset: 2px; }
+  .da-banner { padding: 8px 12px; font-size: 12px; color: #fff; display: flex; align-items: center; gap: 8px; cursor: pointer; line-height: 1.5; }
+  .da-banner b { font-weight: 700; }
+  .da-pop-mask { position: fixed; inset: 0; background: rgba(17,24,39,.45); z-index: 9500; display: none; }
+  .da-pop-mask.open { display: block; }
+  .da-pop { position: fixed; top: 50%; left: 50%; transform: translate(-50%,-50%); width: 340px; max-width: calc(100vw - 32px); max-height: 80vh; overflow-y: auto; background: #fff; border-radius: 14px; z-index: 9600; padding: 18px; display: none; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+  .da-pop.open { display: block; }
+  .da-pop .da-pop-type { display: inline-block; color: #fff; font-size: 11px; font-weight: 700; border-radius: 4px; padding: 2px 8px; margin-bottom: 8px; }
+  .da-pop h4 { font-size: 16px; color: #111827; margin-bottom: 8px; }
+  .da-pop .da-pop-desc { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 10px; }
+  .da-pop .da-ba { background: #f8fafc; border-radius: 8px; padding: 10px 12px; font-size: 12px; line-height: 1.7; margin-bottom: 12px; }
+  .da-pop .da-ba .lbl { color: #9ca3af; }
+  .da-pop .da-links { display: flex; flex-direction: column; gap: 8px; }
+  .da-pop .da-link-btn { display: block; text-align: center; padding: 9px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; border: none; }
+  .da-pop .da-link-prd { background: #2563eb; color: #fff; }
+  .da-pop .da-link-sdd { background: #eef2ff; color: #4338ca; }
+  .da-pop .da-close { position: absolute; top: 10px; right: 14px; font-size: 18px; color: #9ca3af; cursor: pointer; background: none; border: none; }
+  .da-drawer { position: fixed; top: 0; right: -420px; width: 400px; max-width: 92vw; height: 100vh; background: #fff; z-index: 9700; box-shadow: -8px 0 30px rgba(0,0,0,.2); transition: right .25s ease; display: flex; flex-direction: column; }
+  .da-drawer.open { right: 0; }
+  .da-drawer-head { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; display: flex; align-items: center; justify-content: space-between; font-size: 14px; font-weight: 600; color: #111827; }
+  .da-drawer-head button { background: none; border: none; font-size: 18px; color: #9ca3af; cursor: pointer; }
+  .da-drawer iframe { flex: 1; border: none; width: 100%; }
+  `;
+  document.head.appendChild(style);
+
+  // ---------- 状态 ----------
+  // 模块 key = page + "::" + module；勾选粒度为模块级，默认全部关闭
+  const moduleKeys = [];
+  const byModule = {};
+  CS.changes.forEach(c => {
+    const key = c.page + "::" + c.module;
+    if (!byModule[key]) { byModule[key] = []; moduleKeys.push(key); }
+    byModule[key].push(c);
+  });
+  let enabled = {};
+  try { enabled = JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch (e) { enabled = {}; }
+  moduleKeys.forEach(k => { if (!(k in enabled)) enabled[k] = false; });
+
+  function persist() { try { localStorage.setItem(LS_KEY, JSON.stringify(enabled)); } catch (e) {} }
+
+  // ---------- 徽标 / 横幅渲染 ----------
+  const rendered = {}; // change.id -> [elements]
+  function pageName(pid) {
+    const el = document.getElementById(pid);
+    return (el && el.getAttribute("data-diff-page")) || pid;
+  }
+
+  function renderChange(c) {
+    const target = document.querySelector(c.target);
+    if (!target) return;
+    const meta = TYPE_META[c.type] || TYPE_META.modify;
+    const els = [];
+
+    if (c.level === "page") {
+      const banner = document.createElement("div");
+      banner.className = "da-banner";
+      banner.style.background = meta.color;
+      banner.innerHTML = "<b>[" + meta.label + "]</b><span>" + c.title + "（点击看详情）</span>";
+      banner.addEventListener("click", () => openPopover(c));
+      target.insertBefore(banner, target.firstChild);
+      els.push(banner);
+    } else {
+      const cs = getComputedStyle(target);
+      if (cs.position === "static") target.style.position = "relative";
+      target.classList.add("da-highlight");
+      target.style.outlineColor = meta.color;
+      const stack = target.querySelectorAll(":scope > .da-badge").length;
+      const badge = document.createElement("span");
+      badge.className = "da-badge";
+      badge.style.background = meta.color;
+      badge.style.top = (-10 - stack * 20) + "px";
+      badge.style.right = "-2px";
+      badge.textContent = meta.label + (c.level === "field" ? "·字段" : "");
+      badge.title = c.title;
+      badge.addEventListener("click", e => { e.stopPropagation(); openPopover(c); });
+      target.appendChild(badge);
+      els.push(badge);
+      els.push(target); // 记录以便清理 highlight
+    }
+    rendered[c.id] = els;
+  }
+
+  function unrenderChange(c) {
+    const els = rendered[c.id];
+    if (!els) return;
+    els.forEach(el => {
+      if (el.classList.contains("da-badge") || el.classList.contains("da-banner")) el.remove();
+    });
+    // 若目标元素已无徽标则移除高亮
+    const target = document.querySelector(c.target);
+    if (target && !target.querySelector(":scope > .da-badge")) {
+      target.classList.remove("da-highlight");
+      target.style.outlineColor = "";
+    }
+    delete rendered[c.id];
+  }
+
+  function applyModule(key) {
+    byModule[key].forEach(c => { enabled[key] ? (rendered[c.id] || renderChange(c)) : unrenderChange(c); });
+  }
+  function applyAll() { moduleKeys.forEach(applyModule); }
+
+  // ---------- 详情弹层 ----------
+  const mask = document.createElement("div"); mask.className = "da-pop-mask";
+  const pop = document.createElement("div"); pop.className = "da-pop";
+  document.body.appendChild(mask); document.body.appendChild(pop);
+  mask.addEventListener("click", closePopover);
+  function closePopover() { mask.classList.remove("open"); pop.classList.remove("open"); }
+
+  function openPopover(c) {
+    const meta = TYPE_META[c.type] || TYPE_META.modify;
+    const levelLabel = { page: "页面级", module: "模块级", field: "字段级" }[c.level] || "";
+    let html = '<button class="da-close">✕</button>';
+    html += '<span class="da-pop-type" style="background:' + meta.color + '">' + meta.label + " · " + levelLabel + "</span>";
+    html += "<h4>" + c.title + "</h4>";
+    html += '<div class="da-pop-desc">' + c.desc + "</div>";
+    if (c.before || c.after) {
+      html += '<div class="da-ba"><div><span class="lbl">改动前：</span>' + (c.before || "—") + '</div><div><span class="lbl">改动后：</span>' + (c.after || "—") + "</div></div>";
+    }
+    html += '<div class="da-links">';
+    if (c.prd) {
+      if (CS.meta.prdType === "feishu" && c.prd.blockId) {
+        html += '<a class="da-link-btn da-link-prd" target="_blank" href="' + CS.meta.prdUrl + "#" + c.prd.blockId + '">打开 PRD → ' + c.prd.section + "</a>";
+      } else if (CS.meta.prdType === "html" && c.prd.anchor) {
+        html += '<button class="da-link-btn da-link-prd" data-drawer="' + CS.meta.prdUrl + "#" + c.prd.anchor + '" data-drawer-title="PRD：' + c.prd.section + '">查看 PRD → ' + c.prd.section + "</button>";
+      } else {
+        html += '<div class="da-ba">PRD 章节：' + c.prd.section + "</div>";
+      }
+    }
+    if (c.sdd && CS.meta.sddUrl) {
+      if (CS.meta.sddType === "html") {
+        html += '<button class="da-link-btn da-link-sdd" data-drawer="' + CS.meta.sddUrl + "#" + c.sdd.anchor + '" data-drawer-title="SDD：' + c.sdd.reqId + '">查看 SDD 需求 ' + c.sdd.reqId + "（侧边联动）</button>";
+      } else {
+        html += '<a class="da-link-btn da-link-sdd" target="_blank" href="' + CS.meta.sddUrl + '">打开 SDD：' + c.sdd.reqId + "</a>";
+      }
+    }
+    html += "</div>";
+    pop.innerHTML = html;
+    pop.querySelector(".da-close").addEventListener("click", closePopover);
+    pop.querySelectorAll("[data-drawer]").forEach(btn => {
+      btn.addEventListener("click", () => { openDrawer(btn.getAttribute("data-drawer"), btn.getAttribute("data-drawer-title")); });
+    });
+    mask.classList.add("open");
+    pop.classList.add("open");
+  }
+
+  // ---------- SDD/PRD(HTML) 侧边抽屉 ----------
+  const drawer = document.createElement("div");
+  drawer.className = "da-drawer";
+  drawer.innerHTML = '<div class="da-drawer-head"><span id="da-drawer-title">文档</span><button id="da-drawer-close">✕</button></div><iframe id="da-drawer-frame" src="about:blank"></iframe>';
+  document.body.appendChild(drawer);
+  drawer.querySelector("#da-drawer-close").addEventListener("click", () => drawer.classList.remove("open"));
+  function openDrawer(url, title) {
+    drawer.querySelector("#da-drawer-title").textContent = title || "文档";
+    const frame = drawer.querySelector("#da-drawer-frame");
+    // 相同 URL 仅 hash 变化时强制刷新，保证锚点高亮重新触发
+    frame.src = "about:blank";
+    setTimeout(() => { frame.src = url; }, 30);
+    drawer.classList.add("open");
+    closePopover();
+  }
+
+  // ---------- 控制面板 ----------
+  const launcher = document.createElement("button");
+  launcher.className = "da-launcher";
+  launcher.innerHTML = '变更导览 <span class="da-count">' + CS.changes.length + "</span>";
+  document.body.appendChild(launcher);
+
+  const panel = document.createElement("div");
+  panel.className = "da-panel";
+  let head = '<div class="da-panel-head"><h4>本次变更导览</h4><div class="da-meta">';
+  head += "基线：" + CS.meta.baseline + "<br>版本：" + CS.meta.version + "　";
+  head += '<a target="_blank" href="' + CS.meta.prdUrl + '">' + (CS.meta.prdTitle || "PRD") + "</a>";
+  if (CS.meta.sddUrl && CS.meta.sddType !== "html") head += '　<a target="_blank" href="' + CS.meta.sddUrl + '">SDD</a>';
+  head += "</div></div>";
+  head += '<div class="da-bulk"><button id="da-all-on">全部显示</button><button id="da-all-off">全部隐藏</button></div>';
+  head += '<div class="da-hint">默认不展示标注。按模块勾选想看的变更点：</div>';
+
+  // 按页面分组
+  const pages = [];
+  const modsByPage = {};
+  moduleKeys.forEach(k => {
+    const p = k.split("::")[0];
+    if (!modsByPage[p]) { modsByPage[p] = []; pages.push(p); }
+    modsByPage[p].push(k);
+  });
+  let body = "";
+  pages.forEach(p => {
+    body += '<div class="da-group"><div class="da-group-title">📄 ' + pageName(p) + "</div>";
+    modsByPage[p].forEach(k => {
+      const mod = k.split("::")[1];
+      const chips = byModule[k].map(c => {
+        const m = TYPE_META[c.type] || TYPE_META.modify;
+        return '<span class="da-chip" style="background:' + m.color + '">' + m.label + "</span>";
+      }).join("");
+      body += '<label class="da-mod-row"><input type="checkbox" data-key="' + k + '"' + (enabled[k] ? " checked" : "") + ">";
+      body += '<span class="da-mod-info"><span class="da-mod-name">' + mod + "（" + byModule[k].length + "）</span><span class=\"da-mod-tags\">" + chips + "</span></span>";
+      body += '<span class="da-goto" data-page="' + p + '">跳页</span></label>';
+    });
+    body += "</div>";
+  });
+  panel.innerHTML = head + body;
+  document.body.appendChild(panel);
+
+  launcher.addEventListener("click", () => panel.classList.toggle("open"));
+  panel.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+    cb.addEventListener("change", () => {
+      const k = cb.getAttribute("data-key");
+      enabled[k] = cb.checked;
+      applyModule(k);
+      persist();
+    });
+  });
+  panel.querySelectorAll(".da-goto").forEach(g => {
+    g.addEventListener("click", e => {
+      e.preventDefault(); e.stopPropagation();
+      const pid = g.getAttribute("data-page");
+      if (window.DIFF_HOOKS && window.DIFF_HOOKS.showPage) window.DIFF_HOOKS.showPage(pid);
+    });
+  });
+  panel.querySelector("#da-all-on").addEventListener("click", () => {
+    moduleKeys.forEach(k => { enabled[k] = true; });
+    panel.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = true; });
+    applyAll(); persist();
+  });
+  panel.querySelector("#da-all-off").addEventListener("click", () => {
+    moduleKeys.forEach(k => { enabled[k] = false; });
+    panel.querySelectorAll('input[type="checkbox"]').forEach(cb => { cb.checked = false; });
+    applyAll(); persist();
+  });
+
+  // 初始应用（localStorage 中已勾选的模块恢复展示）
+  applyAll();
+})();
+</script>
+</body>
+</html>

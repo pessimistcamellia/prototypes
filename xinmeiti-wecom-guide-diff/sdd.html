@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SDD-新媒体激活页引导加企微</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Hiragino Sans GB', sans-serif; background: #f8fafc; color: #1e293b; line-height: 1.75; padding: 24px 20px 60px; font-size: 14px; }
+h1 { font-size: 20px; margin-bottom: 6px; }
+.sub { font-size: 12px; color: #64748b; margin-bottom: 24px; }
+.sub a { color: #2563eb; }
+h2 { font-size: 15px; margin: 24px 0 10px; color: #0f172a; }
+.req { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; margin-bottom: 12px; scroll-margin-top: 16px; transition: box-shadow .3s, border-color .3s; }
+.req.hit { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.18); }
+.req-id { display: inline-block; font-size: 11px; font-weight: 700; color: #4338ca; background: #eef2ff; border-radius: 4px; padding: 1px 8px; margin-bottom: 6px; font-family: ui-monospace, Menlo, monospace; }
+.ears { font-size: 11px; color: #64748b; background: #f1f5f9; border-radius: 4px; padding: 1px 6px; margin-left: 6px; }
+.req p { margin-top: 4px; }
+.req .trace { margin-top: 8px; font-size: 12px; color: #94a3b8; }
+kbd { background: #f1f5f9; border-radius: 4px; padding: 0 5px; font-size: 12px; font-family: ui-monospace, Menlo, monospace; color: #0f172a; }
+</style>
+</head>
+<body>
+<h1>SDD-新媒体激活页引导加企微</h1>
+<div class="sub">EARS 语法 · 派生自 <a href="https://guanghe.feishu.cn/docx/QastdWJ88oXXAlxoFaqcEcQXn2R" target="_blank">PRD v1.3</a> · 每条需求可追溯 PRD 章节</div>
+
+<h2>1. 渠道判定</h2>
+<div class="req" id="REQ-001">
+  <span class="req-id">REQ-001</span><span class="ears">状态驱动 While</span>
+  <p>While 订单的 <kbd>sellfrom</kbd> 字段以 <kbd>xinmeiti</kbd> 开头，the 权益激活成功页 shall 在绑定成功提示文案下方展示企微引导按钮；否则 shall 保持当前线上激活成功页样式不变。</p>
+  <div class="trace">追溯：PRD 8.1 渠道判定逻辑（覆盖所有三方订单激活链接）</div>
+</div>
+
+<h2>2. 企微引导按钮</h2>
+<div class="req" id="REQ-002">
+  <span class="req-id">REQ-002</span><span class="ears">普遍 Ubiquitous</span>
+  <p>The 企微引导按钮 shall 展示于「绑定课程权益」页绑定成功提示文案下方，为页面新增模块。</p>
+  <div class="trace">追溯：PRD 8.2 激活页企微引导按钮</div>
+</div>
+<div class="req" id="REQ-003">
+  <span class="req-id">REQ-003</span><span class="ears">普遍 Ubiquitous</span>
+  <p>The 企微引导按钮文案 shall 统一为「添加助教老师去上课」，不区分命中组。</p>
+  <div class="trace">追溯：PRD 8.2 交互说明（v1.1 修订：统一按钮文案）</div>
+</div>
+<div class="req" id="REQ-004">
+  <span class="req-id">REQ-004</span><span class="ears">事件驱动 When</span>
+  <p>When 用户点击企微引导按钮，the 系统 shall 按商品匹配规则直接拉起微信并跳转到对应老师的企微加好友页面，用户无需保存二维码或扫码。</p>
+  <div class="trace">追溯：PRD 8.2 交互说明、六 业务流程图（v1.1 修订：点击直接跳转微信加好友）</div>
+</div>
+
+<h2>3. 商品-企微匹配</h2>
+<div class="req" id="REQ-005">
+  <span class="req-id">REQ-005</span><span class="ears">事件驱动 When</span>
+  <p>When 用户点击企微引导按钮，if 商品编号命中助教老师组指定商品 ID 列表（共 10 个），the 系统 shall 跳转助教老师企微加好友页面；else shall 默认跳转私域老师企微加好友页面。</p>
+  <div class="trace">追溯：PRD 8.3 商品-企微类型匹配规则（v1.1 修订：由商品类型映射改为命中指定商品 ID）</div>
+</div>
+<div class="req" id="REQ-006">
+  <span class="req-id">REQ-006</span><span class="ears">普遍 Ubiquitous</span>
+  <p>The 跳转载体 shall 使用企微获客链接（助教/私域各一条，运营在企微平台维护），不使用企微活码扫码方式。</p>
+  <div class="trace">追溯：PRD 8.3 当前使用的企微获客链接（v1.2 修订：活码改为获客链接）</div>
+</div>
+
+<h2>4. 异常与兜底</h2>
+<div class="req" id="REQ-007">
+  <span class="req-id">REQ-007</span><span class="ears">异常 If-Then</span>
+  <p>If 企微加好友链接跳转失败，then the 系统 shall Toast 提示「跳转失败，请稍后重试」；if 微信未安装或版本不支持，then shall Toast 提示「请确保已安装最新版微信」。</p>
+  <div class="trace">追溯：PRD 8.4 异常与兜底处理</div>
+</div>
+
+<script>
+function highlightHash() {
+  document.querySelectorAll('.req.hit').forEach(el => el.classList.remove('hit'));
+  const id = location.hash.replace('#', '');
+  if (!id) return;
+  const el = document.getElementById(id);
+  if (el) { el.classList.add('hit'); el.scrollIntoView({ block: 'start', behavior: 'smooth' }); }
+}
+window.addEventListener('hashchange', highlightHash);
+highlightHash();
+</script>
+</body>
+</html>
