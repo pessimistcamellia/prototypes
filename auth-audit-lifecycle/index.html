@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 内容权限全生命周期审计 v8.3</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v8.4</title>
 <style>
   :root {
     --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
@@ -230,7 +230,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v8.3 · 生命周期审计</span>
+  <span class="tag-proto">交互原型 v8.4 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -260,6 +260,7 @@
     <a onclick="openDrawer('A-026');togglePM()">㉒ 抽屉：对账补记+审计冲正</a>
     <a onclick="openDrawer('A-027');togglePM()">㉓ 抽屉：家庭组共享（原始受益人口径）</a>
     <a onclick="toggleSvcPane();togglePM()">㉔ 服务期归属（独立体系·边界说明）</a>
+    <a onclick="openDrawer('A-028');togglePM()">㉕ 抽屉：账号转换（A用户转B用户）</a>
   </div>
 </div>
 
@@ -795,6 +796,8 @@ const AUTHS = {
    start:"2026-11-25 00:00:00", end:"2026-11-27 23:59:59", remain:"—", total:"3天", src:"完成任务获得(subtask)", sourceId:"task_171888220043", credT:"activity", credId:"task_171888220043", created:"2026-11-25 08:00:00", creator:"system", reason:"任务奖励（到期事件曾漏记）", archived:false },
  "A-027": { name:"初中全科 同步课 VIP〔隐形权益case③：家庭组共享·查询改写〕", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
    start:"2026-09-02 00:00:00", end:"2027-09-01 23:59:59", remain:"411 天", total:"365天", src:"家庭组共享（查询改写值）", sourceId:"", sourceIdTip:"线上现状：查询返回时 sourceType 被改写为「家庭组共享」、sourceId 被清空、userId 被替换为查询者；原始值见生命周期", credT:"none", credId:"", created:"2026-09-02 10:05:00", creator:"—", reason:"家庭组共享（原始授权属于家长）", archived:false },
+ "A-028": { name:"初中数学 同步课 VIP〔账号转换case：A用户转入B（本账号）〕", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
+   start:"2026-12-12 14:00:00", end:"2027-06-09 23:59:59", remain:"178 天", total:"180天", src:"授权转换(auth)", sourceId:"A-EXT-901", sourceIdTip:"账号转换：前驱授权 A-EXT-901 在另一用户（转出方）名下；转出方同时被撤销（cancelReason=exchange）", credT:"auth", credId:"A-EXT-901", created:"2026-12-12 14:00:00", creator:"李思思", reason:"账号转换（买错账号迁移）", archived:false },
  "A-101": { name:"初中化学 体验课（7天）", type:"同步课", subject:"初中化学", state:"canceled", stateTxt:"已取消",
    start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", total:"7天", src:"体验券兑换(trialVouchers)", sourceId:"tv_3301", credT:"voucher", credId:"tv_3301", created:"2026-10-03 12:00:00", creator:"system", reason:"体验券兑换", archived:true, archivedAt:"2026-12-01 02:10:00" },
 };
@@ -995,6 +998,12 @@ const EVENTS = {
      body:"本条是家庭组共享的展示态：孩子端/后台查询时被改写为「家庭组共享」（来源 ID 清空、用户替换为查询者）。审计事件存的是原始值——原始受益人为家长账号 u_par…88（购买人），凭据为家长的真实订单，受益范围=家庭（benefit_scope=family）。回答「这条权益的本源在谁身上」以本事件为准，不跟查询改写走。",
      diff:[["状态","—","使用中"]], cred:{t:"order", id:"O2026090201"},
      tech:{"事件编号":"E-9H01","事件序号":"1","原始受益人 user_id":"u_par…88","benefit_scope":"family"} }
+ ]},
+ "A-028": { chain:null, events:[
+   { et:"exchange_in", cls:"birth", label:"转换入（账号转换）", time:"2026-12-12 14:00:00", op:"李思思（客服一部）",
+     body:"原因：转换（账号转换）｜ 家长买错账号，客服将用户 u_a…33 名下的初中数学 VIP 剩余 180 天按比例 1.0 转入本账号。转出方原授权 A-EXT-901 同时被撤销（撤销原因=exchange），两条记录通过前驱授权 ID 互查。与升学转换同一 exchange 机制，区别仅在于转出/转入是不同用户（extras 标记 exchange_kind=账号转换）。",
+     diff:[["状态","—","使用中"],["时长变化","","+180 天"]], cred:{t:"auth", id:"A-EXT-901"},
+     tech:{"事件编号":"E-9J01","事件序号":"1","前驱授权 ID":"A-EXT-901（转出方用户名下）","extras":"{exchange_kind:账号转换, from_user:u_a…33}"} }
  ]},
  "A-101": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-03 12:00:00", op:"系统（活动服务）",
