@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 内容权限全生命周期审计 v8.2</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v8.3</title>
 <style>
   :root {
     --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
@@ -230,7 +230,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v8.2 · 生命周期审计</span>
+  <span class="tag-proto">交互原型 v8.3 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -258,6 +258,8 @@
     <a onclick="openDrawer('A-024');togglePM()">⑳ 抽屉：人工调整（客服延期）</a>
     <a onclick="openDrawer('A-025');togglePM()">㉑ 抽屉：修复重建（新旧ID映射）</a>
     <a onclick="openDrawer('A-026');togglePM()">㉒ 抽屉：对账补记+审计冲正</a>
+    <a onclick="openDrawer('A-027');togglePM()">㉓ 抽屉：家庭组共享（原始受益人口径）</a>
+    <a onclick="toggleSvcPane();togglePM()">㉔ 服务期归属（独立体系·边界说明）</a>
   </div>
 </div>
 
@@ -290,7 +292,7 @@
         <div class="tab">订单记录</div>
         <div class="tab">体验券记录</div>
         <div class="tab">兑换码记录</div>
-        <div class="tab">服务期归属</div>
+        <div class="tab" id="tab-svc" onclick="toggleSvcPane()" title="隐形权益case④：服务期（独立体系，点击查看边界说明）">服务期归属</div>
       </div>
 
       <div class="anno">📌 PRD §4.1 改动总览：三个子 tab 线上查询交互全保留；列表增强（生命周期按钮+凭据展示升级）；新增生命周期抽屉；添加权益/撤销表单增强。</div>
@@ -607,6 +609,7 @@ const SOURCE_HELP = {
   send_rule:"凭据 ID=来源 ID=补发规则 ID（send_rule 规则主键，补发规则配置里可查）。",
   "新课程补发":"凭据 ID=来源 ID=补发规则 ID（send_rule 规则主键，补发规则配置里可查）。",
   school:"凭据 ID 为脱敏设备标识 omvd 或平板 SN 记录 ID。",
+  "家庭组共享（查询改写值）":"这是查询层改写后的展示值，不是主表原始来源。原始授权属于家长账号（原始受益人），原始凭据=家长的订单；审计事件存原始值，见本条生命周期。",
   teacherLevelUp:"历史来源无业务凭据；上线后系统事件必须写清原因说明。",
   parentsReward:"历史来源没有可靠业务单据；保留原来源 ID，不反推标准凭据。"
 };
@@ -738,7 +741,7 @@ function openDrawerByAuthRef(refId){
 
 /* ============ 授权数据 ============ */
 const AUTHS = {
- "A-001": { name:"初中数学 同步课 VIP", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
+ "A-001": { name:"初中数学 同步课 VIP〔隐形权益case①：本体·挂2条附加权益，见全部权益总时长tab〕", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
    start:"2026-10-12 00:00:00", end:"2027-10-11 23:59:59", remain:"412 天", total:"365天", src:"购买获得(buy)", sourceId:"O2026101201", credT:"order", credId:"O2026101201", created:"2026-10-12 10:03:22", creator:"—", reason:"订单购买", archived:false },
  "A-002": { name:"初中英语 同步课 VIP", type:"同步课", subject:"初中英语", state:"canceled", stateTxt:"已取消",
    start:"2026-10-15 00:00:00", end:"2026-11-02 14:20:11", remain:"—", total:"365天", src:"购买获得(buy)", sourceId:"O2026101502", credT:"order", credId:"O2026101502", created:"2026-10-15 09:11:45", creator:"—", reason:"订单购买", archived:false },
@@ -782,7 +785,7 @@ const AUTHS = {
    start:"2026-12-10 16:20:00", end:"2027-01-08 23:59:59", remain:"29 天", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_04af…25cc", sourceIdTip:"存量来源ID保留操作人ID；本次操作依据为图文记录", credT:"none", credId:"", evidenceId:"EV-20261210-0042", created:"2026-12-10 16:20:00", creator:"李思思", reason:"无工单图文补偿", archived:false },
  "A-021": { name:"小学英语 同步课 VIP（无工单撤销）", type:"同步课", subject:"小学英语", state:"canceled", stateTxt:"已取消",
    start:"2026-11-12 10:00:00", end:"2026-12-11 09:36:00", remain:"—", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_7b9c…8a11", sourceIdTip:"来源ID保留原操作者ID；撤销依据为图文记录", credT:"none", credId:"", evidenceId:"EV-20261211-0016", created:"2026-11-12 10:00:00", creator:"王晴", reason:"无工单图文撤销", archived:false },
- "A-023": { name:"初中英语 同步课 VIP（寒假班·延迟开通）", type:"同步课", subject:"初中英语", state:"unused", stateTxt:"待激活",
+ "A-023": { name:"初中英语 同步课 VIP（寒假班）〔隐形权益case②：延迟授权 delay_vip_auth〕", type:"同步课", subject:"初中英语", state:"unused", stateTxt:"待激活",
    start:"—", end:"—", remain:"2027-01-15 开通", total:"60天", src:"购买获得(buy)", sourceId:"O2026122009", credT:"order", credId:"O2026122009", created:"2026-12-20 10:12:00", creator:"system", reason:"寒假班延迟开通订单", archived:false },
  "A-024": { name:"初中物理 同步课 VIP（客服延期）", type:"同步课", subject:"初中物理", state:"using", stateTxt:"使用中",
    start:"2026-11-01 00:00:00", end:"2026-12-08 23:59:59", remain:"9 天", total:"30+7天", src:"购买获得(buy)", sourceId:"O2026110155", credT:"order", credId:"O2026110155", created:"2026-11-01 09:00:00", creator:"—", reason:"订单购买（后经客服延期）", archived:false },
@@ -790,6 +793,8 @@ const AUTHS = {
    start:"2026-11-15 00:00:00", end:"2027-11-14 23:59:59", remain:"330 天", total:"365天", src:"购买获得(buy)", sourceId:"O2026101877", credT:"auth", credId:"A-OLD-552", created:"2026-12-02 03:20:00", creator:"system", reason:"时间排布修复重建", archived:false },
  "A-026": { name:"初中英语 同步课 VIP（3天体验·补记案例）", type:"同步课", subject:"初中英语", state:"used", stateTxt:"已使用",
    start:"2026-11-25 00:00:00", end:"2026-11-27 23:59:59", remain:"—", total:"3天", src:"完成任务获得(subtask)", sourceId:"task_171888220043", credT:"activity", credId:"task_171888220043", created:"2026-11-25 08:00:00", creator:"system", reason:"任务奖励（到期事件曾漏记）", archived:false },
+ "A-027": { name:"初中全科 同步课 VIP〔隐形权益case③：家庭组共享·查询改写〕", type:"同步课", subject:"初中全科", state:"using", stateTxt:"使用中",
+   start:"2026-09-02 00:00:00", end:"2027-09-01 23:59:59", remain:"411 天", total:"365天", src:"家庭组共享（查询改写值）", sourceId:"", sourceIdTip:"线上现状：查询返回时 sourceType 被改写为「家庭组共享」、sourceId 被清空、userId 被替换为查询者；原始值见生命周期", credT:"none", credId:"", created:"2026-09-02 10:05:00", creator:"—", reason:"家庭组共享（原始授权属于家长）", archived:false },
  "A-101": { name:"初中化学 体验课（7天）", type:"同步课", subject:"初中化学", state:"canceled", stateTxt:"已取消",
    start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", total:"7天", src:"体验券兑换(trialVouchers)", sourceId:"tv_3301", credT:"voucher", credId:"tv_3301", created:"2026-10-03 12:00:00", creator:"system", reason:"体验券兑换", archived:true, archivedAt:"2026-12-01 02:10:00" },
 };
@@ -984,6 +989,12 @@ const EVENTS = {
      body:"复核发现上一条补记事件把截止时间误写成 11-26，本条更正为 11-27 23:59:59 并指向被纠正的事件编号。错误事件本身保留不改——账本只增不改，错误和更正都留痕。",
      diff:[["截止时间（更正）","2026-11-26 23:59:59","2026-11-27 23:59:59"]], cred:null,
      tech:{"事件编号":"E-9G04","事件序号":"4","extras":"{corrects_event_id:E-9G03}"} }
+ ]},
+ "A-027": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-09-02 10:05:00", op:"系统（订单服务）",
+     body:"本条是家庭组共享的展示态：孩子端/后台查询时被改写为「家庭组共享」（来源 ID 清空、用户替换为查询者）。审计事件存的是原始值——原始受益人为家长账号 u_par…88（购买人），凭据为家长的真实订单，受益范围=家庭（benefit_scope=family）。回答「这条权益的本源在谁身上」以本事件为准，不跟查询改写走。",
+     diff:[["状态","—","使用中"]], cred:{t:"order", id:"O2026090201"},
+     tech:{"事件编号":"E-9H01","事件序号":"1","原始受益人 user_id":"u_par…88","benefit_scope":"family"} }
  ]},
  "A-101": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-10-03 12:00:00", op:"系统（活动服务）",
@@ -1371,6 +1382,13 @@ function submitCancel(){
   toast('已撤销并记入生命周期（"撤销"事件；批量操作共享同一批次号）');
 }
 
+/* 隐形权益case④：服务期归属 tab（独立体系边界说明） */
+function toggleSvcPane(){
+  document.getElementById('cred-body').innerHTML = `<div class="jump-box">
+    <b>服务期归属〔隐形权益case④：服务期·不进本审计表〕</b>
+    <div style="margin-top:8px;color:#667085;line-height:1.7">服务期（新媒体/研学）由 revenue-clue-manage 按<b>家庭 familyId</b> 记账，<b>完全不经过 userauth</b>，与家庭组共享授权是两码事。按 PRD §2.2 边界决策：服务期<b>不混入</b>授权审计事件表；建议二期按相同事件范式独立建 service_period_audit_event，本 tab 届时加同样的时间线，两域用 trace_id 串联。因此本原型的生命周期抽屉不提供服务期事件流——这是边界，不是遗漏。</div></div>`;
+  document.getElementById('credMask').classList.add('open');
+}
 /* ============ tab / 五态 / 其它 ============ */
 function showView(view){
   const isUser=view==='user';
