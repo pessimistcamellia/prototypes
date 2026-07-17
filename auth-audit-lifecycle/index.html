@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 内容权限全生命周期审计 v8.4</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v8.5</title>
 <style>
   :root {
     --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
@@ -230,7 +230,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v8.4 · 生命周期审计</span>
+  <span class="tag-proto">交互原型 v8.5 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -450,16 +450,13 @@
         <div class="tip">「客服补偿」「客服AI流程」须点选次级分类（不满意/挽单/禁止电联/BUG…），便于后手客服业务场景核实；审计落叶子代号</div>
         <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
       <div class="frow" id="f-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
-        <div class="demo-fill"><span>快速查看：</span><button class="btn" onclick="fillBasisDemo('add','ticket')">有工单示例</button><button class="btn" onclick="fillBasisDemo('add','evidence')">无工单示例</button></div>
-        <div class="basis-switch"><button id="add-mode-ticket" class="active" onclick="setBasisMode('add','ticket')">关联工单</button><button id="add-mode-evidence" onclick="setBasisMode('add','evidence')">无工单·图文依据</button></div>
-        <div id="add-ticket-pane"><input type="text" id="add-ticket" placeholder="请输入客服工单号，如 WO-88121"></div>
-        <div id="add-evidence-pane" style="display:none">
-          <div class="rich-editor" id="add-evidence-text" contenteditable="true" data-placeholder="必填文字说明（5~500 字）：写清邮件/大象沟通结论及操作依据"></div>
-          <div class="paste-zone" id="add-paste" onclick="addMockAttachment('add')">粘贴邮件或大象截图（1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp），或点击添加示例截图
-            <div class="attachment-list" id="add-attachments"></div>
-          </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="add-basis" placeholder="填工单号（如 WO-88121），或邮件/大象沟通结论等文字说明" style="flex:1">
+          <button class="btn" title="可附图片 1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp" onclick="addMockAttachment('add')">＋ 图片</button>
         </div>
-        <div class="err">关联工单模式须填写有效工单号；无工单模式须提供 5~500 字文字说明和 1~5 张截图（单张 ≤10MB，png/jpg/jpeg/gif/webp）</div></div></div>
+        <div class="attachment-list" id="add-attachments"></div>
+        <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
+        <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div></div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（登录态自动带出，不可修改）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
@@ -480,16 +477,13 @@
         <select id="c-rcode"><option value="">请选择</option><option>客服处理</option><option>退款补录</option><option>风控</option><option>发放错误</option><option>其他（须详述）</option></select>
         <div class="err">请选择撤销原因分类</div></div></div>
       <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
-        <div class="demo-fill"><span>快速查看：</span><button class="btn" onclick="fillBasisDemo('cancel','ticket')">有工单示例</button><button class="btn" onclick="fillBasisDemo('cancel','evidence')">无工单示例</button></div>
-        <div class="basis-switch"><button id="cancel-mode-ticket" class="active" onclick="setBasisMode('cancel','ticket')">关联工单</button><button id="cancel-mode-evidence" onclick="setBasisMode('cancel','evidence')">无工单·图文依据</button></div>
-        <div id="cancel-ticket-pane"><input type="text" id="c-ticket" placeholder="请输入客服工单号，如 WO-99217"></div>
-        <div id="cancel-evidence-pane" style="display:none">
-          <div class="rich-editor" id="cancel-evidence-text" contenteditable="true" data-placeholder="必填文字说明（5~500 字）：写清邮件/大象沟通结论及撤销依据"></div>
-          <div class="paste-zone" id="cancel-paste" onclick="addMockAttachment('cancel')">粘贴邮件或大象截图（1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp），或点击添加示例截图
-            <div class="attachment-list" id="cancel-attachments"></div>
-          </div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="cancel-basis" placeholder="填工单号（如 WO-99217），或邮件/大象沟通结论等文字说明" style="flex:1">
+          <button class="btn" title="可附图片 1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp" onclick="addMockAttachment('cancel')">＋ 图片</button>
         </div>
-        <div class="err">关联工单模式须填写有效工单号；无工单模式须提供 5~500 字文字说明和 1~5 张截图（单张 ≤10MB，png/jpg/jpeg/gif/webp）</div></div></div>
+        <div class="attachment-list" id="cancel-attachments"></div>
+        <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
+        <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div></div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
@@ -518,13 +512,13 @@ user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个
         <div class="tip">「客服补偿」「客服AI流程」须点选次级分类，与添加权益表单同一套枚举</div>
         <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
       <div class="frow" id="f-reward-basis"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
-        <div class="basis-switch"><button id="reward-mode-ticket" class="active" onclick="setBasisMode('reward','ticket')">关联工单</button><button id="reward-mode-evidence" onclick="setBasisMode('reward','evidence')">无工单·图文依据</button></div>
-        <div id="reward-ticket-pane"><input type="text" id="reward-ticket" value="WO-20260715-32"></div>
-        <div id="reward-evidence-pane" style="display:none">
-          <div class="rich-editor" id="reward-evidence-text" contenteditable="true" data-placeholder="必填文字说明（5~500 字）：写清邮件/大象审批结论"></div>
-          <div class="paste-zone" onclick="addMockAttachment('reward')">粘贴邮件或大象截图（1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp），或点击添加示例截图<div class="attachment-list" id="reward-attachments"></div></div>
+        <div style="display:flex;gap:8px">
+          <input type="text" id="reward-basis" value="WO-20260715-32" placeholder="填工单号，或邮件/大象审批结论等文字说明" style="flex:1">
+          <button class="btn" title="可附图片 1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp" onclick="addMockAttachment('reward')">＋ 图片</button>
         </div>
-        <div class="err">请提供有效工单，或提供 5~500 字说明和 1~5 张截图（单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
+        <div class="attachment-list" id="reward-attachments"></div>
+        <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
+        <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div>
       </div></div>
       <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">张怡婷 · 教师与学校业务群（登录态自动带出，不可修改）</div></div></div>
     </div>
@@ -1294,51 +1288,22 @@ function reasonCodeOk(prefix){
   if (REASON_TREE[l1]) return !!document.getElementById(prefix+'-'+(prefix==='reward'?'code2':'rcode2')).value;
   return true;
 }
-/* ============ 表单 / 操作依据 ============ */
-const basisMode={add:'ticket',cancel:'ticket',reward:'ticket'};
+/* ============ 表单 / 操作依据（简化版：单输入框 + ＋图片） ============
+   输入框：工单号或其他文字说明均可；服务端按格式识别：
+   工单号 → credential_type=work_order；其他文字 → reason_text + extras.manual_evidence（含附图引用）。 */
 const attachmentCount={add:0,cancel:0,reward:0};
-function setBasisMode(prefix, mode){
-  basisMode[prefix]=mode;
-  document.getElementById(prefix+'-mode-ticket').classList.toggle('active',mode==='ticket');
-  document.getElementById(prefix+'-mode-evidence').classList.toggle('active',mode==='evidence');
-  document.getElementById(prefix+'-ticket-pane').style.display=mode==='ticket'?'':'none';
-  document.getElementById(prefix+'-evidence-pane').style.display=mode==='evidence'?'':'none';
-}
 function addMockAttachment(prefix, name){
-  if(attachmentCount[prefix]>=5){ toast('最多上传 5 张截图'); return; }
-  if(attachmentCount[prefix]>=5){ toast('截图最多 5 张'); return; }
+  if(attachmentCount[prefix]>=5){ toast('图片最多 5 张'); return; }
   attachmentCount[prefix]+=1;
   const list=document.getElementById(prefix+'-attachments');
   const file=name||`${prefix==='cancel'?'邮件':'大象'}截图_${attachmentCount[prefix]}.png`;
   list.insertAdjacentHTML('beforeend',`<span class="attachment-chip">▧ ${file}</span>`);
 }
-function fillBasisDemo(prefix, mode){
-  setBasisMode(prefix,mode);
-  const ticketId=prefix==='cancel'?'c-ticket':prefix+'-ticket';
-  if(mode==='ticket'){
-    document.getElementById(ticketId).value=prefix==='cancel'?'WO-99217':'WO-88121';
-  }else{
-    const editor=document.getElementById(prefix+'-evidence-text');
-    editor.textContent=prefix==='cancel'?'邮件确认该权益重复发放，需撤销；截图包含审批结论。':'大象沟通确认用户受课程故障影响，同意补偿 30 天；截图包含产品确认结论。';
-    if(!attachmentCount[prefix]) addMockAttachment(prefix,prefix==='cancel'?'奖励复核邮件.png':'大象沟通截图.png');
-  }
-}
 function validBasis(prefix){
-  if(basisMode[prefix]==='ticket'){
-    const id=prefix==='cancel'?'c-ticket':prefix+'-ticket';
-    return validTicket(document.getElementById(id).value,false);
-  }
-  const editor=document.getElementById(prefix+'-evidence-text');
-  const txt=(editor.textContent||'').trim();
-  return txt.length>=5 && txt.length<=500 && !/^\d+$/.test(txt) && attachmentCount[prefix]>=1 && attachmentCount[prefix]<=5;
-}
-function bindPaste(prefix){
-  const editor=document.getElementById(prefix+'-evidence-text');
-  if(!editor)return;
-  editor.addEventListener('paste',event=>{
-    const images=[...(event.clipboardData?.items||[])].filter(item=>item.type.startsWith('image/'));
-    images.forEach((_,i)=>addMockAttachment(prefix,`粘贴截图_${attachmentCount[prefix]+i+1}.png`));
-  });
+  const v=(document.getElementById(prefix+'-basis').value||'').trim();
+  if(!v) return false;
+  if(validTicket(v,false)) return true;
+  return v.length>=5 && v.length<=500 && !/^\d+$/.test(v);
 }
 function toggleDurType(){
   const v = document.getElementById('add-dur-type').value;
@@ -1439,7 +1404,6 @@ renderStateChips();
 renderTables();
 renderSummary();
 renderRewardTable();
-['add','cancel','reward'].forEach(bindPaste);
 </script>
 </body>
 </html>
