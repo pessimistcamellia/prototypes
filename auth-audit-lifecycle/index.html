@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 内容权限全生命周期审计 v8.1</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v8.2</title>
 <style>
   :root {
     --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
@@ -230,7 +230,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v8.1 · 生命周期审计</span>
+  <span class="tag-proto">交互原型 v8.2 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -446,9 +446,6 @@
         </div>
         <div class="tip">「客服补偿」「客服AI流程」须点选次级分类（不满意/挽单/禁止电联/BUG…），便于后手客服业务场景核实；审计落叶子代号</div>
         <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
-      <div class="frow" id="f-reason-text"><div class="lab"><span class="req">*</span>原因说明<span class="new-tag">升格必填</span></div><div class="ctl">
-        <textarea id="add-rtext" placeholder="5~200 字，写清给谁、因何补偿/发放（线上『增加原因』字段升格：必填+落审计）"></textarea>
-        <div class="err">原因说明须 5~200 字，且不能是纯数字或重复字符</div></div></div>
       <div class="frow" id="f-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
         <div class="demo-fill"><span>快速查看：</span><button class="btn" onclick="fillBasisDemo('add','ticket')">有工单示例</button><button class="btn" onclick="fillBasisDemo('add','evidence')">无工单示例</button></div>
         <div class="basis-switch"><button id="add-mode-ticket" class="active" onclick="setBasisMode('add','ticket')">关联工单</button><button id="add-mode-evidence" onclick="setBasisMode('add','evidence')">无工单·图文依据</button></div>
@@ -474,14 +471,11 @@
   <div class="modal">
     <div class="modal-head"><h3 id="cancel-title">撤销权益</h3><span class="drawer-close" onclick="closeModal('cancelMask')">✕</span></div>
     <div class="modal-body">
-      <div class="anno">📌 PRD §4.5：线上批量撤销的"先选中→仅查看已选中→再撤销"流程保留；撤销理由（线上已有）升格为 原因分类+原因说明+工单号；批量自动生成批次号。</div>
+      <div class="anno">📌 PRD §4.5：线上批量撤销的"先选中→仅查看已选中→再撤销"流程保留；撤销理由（线上已有）改造为 两级原因分类+操作依据（工单号或图文依据，图文文字即审计原因说明）；不再单设「原因说明」输入框；批量自动生成批次号。</div>
       <div class="batch-preview" id="batch-preview" style="display:none"></div>
       <div class="frow" id="f-c-code"><div class="lab"><span class="req">*</span>撤销原因分类<span class="new-tag">改造</span></div><div class="ctl">
         <select id="c-rcode"><option value="">请选择</option><option>客服处理</option><option>退款补录</option><option>风控</option><option>发放错误</option><option>其他（须详述）</option></select>
         <div class="err">请选择撤销原因分类</div></div></div>
-      <div class="frow" id="f-c-text"><div class="lab"><span class="req">*</span>原因说明<span class="old-tag">线上已有·升格必填</span></div><div class="ctl">
-        <textarea id="c-rtext" placeholder="5~200 字（线上『撤销理由』输入框升格：必填+落审计）"></textarea>
-        <div class="err">原因说明须 5~200 字</div></div></div>
       <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
         <div class="demo-fill"><span>快速查看：</span><button class="btn" onclick="fillBasisDemo('cancel','ticket')">有工单示例</button><button class="btn" onclick="fillBasisDemo('cancel','evidence')">无工单示例</button></div>
         <div class="basis-switch"><button id="cancel-mode-ticket" class="active" onclick="setBasisMode('cancel','ticket')">关联工单</button><button id="cancel-mode-evidence" onclick="setBasisMode('cancel','evidence')">无工单·图文依据</button></div>
@@ -520,7 +514,6 @@ user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个
         </div>
         <div class="tip">「客服补偿」「客服AI流程」须点选次级分类，与添加权益表单同一套枚举</div>
         <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
-      <div class="frow" id="f-reward-text"><div class="lab"><span class="req">*</span>原因说明<span class="new-tag">升格必填</span></div><div class="ctl"><textarea id="reward-text" placeholder="写清本批奖励对象、原因和授权内容"></textarea><div class="err">原因说明须 5~200 字</div></div></div>
       <div class="frow" id="f-reward-basis"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
         <div class="basis-switch"><button id="reward-mode-ticket" class="active" onclick="setBasisMode('reward','ticket')">关联工单</button><button id="reward-mode-evidence" onclick="setBasisMode('reward','evidence')">无工单·图文依据</button></div>
         <div id="reward-ticket-pane"><input type="text" id="reward-ticket" value="WO-20260715-32"></div>
@@ -1253,7 +1246,6 @@ function openRewardModal(){ document.getElementById('rewardMask').classList.add(
 function submitReward(){
   let ok=true;
   ok=mark('f-reward-code',!reasonCodeOk('reward'))&&ok;
-  ok=mark('f-reward-text',!validText(document.getElementById('reward-text').value))&&ok;
   ok=mark('f-reward-basis',!validBasis('reward'))&&ok;
   if(!ok)return;
   closeModal('rewardMask');
@@ -1363,7 +1355,6 @@ function mark(fid, bad){ document.getElementById(fid).classList.toggle('invalid'
 function submitAdd(){
   let ok = true;
   ok = mark('f-reason-code', !reasonCodeOk('add')) && ok;
-  ok = mark('f-reason-text', !validText(document.getElementById('add-rtext').value)) && ok;
   ok = mark('f-ticket', !validBasis('add')) && ok;
   if(!ok) return;
   closeModal('addMask');
@@ -1372,7 +1363,6 @@ function submitAdd(){
 function submitCancel(){
   let ok = true;
   ok = mark('f-c-code', !document.getElementById('c-rcode').value) && ok;
-  ok = mark('f-c-text', !validText(document.getElementById('c-rtext').value)) && ok;
   ok = mark('f-c-ticket', !validBasis('cancel')) && ok;
   if(!ok) return;
   closeModal('cancelMask');
