@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 内容权限全生命周期审计 v8.0</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v8.1</title>
 <style>
   :root {
     --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
@@ -230,7 +230,7 @@
   <span class="logo">运营平台</span>
   <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v8.0 · 生命周期审计</span>
+  <span class="tag-proto">交互原型 v8.1 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -439,10 +439,13 @@
       <div class="frow"><div class="lab"><span class="req">*</span>权益类型<span class="old-tag">线上已有</span></div><div class="ctl"><select><option>平板权益（按设备预设配置发放课程）</option></select></div></div>
       <div class="frow"><div class="lab"><span class="req">*</span>权益时长<span class="old-tag">线上已有</span></div><div class="ctl"><input type="text" value="7300"><div class="tip">一口价平板默认 20 年（7300 天）</div></div></div>
       </div>
-      <div class="frow" id="f-reason-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增</span></div><div class="ctl">
-        <select id="add-rcode"><option value="">请选择</option><option>客服补偿</option><option>运营发放</option><option>测试账号</option><option>其他（须详述）</option></select>
-        <div class="tip">枚举与审计「原因分类」对齐</div>
-        <div class="err">请选择原因分类</div></div></div>
+      <div class="frow" id="f-reason-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增·两级</span></div><div class="ctl">
+        <div style="display:flex;gap:8px">
+          <select id="add-rcode" style="flex:1" onchange="onReasonL1('add')"><option value="">请选择大类</option><option>客服补偿</option><option>运营发放</option><option>达人体验</option><option>客服AI流程</option><option>测试账号</option><option>其他（须详述）</option></select>
+          <select id="add-rcode2" style="flex:1;display:none"><option value="">请选择次级分类</option></select>
+        </div>
+        <div class="tip">「客服补偿」「客服AI流程」须点选次级分类（不满意/挽单/禁止电联/BUG…），便于后手客服业务场景核实；审计落叶子代号</div>
+        <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
       <div class="frow" id="f-reason-text"><div class="lab"><span class="req">*</span>原因说明<span class="new-tag">升格必填</span></div><div class="ctl">
         <textarea id="add-rtext" placeholder="5~200 字，写清给谁、因何补偿/发放（线上『增加原因』字段升格：必填+落审计）"></textarea>
         <div class="err">原因说明须 5~200 字，且不能是纯数字或重复字符</div></div></div>
@@ -510,7 +513,13 @@ user_88202
 user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个；提交后按用户逐条写 grant 事件，共享同一 batch_id。</div></div></div>
       <div class="frow"><div class="lab"><span class="req">*</span>所属业务群<span class="old-tag">线上已有</span></div><div class="ctl"><select id="reward-group"><option>教师与学校业务群</option><option>用户增长业务群</option><option>客户服务业务群</option></select></div></div>
       <div class="frow"><div class="lab"><span class="req">*</span>奖励内容<span class="old-tag">线上已有</span></div><div class="ctl"><select id="reward-target"><option>培优课｜初中数学｜30 天</option><option>VIP｜小学全科｜7 天</option></select></div></div>
-      <div class="frow" id="f-reward-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增</span></div><div class="ctl"><select id="reward-code"><option value="">请选择</option><option>运营发放</option><option>客服处理</option><option>测试账号</option></select><div class="err">请选择原因分类</div></div></div>
+      <div class="frow" id="f-reward-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增·两级</span></div><div class="ctl">
+        <div style="display:flex;gap:8px">
+          <select id="reward-code" style="flex:1" onchange="onReasonL1('reward')"><option value="">请选择大类</option><option>运营发放</option><option>客服补偿</option><option>达人体验</option><option>客服AI流程</option><option>测试账号</option><option>其他（须详述）</option></select>
+          <select id="reward-code2" style="flex:1;display:none"><option value="">请选择次级分类</option></select>
+        </div>
+        <div class="tip">「客服补偿」「客服AI流程」须点选次级分类，与添加权益表单同一套枚举</div>
+        <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
       <div class="frow" id="f-reward-text"><div class="lab"><span class="req">*</span>原因说明<span class="new-tag">升格必填</span></div><div class="ctl"><textarea id="reward-text" placeholder="写清本批奖励对象、原因和授权内容"></textarea><div class="err">原因说明须 5~200 字</div></div></div>
       <div class="frow" id="f-reward-basis"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
         <div class="basis-switch"><button id="reward-mode-ticket" class="active" onclick="setBasisMode('reward','ticket')">关联工单</button><button id="reward-mode-evidence" onclick="setBasisMode('reward','evidence')">无工单·图文依据</button></div>
@@ -1243,7 +1252,7 @@ function resetRewardFilter(){ ['rf-reason','rf-code','rf-operator'].forEach(id=>
 function openRewardModal(){ document.getElementById('rewardMask').classList.add('open'); }
 function submitReward(){
   let ok=true;
-  ok=mark('f-reward-code',!document.getElementById('reward-code').value)&&ok;
+  ok=mark('f-reward-code',!reasonCodeOk('reward'))&&ok;
   ok=mark('f-reward-text',!validText(document.getElementById('reward-text').value))&&ok;
   ok=mark('f-reward-basis',!validBasis('reward'))&&ok;
   if(!ok)return;
@@ -1251,6 +1260,28 @@ function submitReward(){
   toast('批量奖励已提交：逐用户写入发放事件，共享同一 batch_id');
 }
 
+/* ============ 原因分类两级级联（客服团队 2026-07 反馈）============
+   一级：客服补偿 / 运营发放 / 达人体验 / 客服AI流程 / 测试账号 / 其他；
+   「客服补偿」「客服AI流程」必须点选次级分类，审计 reason_code 落叶子代号。 */
+const REASON_TREE = {
+  "客服补偿": ["不满意","挽单","禁止电联","BUG","客诉"],
+  "客服AI流程": ["不满意","挽单","禁止电联","BUG"]
+};
+function onReasonL1(prefix){
+  const l1 = document.getElementById(prefix+'-'+(prefix==='reward'?'code':'rcode')).value;
+  const sel2 = document.getElementById(prefix+'-'+(prefix==='reward'?'code2':'rcode2'));
+  const subs = REASON_TREE[l1];
+  if (subs){
+    sel2.innerHTML = '<option value="">请选择次级分类</option>' + subs.map(s=>`<option>${s}</option>`).join('');
+    sel2.style.display='';
+  } else { sel2.style.display='none'; sel2.innerHTML='<option value=""></option>'; }
+}
+function reasonCodeOk(prefix){
+  const l1 = document.getElementById(prefix+'-'+(prefix==='reward'?'code':'rcode')).value;
+  if (!l1) return false;
+  if (REASON_TREE[l1]) return !!document.getElementById(prefix+'-'+(prefix==='reward'?'code2':'rcode2')).value;
+  return true;
+}
 /* ============ 表单 / 操作依据 ============ */
 const basisMode={add:'ticket',cancel:'ticket',reward:'ticket'};
 const attachmentCount={add:0,cancel:0,reward:0};
@@ -1331,7 +1362,7 @@ function validTicket(v, noTicket){ if(noTicket) return true; return /^WO-\w{3,}$
 function mark(fid, bad){ document.getElementById(fid).classList.toggle('invalid', bad); return !bad; }
 function submitAdd(){
   let ok = true;
-  ok = mark('f-reason-code', !document.getElementById('add-rcode').value) && ok;
+  ok = mark('f-reason-code', !reasonCodeOk('add')) && ok;
   ok = mark('f-reason-text', !validText(document.getElementById('add-rtext').value)) && ok;
   ok = mark('f-ticket', !validBasis('add')) && ok;
   if(!ok) return;
