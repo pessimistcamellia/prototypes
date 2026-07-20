@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>通用三方订单激活课程 · 可交互原型</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background: #f2f4f7; color: #1f2a37; font-size: 14px; }
+  .app { min-height: 100vh; display: flex; flex-direction: column; }
+  .hidden { display: none !important; }
+
+  /* 顶栏 */
+  .topbar { height: 56px; background: #0f2942; color: #fff; display: flex; align-items: center; padding: 0 22px; gap: 14px; }
+  .topbar .logo { font-weight: 700; font-size: 16px; letter-spacing: .02em; }
+  .topbar .crumb { color: rgba(255,255,255,.6); font-size: 13px; }
+  .topbar .crumb b { color: #fff; font-weight: 600; }
+  .topbar .spacer { flex: 1; }
+  #currentUser { font-size: 13px; color: rgba(255,255,255,.85); display: inline-flex; align-items: center; gap: 8px; }
+  #currentUser .dot { width: 26px; height: 26px; border-radius: 50%; background: #2c93e8; display: grid; place-items: center; font-size: 12px; font-weight: 700; }
+
+  /* 主体 */
+  .main { flex: 1; padding: 22px 26px 60px; max-width: 1240px; width: 100%; margin: 0 auto; }
+  .page-title { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+  .page-sub { color: #6b7684; font-size: 13px; margin-bottom: 18px; }
+
+  /* 说明 banner */
+  .notice { display: flex; gap: 12px; align-items: flex-start; background: #eaf4ff; border: 1px solid #b9dbff;
+    border-radius: 10px; padding: 13px 16px; margin-bottom: 18px; }
+  .notice .ic { flex: 0 0 auto; width: 22px; height: 22px; border-radius: 50%; background: #1479d1; color: #fff;
+    display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+  .notice .txt { font-size: 13px; line-height: 1.7; color: #24527d; }
+  .notice .txt b { color: #0f4c8a; }
+  .tag-off { display: inline-block; background: #ffece8; color: #c0341d; border: 1px solid #ffc9bd;
+    border-radius: 5px; padding: 0 7px; font-size: 12px; font-weight: 600; margin: 0 2px; }
+
+  /* 工具栏 */
+  .toolbar { display: flex; gap: 12px; align-items: center; margin-bottom: 14px; }
+  .toolbar input, .toolbar select { height: 36px; border: 1px solid #d3d9e0; border-radius: 8px; padding: 0 12px;
+    font-size: 13px; background: #fff; }
+  .toolbar input { width: 240px; }
+  .btn { height: 36px; border: 0; border-radius: 8px; padding: 0 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
+  .btn-primary { background: #1479d1; color: #fff; }
+  .btn-primary:hover { background: #1069bd; }
+  .btn-ghost { background: #fff; color: #3a4552; border: 1px solid #d3d9e0; }
+  .btn-ghost:hover { border-color: #1479d1; color: #1479d1; }
+  .toolbar .spacer { flex: 1; }
+  .seg { display: inline-flex; border: 1px solid #d3d9e0; border-radius: 8px; overflow: hidden; }
+  .seg button { height: 34px; border: 0; background: #fff; padding: 0 14px; font-size: 13px; cursor: pointer; color: #3a4552; }
+  .seg button.on { background: #1479d1; color: #fff; }
+
+  /* 表格 */
+  .card { background: #fff; border: 1px solid #e5e9ee; border-radius: 12px; overflow: hidden; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: #f7f9fb; color: #57626f; font-size: 12px; font-weight: 600; text-align: left;
+    padding: 12px 14px; border-bottom: 1px solid #e5e9ee; white-space: nowrap; }
+  tbody td { padding: 13px 14px; border-bottom: 1px solid #f0f2f5; font-size: 13px; color: #2b3542; vertical-align: middle; }
+  tbody tr:last-child td { border-bottom: 0; }
+  tbody tr:hover { background: #fafcff; }
+  .col-op { width: 110px; text-align: center; }
+  .plat { display: inline-block; padding: 2px 8px; border-radius: 5px; font-size: 12px; background: #eef1f5; color: #47525f; }
+  .status { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; }
+  .status .d { width: 7px; height: 7px; border-radius: 50%; }
+  .st-wait .d { background: #f0a020; } .st-wait { color: #b9791a; }
+  .st-done .d { background: #21a35b; } .st-done { color: #1c8a4d; }
+  .st-refund .d { background: #98a2b3; } .st-refund { color: #79828f; }
+  .link-btn { color: #1479d1; background: none; border: 0; font-size: 13px; font-weight: 600; cursor: pointer; padding: 0; }
+  .link-btn:hover { text-decoration: underline; }
+  .op-empty { color: #b2bac4; font-size: 13px; }
+  .empty-state { padding: 60px 0; text-align: center; color: #98a2b3; }
+
+  /* 弹窗 */
+  .mask { position: fixed; inset: 0; background: rgba(15,41,66,.45); display: flex; align-items: center; justify-content: center; z-index: 500; }
+  .mask.hidden { display: none; }
+  .modal { background: #fff; border-radius: 14px; width: 420px; box-shadow: 0 20px 60px rgba(15,41,66,.28); overflow: hidden; }
+  .modal-head { padding: 18px 20px 6px; font-size: 16px; font-weight: 700; }
+  .modal-body { padding: 12px 20px 8px; }
+  .modal-foot { padding: 14px 20px 18px; display: flex; gap: 10px; justify-content: flex-end; }
+  .modal .close { position: absolute; }
+  .field-label { font-size: 13px; color: #57626f; margin: 12px 0 6px; }
+  .field-input { width: 100%; height: 40px; border: 1px solid #d3d9e0; border-radius: 8px; padding: 0 12px; font-size: 14px; }
+  .field-input.err { border-color: #e5484d; background: #fff6f6; }
+  .field-hint { font-size: 12px; color: #98a2b3; margin-top: 6px; }
+  .field-err { font-size: 12px; color: #e5484d; margin-top: 6px; display: none; }
+  .field-err.show { display: block; }
+  .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid #f0f2f5; font-size: 14px; }
+  .info-row:last-child { border-bottom: 0; }
+  .info-row .k { width: 96px; color: #79828f; }
+  .info-row .v { flex: 1; color: #1f2a37; font-weight: 600; }
+  .result-ic { width: 52px; height: 52px; border-radius: 50%; display: grid; place-items: center; margin: 6px auto 12px; font-size: 26px; }
+  .result-ic.ok { background: #e6f7ee; color: #21a35b; }
+  .result-ic.fail { background: #fdecea; color: #e5484d; }
+  .result-title { text-align: center; font-size: 17px; font-weight: 700; margin-bottom: 8px; }
+  .result-desc { text-align: center; color: #6b7684; font-size: 13px; line-height: 1.7; }
+
+  .modal-x { position: absolute; top: 14px; right: 16px; border: 0; background: none; font-size: 18px; color: #98a2b3; cursor: pointer; }
+  .modal-wrap { position: relative; }
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <span class="logo">洋葱学园 · 运营后台</span>
+    <span class="crumb">三方订单管理 / <b>通用三方订单</b></span>
+    <span class="spacer"></span>
+    <span id="currentUser"><span class="dot">运</span>三方运营 · wangfl</span>
+  </div>
+
+  <div class="main">
+    <section id="listView" data-diff-page="通用三方订单管理 · 订单列表">
+      <div class="page-title">通用三方订单</div>
+      <div class="page-sub">微店 / 有赞 / 天猫 / 视频号小店 / 快手等通用三方订单，支持后台为无主订单激活课程。</div>
+
+      <div class="notice" id="activateNotice">
+        <span class="ic">i</span>
+        <span class="txt">
+          <b>激活方式已升级：</b>运营在后台点击「激活课程」，直接输入用户洋葱ID核实后一键绑定发权益。
+          原<span class="tag-off">免登录激活链接 / 二维码</span>方式已下线；用户信息查询接口
+          <span class="tag-off">/weidian/get/userinfo</span> 已收敛为仅后台鉴权访问，不再对 C 端公网放行。
+        </span>
+      </div>
+
+      <div class="toolbar">
+        <input type="text" placeholder="搜索订单号 / 商品名称" />
+        <select><option>全部平台</option><option>微店</option><option>有赞</option><option>天猫</option><option>视频号小店</option></select>
+        <select id="statusFilter"><option>全部状态</option><option>未激活</option><option>已激活</option><option>已退款</option></select>
+        <button class="btn btn-ghost">查询</button>
+        <span class="spacer"></span>
+        <span class="seg" title="演示用：切换列表状态">
+          <button class="on" data-demo="normal">正常</button>
+          <button data-demo="empty">空态</button>
+        </span>
+      </div>
+
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>订单号</th>
+              <th>平台</th>
+              <th>商品</th>
+              <th>下单手机号</th>
+              <th>状态</th>
+              <th class="col-op" id="opColHead">操作</th>
+            </tr>
+          </thead>
+          <tbody id="orderTbody"><!-- rows injected --></tbody>
+        </table>
+        <div class="empty-state hidden" id="emptyState">暂无订单数据</div>
+      </div>
+    </section>
+  </div>
+</div>
+
+<!-- 弹窗一：输入洋葱ID -->
+<div class="mask hidden" id="idModal" data-diff-page="输入洋葱ID弹窗">
+  <div class="modal modal-wrap">
+    <button class="modal-x" onclick="closeAll()">✕</button>
+    <div class="modal-head">请输入用户的洋葱ID：</div>
+    <div class="modal-body">
+      <div id="onionIdRow">
+        <input class="field-input" id="onionIdInput" inputmode="numeric" placeholder="请输入纯数字洋葱ID" autocomplete="off" />
+        <div class="field-hint">请输入纯数字洋葱ID</div>
+        <div class="field-err" id="onionIdErr">请输入洋葱ID</div>
+      </div>
+    </div>
+    <div class="modal-foot">
+      <button class="btn btn-ghost" onclick="closeAll()">取消</button>
+      <button class="btn btn-primary" onclick="submitOnionId()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗二：确认用户信息 -->
+<div class="mask hidden" id="confirmModal" data-diff-page="确认用户信息弹窗">
+  <div class="modal modal-wrap">
+    <button class="modal-x" onclick="closeAll()">✕</button>
+    <div class="modal-head">确认用户信息</div>
+    <div class="modal-body">
+      <div class="info-row"><span class="k">洋葱ID</span><span class="v" id="cfOnionId">—</span></div>
+      <div class="info-row"><span class="k">用户昵称</span><span class="v" id="cfNickname">—</span></div>
+      <div class="info-row" id="confirmPhoneRow"><span class="k">绑定手机号</span><span class="v" id="cfPhone">—</span></div>
+    </div>
+    <div class="modal-foot" id="confirmFoot">
+      <button class="btn btn-ghost" onclick="backToStep1()">返回上一步</button>
+      <button class="btn btn-primary" onclick="doBind()">确认</button>
+    </div>
+  </div>
+</div>
+
+<!-- 弹窗三：结果反馈 -->
+<div class="mask hidden" id="resultModal" data-diff-page="绑定结果弹窗">
+  <div class="modal modal-wrap">
+    <button class="modal-x" onclick="closeAll()">✕</button>
+    <div class="modal-body" style="padding-top:22px">
+      <div class="result-ic ok" id="resultIc">✓</div>
+      <div class="result-title" id="resultTitle">课程激活成功</div>
+      <div class="result-desc" id="resultDesc"></div>
+    </div>
+    <div class="modal-foot" style="justify-content:center">
+      <button class="btn btn-primary" onclick="closeAll()">关闭</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ---------------- 原型业务逻辑（假数据） ---------------- */
+var $ = function (id) { return document.getElementById(id); };
+
+// 用户库（onionId -> 用户）；返回给后台的手机号已脱敏（中间四位）
+var USER_DB = {
+  "10234567": { nickname: "小葱头", phone: "138****6621" },
+  "20456789": { nickname: "洋葱家长-李", phone: "159****3308" },
+  "88991234": { nickname: "study_mom", phone: "186****7742" }
+};
+
+// 订单列表（未激活才展示激活按钮；已激活/已退款不展示）
+var ORDERS = [
+  { id: "WD202607200012", plat: "微店",       good: "初中同步课联售包",   phone: "150****8890", status: "wait" },
+  { id: "YZ202607200031", plat: "有赞",       good: "小学英语专项营",     phone: "133****2217", status: "wait" },
+  { id: "TM202607190088", plat: "天猫",       good: "初中数学满分突破",   phone: "188****5533", status: "done" },
+  { id: "SP202607190102", plat: "视频号小店", good: "高中物理精讲",       phone: "170****9021", status: "done" },
+  { id: "KS202607180077", plat: "快手",       good: "小学同步课年卡",     phone: "155****4410", status: "refund" }
+];
+
+var STATUS_META = {
+  wait:   { cls: "st-wait",   text: "未激活" },
+  done:   { cls: "st-done",   text: "已激活" },
+  refund: { cls: "st-refund", text: "已退款" }
+};
+
+var currentOrder = null;   // 正在激活的订单
+var currentUser = null;    // 查到的用户
+var demoBindFail = false;  // 演示：绑定失败分支
+
+function renderTable() {
+  var tb = $("orderTbody");
+  tb.innerHTML = "";
+  ORDERS.forEach(function (o, idx) {
+    var m = STATUS_META[o.status];
+    var tr = document.createElement("tr");
+    // 仅未激活订单展示「激活课程」按钮；已激活/已退款展示占位
+    var opHtml = o.status === "wait"
+      ? '<button class="link-btn"' + (idx === 0 ? ' id="firstActivateBtn"' : '') + ' onclick="openActivate(\'' + o.id + '\')">激活课程</button>'
+      : '<span class="op-empty">—</span>';
+    tr.innerHTML =
+      '<td>' + o.id + '</td>' +
+      '<td><span class="plat">' + o.plat + '</span></td>' +
+      '<td>' + o.good + '</td>' +
+      '<td>' + o.phone + '</td>' +
+      '<td><span class="status ' + m.cls + '"><span class="d"></span>' + m.text + '</span></td>' +
+      '<td class="col-op">' + opHtml + '</td>';
+    tb.appendChild(tr);
+  });
+}
+
+function openActivate(orderId) {
+  currentOrder = ORDERS.find(function (o) { return o.id === orderId; }) || null;
+  closeAll();
+  $("onionIdInput").value = "";
+  $("onionIdInput").classList.remove("err");
+  $("onionIdErr").classList.remove("show");
+  $("onionIdErr").textContent = "请输入洋葱ID";
+  $("idModal").classList.remove("hidden");
+  setTimeout(function () { $("onionIdInput").focus(); }, 50);
+}
+
+// 输入框仅允许数字
+document.addEventListener("input", function (e) {
+  if (e.target && e.target.id === "onionIdInput") {
+    var v = e.target.value.replace(/\D/g, "");
+    if (v !== e.target.value) e.target.value = v;
+    e.target.classList.remove("err");
+    $("onionIdErr").classList.remove("show");
+  }
+});
+
+function submitOnionId() {
+  var val = ($("onionIdInput").value || "").trim();
+  if (!val) {
+    $("onionIdInput").classList.add("err");
+    $("onionIdErr").textContent = "请输入洋葱ID";
+    $("onionIdErr").classList.add("show");
+    return;
+  }
+  var user = USER_DB[val];
+  if (!user) {
+    $("onionIdInput").classList.add("err");
+    $("onionIdErr").textContent = "用户不存在";
+    $("onionIdErr").classList.add("show");
+    return;
+  }
+  currentUser = { onionId: val, nickname: user.nickname, phone: user.phone };
+  $("cfOnionId").textContent = val;
+  $("cfNickname").textContent = user.nickname;
+  $("cfPhone").textContent = user.phone;
+  $("idModal").classList.add("hidden");
+  $("confirmModal").classList.remove("hidden");
+}
+
+function backToStep1() {
+  $("confirmModal").classList.add("hidden");
+  $("idModal").classList.remove("hidden");
+  if (currentUser) $("onionIdInput").value = currentUser.onionId;
+}
+
+function doBind() {
+  $("confirmModal").classList.add("hidden");
+  if (demoBindFail) {
+    showResult(false, "该订单已绑定用户，请勿重复兑换");
+  } else {
+    if (currentOrder) {
+      currentOrder.status = "done";
+      currentOrder.phone = (currentUser && currentUser.phone) || currentOrder.phone;
+      renderTable();
+    }
+    showResult(true, "已将洋葱ID " + (currentUser ? currentUser.onionId : "") +
+      " 绑定到订单 " + (currentOrder ? currentOrder.id : "") + "，课程权益已自动发放。");
+  }
+}
+
+function showResult(ok, desc) {
+  $("resultIc").className = "result-ic " + (ok ? "ok" : "fail");
+  $("resultIc").textContent = ok ? "✓" : "!";
+  $("resultTitle").textContent = ok ? "课程激活成功" : "激活失败";
+  $("resultDesc").textContent = desc;
+  $("resultModal").classList.remove("hidden");
+}
+
+function closeAll() {
+  ["idModal", "confirmModal", "resultModal"].forEach(function (m) { $(m).classList.add("hidden"); });
+}
+
+// 点击遮罩关闭
+document.querySelectorAll(".mask").forEach(function (mk) {
+  mk.addEventListener("click", function (e) { if (e.target === mk) closeAll(); });
+});
+
+// 演示切换：正常 / 空态
+document.querySelectorAll("[data-demo]").forEach(function (b) {
+  b.addEventListener("click", function () {
+    document.querySelectorAll("[data-demo]").forEach(function (x) { x.classList.remove("on"); });
+    b.classList.add("on");
+    var mode = b.getAttribute("data-demo");
+    if (mode === "empty") {
+      $("orderTbody").innerHTML = "";
+      $("emptyState").classList.remove("hidden");
+    } else {
+      $("emptyState").classList.add("hidden");
+      renderTable();
+    }
+  });
+});
+
+renderTable();
+</script>
+
+<!-- ====== 定位钩子（proto-note） ====== -->
+<script>
+window.DIFF_HOOKS = {
+  locate: function (pageId) {
+    if (pageId === "idModal") {
+      closeAll(); openActivate(ORDERS[0].id);
+      return;
+    }
+    if (pageId === "confirmModal") {
+      closeAll();
+      // 预填一个存在的用户，直达确认弹窗
+      currentOrder = ORDERS.find(function (o) { return o.status === "wait"; }) || ORDERS[0];
+      currentUser = { onionId: "10234567", nickname: USER_DB["10234567"].nickname, phone: USER_DB["10234567"].phone };
+      $("cfOnionId").textContent = currentUser.onionId;
+      $("cfNickname").textContent = currentUser.nickname;
+      $("cfPhone").textContent = currentUser.phone;
+      $("confirmModal").classList.remove("hidden");
+      return;
+    }
+    if (pageId === "resultModal") {
+      closeAll(); showResult(true, "已将洋葱ID 10234567 绑定到订单，课程权益已自动发放。");
+      return;
+    }
+    // 列表页：关闭所有弹窗
+    closeAll();
+  }
+};
+</script>
+
+<!-- ====== 变更标注层：数据 + 引擎（proto-note v3） ====== -->
+<script>
+window.DIFF_CHANGESET = {
+  meta: {
+    sddTitle: "SDD-通用三方订单激活课程",
+    sddUrl: "https://guanghe.feishu.cn/docx/DG4xdLtMko9tkkxFmKScOqrznwc",
+    sddType: "feishu"
+  },
+  changes: [
+    {
+      id: "chg-op-col",
+      level: "module",
+      page: "listView",
+      module: "操作列与激活按钮",
+      target: "#opColHead",
+      type: "new",
+      title: "订单列表新增操作列与「激活课程」按钮",
+      desc: "通用三方订单列表最右侧新增固定「操作」列，展示蓝色文字链接样式的「激活课程」按钮，运营点击进入后台激活流程。",
+      before: "无此列，激活靠运营生成免登录链接发给用户自助绑定",
+      after: "新增操作列 + 激活课程按钮，后台直接发起激活",
+      sdd: { section: "功能点 1：订单列表新增操作列与按钮展示条件", blockId: "doxcn9Ps20bGvnT4cIf7sNG8ylf" }
+    },
+    {
+      id: "chg-btn-incremental",
+      level: "field",
+      page: "listView",
+      module: "按钮展示条件",
+      target: "#firstActivateBtn",
+      type: "logic",
+      title: "按钮仅对未激活订单展示（增量）",
+      desc: "仅未激活（无主订单，绑定手机号为空）行展示「激活课程」按钮；已激活、已退款订单操作列显示「—」，不展示按钮，避免误操作与重复绑定。",
+      before: "无此按钮",
+      after: "未激活行展示，已激活/已退款行不展示",
+      sdd: { section: "功能点 1：订单列表新增操作列与按钮展示条件", blockId: "doxcn9Ps20bGvnT4cIf7sNG8ylf" }
+    },
+    {
+      id: "chg-id-modal",
+      level: "module",
+      page: "idModal",
+      module: "输入洋葱ID弹窗",
+      target: "#idModal .modal",
+      type: "new",
+      title: "新增第一步弹窗：输入洋葱ID",
+      desc: "点击激活课程弹出输入弹窗，输入框仅允许数字、自动过滤非数字、不做位数校验，下方提示「请输入纯数字洋葱ID」。",
+      before: "无此弹窗（走 C 端免登录页自助流程）",
+      after: "后台弹窗输入洋葱ID，仅数字、不限位数",
+      sdd: { section: "功能点 2：点击激活课程弹出输入洋葱ID弹窗", blockId: "doxcnhK2DJr9xWnwwlXgl4UEAgm" }
+    },
+    {
+      id: "chg-empty-check",
+      level: "field",
+      page: "idModal",
+      module: "空值与查询校验",
+      target: "#onionIdRow",
+      type: "logic",
+      title: "空值校验与用户不存在提示",
+      desc: "确认时若输入为空，输入框标红并提示「请输入洋葱ID」；非空则调用后台鉴权用户查询接口，查不到用户时提示「用户不存在」，修改输入即恢复。",
+      before: "无此功能",
+      after: "空值/用户不存在均有明确后台校验与提示",
+      sdd: { section: "功能点 3：空值校验", blockId: "doxcnqS2hH1xUnjX85lJaBOW3pc" }
+    },
+    {
+      id: "chg-confirm-modal",
+      level: "module",
+      page: "confirmModal",
+      module: "确认用户信息弹窗",
+      target: "#confirmModal .modal",
+      type: "new",
+      title: "新增第二步弹窗：确认用户信息",
+      desc: "用户存在时弹出确认弹窗，展示洋葱ID、用户昵称、绑定手机号供运营核实，底部提供返回上一步与确认。",
+      before: "无此弹窗",
+      after: "后台确认弹窗展示用户信息供核实",
+      sdd: { section: "功能点 5：确认用户信息弹窗", blockId: "doxcn9HYOSjXhDFIz6QpkdZl9Zd" }
+    },
+    {
+      id: "chg-phone-mask",
+      level: "field",
+      page: "confirmModal",
+      module: "手机号脱敏",
+      target: "#confirmPhoneRow",
+      type: "enum",
+      title: "确认弹窗手机号中间四位脱敏",
+      desc: "后台用户信息查询接口只返回脱敏手机号（中间四位打码），确认弹窗展示脱敏号码，禁止展示完整明文手机号。",
+      before: "免登录页接口返回明文手机号（历史撞库风险点）",
+      after: "接口仅返回脱敏手机号，中间四位打码",
+      sdd: { section: "功能点 5：确认用户信息弹窗", blockId: "doxcn9HYOSjXhDFIz6QpkdZl9Zd" }
+    },
+    {
+      id: "chg-bind-result",
+      level: "field",
+      page: "confirmModal",
+      module: "确认绑定与结果反馈",
+      target: "#confirmFoot",
+      type: "flow",
+      title: "确认绑定并自动发权益",
+      desc: "点击确认调用后台绑定接口，绑定订单并自动发放课程权益；成功展示「课程激活成功」+洋葱ID+订单号，失败展示接口返回原因（已绑定/已退款/购买限制等）。",
+      before: "用户在免登录页自助绑定",
+      after: "运营后台确认即绑定发权益，结果即时反馈",
+      sdd: { section: "功能点 7：确认绑定与结果反馈", blockId: "doxcnCC9FrAMZbSuzeSefl7aBTc" }
+    },
+    {
+      id: "chg-antifraud",
+      level: "field",
+      page: "confirmModal",
+      module: "后台绑定豁免与审计",
+      target: "#confirmFoot",
+      type: "logic",
+      title: "后台绑定豁免 C 端防灰产校验并留痕",
+      desc: "后台激活为可信内部操作，绑定走后台专用通道或豁免 C 端设备参数（device-token/ip 等）校验，不因缺参数被拦；同时记录操作人、时间、订单与洋葱ID供审计。",
+      before: "复用 C 端绑定接口，缺设备参数会被防灰产拦截",
+      after: "后台通道豁免设备校验 + 操作留痕审计",
+      sdd: { section: "功能点 10：实现约束与安全要求", blockId: "doxcngsZShsG57TsohwZOJwS9ah" }
+    },
+    {
+      id: "chg-offline-link",
+      level: "module",
+      page: "listView",
+      module: "免登录激活方式下线",
+      target: "#activateNotice",
+      type: "remove",
+      title: "下线 C 端免登录激活链接/页面",
+      desc: "运营后台不再提供生成免登录链接/二维码的激活方式，激活统一走后台直接输入洋葱ID绑定，C 端免登录激活页入口下线。",
+      before: "运营生成免登录链接/二维码 → 发用户 → 用户自助打开绑定",
+      after: "免登录激活入口下线，统一走后台激活",
+      sdd: { section: "功能点 9：下线 C 端免登录激活链路与公网查询放行", blockId: "doxcnqpo4g0A6ezDgm6F5D1NlLm" }
+    },
+    {
+      id: "chg-offline-api",
+      level: "module",
+      page: "listView",
+      module: "用户信息接口收敛",
+      target: "#activateNotice",
+      type: "logic",
+      title: "用户信息查询接口移除公网放行",
+      desc: "/weidian/get/userinfo 从 C 端公网网关白名单移除，仅保留后台鉴权访问供确认弹窗查询；C 端匿名请求返回鉴权失败，根除 onionId 枚举撞库面。",
+      before: "接口对 C 端公网免鉴权放行、onionId 可枚举",
+      after: "仅后台鉴权可访问，C 端公网放行下线",
+      sdd: { section: "功能点 9：下线 C 端免登录激活链路与公网查询放行", blockId: "doxcnqpo4g0A6ezDgm6F5D1NlLm" }
+    }
+  ]
+};
+</script>
+<script>
+/* ============ 原型变更标注引擎 diff-annotator v3（零依赖，可整段复用） ============
+   布局参考：固定右侧深色批注栏 + 页面编号锚点 + canvas 连线（axure 批注风格）
+   规则：默认不显示任何标注；按模块勾选显示；只联动 SDD（不展示 PRD） */
+(function () {
+  const CS = window.DIFF_CHANGESET;
+  if (!CS || !CS.changes || !CS.changes.length) return;
+
+  const TYPE_LABEL = { new: "新增", modify: "修改", copy: "文案", enum: "口径", logic: "逻辑", flow: "流程", remove: "删除" };
+  const LEVEL_LABEL = { page: "页面级", module: "模块级", field: "字段级" };
+  const LS_KEY = "diff-annotator-v3:" + location.pathname;
+  const PANEL_W = 360;
+
+  CS.changes.forEach((c, i) => { c._no = String(i + 1).padStart(2, "0"); });
+
+  /* ---------- 状态 ---------- */
+  const moduleKeys = [];
+  const byModule = {};
+  CS.changes.forEach(c => {
+    const key = c.page + "::" + c.module;
+    if (!byModule[key]) { byModule[key] = []; moduleKeys.push(key); }
+    byModule[key].push(c);
+  });
+  const byTarget = {};
+  CS.changes.forEach(c => { (byTarget[c.target] = byTarget[c.target] || []).push(c); });
+  const keyOf = c => c.page + "::" + c.module;
+
+  let state = { open: true, enabled: {} };
+  try { state = Object.assign(state, JSON.parse(localStorage.getItem(LS_KEY) || "{}")); } catch (e) {}
+  moduleKeys.forEach(k => { if (!(k in state.enabled)) state.enabled[k] = false; });
+  const persist = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} };
+  const isOn = c => state.enabled[keyOf(c)];
+
+  function pageName(pid) {
+    const el = document.getElementById(pid);
+    return (el && el.getAttribute("data-diff-page")) || pid;
+  }
+
+  /* ---------- 样式 ---------- */
+  const style = document.createElement("style");
+  style.setAttribute("data-da", "1");
+  style.textContent = `
+  :root { --da-navy:#071d2f; --da-blue:#1479d1; --da-blue-soft:#2c93e8; --da-sky:#72c4ff; --da-panel-w:${PANEL_W}px; }
+  body.da-open { padding-right:var(--da-panel-w) !important; transition:padding-right .22s ease; }
+
+  .da-launch { position:fixed; top:14px; right:14px; z-index:1200; display:inline-flex; align-items:center; gap:8px;
+    background:var(--da-navy); color:#fff; border:0; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:600;
+    cursor:pointer; box-shadow:0 6px 20px rgba(7,29,47,.28); }
+  .da-launch .da-launch-n { color:var(--da-sky); font-weight:700; }
+
+  .da-panel { position:fixed; z-index:1100; top:0; right:0; bottom:0; width:var(--da-panel-w); overflow-y:auto;
+    color:rgba(255,255,255,.78); border-left:1px solid rgba(255,255,255,.08);
+    background:radial-gradient(circle at 100% 0, rgba(44,147,232,.16), transparent 20rem), var(--da-navy);
+    box-shadow:-18px 0 50px rgba(7,29,47,.12); font-size:12px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.2) transparent; }
+  .da-panel-inner { padding:20px 20px 40px; }
+  .da-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .da-top h2 { margin:0; color:#fff; font-size:17px; font-weight:740; letter-spacing:-.01em; }
+  .da-top h2 small { margin-left:6px; color:var(--da-sky); font-size:12px; font-weight:700; }
+  .da-top-actions { display:flex; align-items:center; gap:8px; }
+  .da-sdd-doc { color:var(--da-sky); font-size:11px; font-weight:650; text-decoration:none; white-space:nowrap; }
+  .da-sdd-doc:hover { text-decoration:underline; }
+  .da-hide { width:28px; height:28px; flex:0 0 auto; border:1px solid rgba(255,255,255,.14); border-radius:8px;
+    color:#fff; background:rgba(255,255,255,.06); font-size:14px; line-height:1; cursor:pointer; }
+  .da-hide:hover { background:rgba(255,255,255,.12); }
+
+  .da-mods { margin-bottom:20px; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:11px; background:rgba(255,255,255,.045); }
+  .da-mods-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .da-mods-head span { color:#fff; font-size:12px; font-weight:700; }
+  .da-bulk { display:flex; gap:10px; }
+  .da-bulk button { border:0; background:none; padding:0; color:rgba(255,255,255,.5); font-size:11px; cursor:pointer; }
+  .da-bulk button:hover { color:var(--da-sky); }
+  .da-mod-group { margin-top:8px; }
+  .da-mod-group-name { margin-bottom:2px; color:rgba(255,255,255,.4); font-size:10px; font-weight:650; letter-spacing:.04em; }
+  .da-mod { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:7px; cursor:pointer; }
+  .da-mod:hover { background:rgba(255,255,255,.06); }
+  .da-mod input { margin:0; flex:0 0 auto; accent-color:var(--da-blue-soft); cursor:pointer; }
+  .da-mod-name { flex:1; min-width:0; color:rgba(255,255,255,.86); font-size:12px; font-weight:550; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .da-mod-types { flex:0 0 auto; color:rgba(255,255,255,.34); font-size:10px; }
+
+  .da-note-section { margin-bottom:18px; }
+  .da-note-heading { display:flex; align-items:center; gap:9px; margin-bottom:10px; color:#fff; font-size:12px; font-weight:700; }
+  .da-note-heading::after { height:1px; flex:1; background:rgba(255,255,255,.1); content:""; }
+  .da-empty { padding:10px 2px; color:rgba(255,255,255,.35); font-size:11px; }
+
+  .da-note { position:relative; scroll-margin-top:16px; margin-bottom:9px; padding:12px 13px; border:1px solid rgba(255,255,255,.1);
+    border-radius:11px; background:rgba(255,255,255,.045); cursor:pointer;
+    transition:border-color .18s ease, background .18s ease, transform .18s ease; }
+  .da-note::before { content:""; position:absolute; top:23px; left:-15px; width:14px; height:1px;
+    background:rgba(114,196,255,.32); transition:background .16s ease, box-shadow .16s ease; }
+  .da-note::after { content:""; position:absolute; top:20px; left:-19px; width:7px; height:7px; border-radius:50%;
+    border:1px solid rgba(114,196,255,.55); background:var(--da-navy); transition:background .16s ease, box-shadow .16s ease; }
+  .da-note:hover, .da-note.da-active { border-color:rgba(114,196,255,.65); background:rgba(44,147,232,.13); transform:translateX(-3px); }
+  .da-note.da-active::before { background:#72c4ff; box-shadow:0 0 12px rgba(44,147,232,.62); }
+  .da-note.da-active::after { background:#72c4ff; box-shadow:0 0 0 4px rgba(44,147,232,.18); }
+  .da-note-head { display:flex; align-items:center; gap:9px; margin-bottom:6px; color:#fff; font-size:12px; font-weight:700; }
+  .da-no { display:inline-grid; width:22px; height:22px; flex:0 0 auto; place-items:center; border:1px solid rgba(114,196,255,.3);
+    border-radius:50%; color:#8fd1ff; background:rgba(44,147,232,.09); font-size:9px; font-weight:800; }
+  .da-note.da-active .da-no { color:var(--da-navy); border-color:#bfe6ff; background:#bfe6ff; }
+  .da-note-kind { flex:0 0 auto; margin-left:auto; color:rgba(255,255,255,.35); font-size:10px; font-weight:500; }
+  .da-note p { margin:0; color:rgba(255,255,255,.62); font-size:11px; line-height:1.75; }
+  .da-note-ba { margin-top:8px; padding:7px 9px; border-radius:7px; background:rgba(5,17,28,.52); font-size:10px; line-height:1.7; color:rgba(255,255,255,.55); }
+  .da-note-ba b { color:#bfe6ff; font-weight:650; }
+  .da-note-sdd { display:inline-flex; align-items:center; gap:5px; margin-top:9px; color:var(--da-sky); font-size:10.5px;
+    font-weight:650; text-decoration:none; }
+  .da-note-sdd:hover { text-decoration:underline; }
+
+  .da-anchors { position:absolute; left:0; top:0; width:0; height:0; z-index:1050; pointer-events:none; }
+  .da-anchor { position:absolute; display:grid; width:22px; height:22px; place-items:center; border:1px solid rgba(20,121,209,.28);
+    border-radius:50%; color:var(--da-blue); background:#eff8ff; font-size:9px; font-weight:800; cursor:pointer;
+    pointer-events:auto; box-shadow:0 2px 8px rgba(7,29,47,.14); transition:transform .15s ease, background .15s ease; }
+  .da-anchor:hover { transform:scale(1.1); }
+  .da-anchor.da-active { color:#fff; border-color:var(--da-blue-soft); background:var(--da-blue);
+    box-shadow:0 0 0 4px rgba(44,147,232,.16), 0 5px 14px rgba(20,121,209,.24); transform:scale(1.08); }
+
+  .da-outlined { outline:1.5px dashed rgba(20,121,209,.45) !important; outline-offset:2px; }
+  @keyframes da-pulse { 0% { box-shadow:0 0 0 0 rgba(44,147,232,.4); } 100% { box-shadow:0 0 0 14px rgba(44,147,232,0); } }
+  .da-pulsing { animation:da-pulse .9s ease-out 2; }
+
+  .da-wires { position:fixed; inset:0; z-index:1040; width:100vw; height:100vh; pointer-events:none; }
+
+  @media print { .da-panel, .da-anchors, .da-wires, .da-launch { display:none !important; } body.da-open { padding-right:0 !important; } }
+  `;
+  document.head.appendChild(style);
+
+  /* ---------- DOM 骨架 ---------- */
+  const launcher = document.createElement("button");
+  launcher.className = "da-launch";
+  launcher.setAttribute("data-da", "1");
+  launcher.innerHTML = '变更导览 <span class="da-launch-n">' + CS.changes.length + "</span>";
+  document.body.appendChild(launcher);
+
+  const panel = document.createElement("aside");
+  panel.className = "da-panel";
+  panel.setAttribute("data-da", "1");
+  document.body.appendChild(panel);
+
+  const anchorLayer = document.createElement("div");
+  anchorLayer.className = "da-anchors";
+  anchorLayer.setAttribute("data-da", "1");
+  document.body.appendChild(anchorLayer);
+
+  const wires = document.createElement("canvas");
+  wires.className = "da-wires";
+  wires.setAttribute("data-da", "1");
+  document.body.appendChild(wires);
+  const wctx = wires.getContext("2d");
+
+  let activeId = null;   // 悬停中的变更
+  let pinnedId = null;   // 点击固定的变更（再次点击取消）
+
+  /* ---------- 面板渲染 ---------- */
+  const pages = [];
+  const modsByPage = {};
+  moduleKeys.forEach(k => {
+    const p = k.split("::")[0];
+    if (!modsByPage[p]) { modsByPage[p] = []; pages.push(p); }
+    modsByPage[p].push(k);
+  });
+
+  function renderPanel() {
+    let html = '<div class="da-panel-inner">';
+    html += '<div class="da-top"><h2>变更导览<small>' + CS.changes.length + "</small></h2><div class=\"da-top-actions\">";
+    if (CS.meta.sddUrl) html += '<a class="da-sdd-doc" target="_blank" href="' + CS.meta.sddUrl + '">' + (CS.meta.sddTitle || "SDD") + " ↗</a>";
+    html += '<button class="da-hide" title="收起">✕</button></div></div>';
+
+    html += '<div class="da-mods"><div class="da-mods-head"><span>模块</span><span class="da-bulk"><button data-all="on">全部显示</button><button data-all="off">全部隐藏</button></span></div>';
+    pages.forEach(p => {
+      html += '<div class="da-mod-group"><div class="da-mod-group-name">' + pageName(p) + "</div>";
+      modsByPage[p].forEach(k => {
+        const mod = k.split("::")[1];
+        const types = [...new Set(byModule[k].map(c => TYPE_LABEL[c.type] || "变更"))].join("·");
+        html += '<label class="da-mod" data-key="' + k + '"><input type="checkbox"' + (state.enabled[k] ? " checked" : "") + ">";
+        html += '<span class="da-mod-name">' + mod + '</span><span class="da-mod-types">' + types + "</span></label>";
+      });
+      html += "</div>";
+    });
+    html += "</div>";
+
+    const anyOn = CS.changes.some(isOn);
+    if (!anyOn) {
+      html += '<div class="da-empty">勾选模块后展示对应标注与连线</div>';
+    } else {
+      pages.forEach(p => {
+        const list = CS.changes.filter(c => c.page === p && isOn(c));
+        if (!list.length) return;
+        html += '<section class="da-note-section"><h3 class="da-note-heading">' + pageName(p) + "</h3>";
+        list.forEach(c => {
+          html += '<article class="da-note" id="da-note-' + c.id + '" data-chg="' + c.id + '">';
+          html += '<div class="da-note-head"><span class="da-no">' + c._no + '</span><span>' + c.title + '</span>';
+          html += '<span class="da-note-kind">' + (TYPE_LABEL[c.type] || "变更") + " · " + (LEVEL_LABEL[c.level] || "") + "</span></div>";
+          html += "<p>" + c.desc + "</p>";
+          if (c.before && c.after) html += '<div class="da-note-ba"><b>前</b>　' + c.before + '<br><b>后</b>　' + c.after + "</div>";
+          if (c.sdd && CS.meta.sddUrl && c.sdd.blockId) {
+            html += '<a class="da-note-sdd" target="_blank" href="' + CS.meta.sddUrl + "#" + c.sdd.blockId + '">SDD · ' + c.sdd.section + " ↗</a>";
+          } else if (c.sdd && c.sdd.section) {
+            html += '<span class="da-note-sdd" style="color:rgba(255,255,255,.4)">SDD · ' + c.sdd.section + "</span>";
+          }
+          html += "</article>";
+        });
+        html += "</section>";
+      });
+    }
+    html += "</div>";
+    panel.innerHTML = html;
+    bindPanel();
+  }
+
+  function bindPanel() {
+    panel.querySelector(".da-hide").addEventListener("click", () => setOpen(false));
+    panel.querySelectorAll(".da-mod input").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const k = cb.closest(".da-mod").getAttribute("data-key");
+        state.enabled[k] = cb.checked;
+        if (pinnedId && !isOn(CS.changes.find(x => x.id === pinnedId))) pinnedId = null;
+        persist();
+        renderPanel();
+        syncAnnotations();
+        applyActive();
+        if (cb.checked) locateModule(k);
+      });
+    });
+    panel.querySelectorAll("[data-all]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const on = btn.getAttribute("data-all") === "on";
+        moduleKeys.forEach(k => { state.enabled[k] = on; });
+        if (!on) pinnedId = null;
+        persist(); renderPanel(); syncAnnotations(); applyActive();
+      });
+    });
+    panel.querySelectorAll(".da-note").forEach(card => {
+      const id = card.getAttribute("data-chg");
+      card.addEventListener("mouseenter", () => setActive(id));
+      card.addEventListener("mouseleave", () => clearActive(id));
+      card.addEventListener("click", e => {
+        if (e.target.closest("a")) return;
+        const c = CS.changes.find(x => x.id === id);
+        if (!c) return;
+        pinnedId = id;
+        applyActive();
+        locateChange(c);
+      });
+    });
+    panel.addEventListener("scroll", scheduleUpdate, { passive: true });
+  }
+
+  /* ---------- 锚点浮层 ---------- */
+  const anchorEls = {};   // change.id -> { el, last:{x,y,shown} }
+  CS.changes.forEach(c => {
+    const a = document.createElement("button");
+    a.className = "da-anchor";
+    a.setAttribute("data-da", "1");
+    a.textContent = c._no;
+    a.style.display = "none";
+    a.addEventListener("mouseenter", () => setActive(c.id));
+    a.addEventListener("mouseleave", () => clearActive(c.id));
+    a.addEventListener("click", () => {
+      togglePin(c.id);
+      if (pinnedId === c.id) {
+        const card = document.getElementById("da-note-" + c.id);
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+    anchorLayer.appendChild(a);
+    anchorEls[c.id] = { el: a, last: { x: -1, y: -1, shown: false } };
+  });
+
+  function targetVisible(el, rect) {
+    if (!el.getClientRects().length) return false;
+    // 遮挡检测（仅当取样点在视口内才有意义）：取样点若不属于目标元素（如被弹窗蒙层盖住），视为不可见。
+    // 目标滚出视口时不做钳制、不强行隐藏——锚点随文档自然滚出即可。
+    const inViewport = (x, y) => x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    if (inViewport(cx, cy)) {
+      const top = document.elementFromPoint(cx, cy);
+      if (top && (el === top || el.contains(top) || top.contains(el))) return true;
+      const sx = rect.left + 10, sy = rect.top + 10;
+      if (inViewport(sx, sy)) {
+        const top2 = document.elementFromPoint(sx, sy);
+        return !!(top2 && (el === top2 || el.contains(top2) || top2.contains(el)));
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function syncAnnotations() {
+    Object.keys(byTarget).forEach(t => {
+      const el = document.querySelector(t);
+      if (!el) return;
+      const on = byTarget[t].some(isOn) && state.open;
+      el.classList.toggle("da-outlined", on);
+    });
+    scheduleUpdate();
+  }
+
+  function updateOverlay() {
+    // 锚点钉在目标左上角，使用文档坐标（以锚点层自身为基准），随页面原生滚动——
+    // 杜绝 fixed 浮层"滚动事件追帧"造成的抖动漂移，也不做视口钳制（滚出即自然滚出）
+    const layerRect = anchorLayer.getBoundingClientRect();
+    Object.keys(byTarget).forEach(t => {
+      const el = document.querySelector(t);
+      const rect = el ? el.getBoundingClientRect() : null;
+      const visible = el && state.open && rect && targetVisible(el, rect);
+      byTarget[t].forEach((c, slot) => {
+        const rec = anchorEls[c.id];
+        const show = visible && isOn(c);
+        if (!show) {
+          if (rec.last.shown) { rec.el.style.display = "none"; rec.last.shown = false; }
+          return;
+        }
+        const x = Math.max(rect.left - 11, 2) + slot * 25 - layerRect.left;
+        const y = rect.top - 11 - layerRect.top;
+        if (!rec.last.shown) { rec.el.style.display = "grid"; rec.last.shown = true; }
+        if (rec.last.x !== x || rec.last.y !== y) {
+          rec.el.style.left = x + "px";
+          rec.el.style.top = y + "px";
+          rec.last.x = x; rec.last.y = y;
+        }
+      });
+    });
+    drawWires();
+  }
+
+  /* ---------- 连线 ---------- */
+  function setWireSize() {
+    const ratio = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round(innerWidth * ratio));
+    const h = Math.max(1, Math.round(innerHeight * ratio));
+    if (wires.width !== w || wires.height !== h) { wires.width = w; wires.height = h; }
+    wctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+
+  function wirePath(sx, sy, ex, ey, active) {
+    const gap = Math.max(38, ex - sx);
+    wctx.save();
+    wctx.beginPath();
+    wctx.moveTo(sx, sy);
+    wctx.bezierCurveTo(sx + Math.min(120, gap * 0.42), sy, ex - Math.min(82, gap * 0.28), ey, ex, ey);
+    wctx.lineWidth = active ? 2 : 1.3;
+    wctx.strokeStyle = active ? "rgba(44,147,232,.96)" : "rgba(44,147,232,.42)";
+    wctx.shadowColor = active ? "rgba(44,147,232,.7)" : "transparent";
+    wctx.shadowBlur = active ? 9 : 0;
+    wctx.stroke();
+    wctx.shadowBlur = 0;
+    wctx.beginPath(); wctx.arc(sx, sy, active ? 3.2 : 2.1, 0, Math.PI * 2);
+    wctx.fillStyle = active ? "#2c93e8" : "rgba(44,147,232,.5)"; wctx.fill();
+    wctx.beginPath(); wctx.arc(ex - 1, ey, active ? 3 : 2, 0, Math.PI * 2);
+    wctx.fillStyle = active ? "#72c4ff" : "rgba(114,196,255,.45)"; wctx.fill();
+    wctx.restore();
+  }
+
+  function drawWires() {
+    setWireSize();
+    wctx.clearRect(0, 0, innerWidth, innerHeight);
+    if (!state.open) return;
+    // 一个编号一条线：固定态优先于悬停态（滚动中误触发的 hover 不得篡改已选中的连线）
+    const id = pinnedId || activeId;
+    if (!id) return;
+    const c = CS.changes.find(x => x.id === id);
+    if (!c || !isOn(c)) return;
+    const rec = anchorEls[id];
+    if (!rec.last.shown) return;
+    // 起点取锚点实时视口坐标（锚点在文档流中，滚动时坐标必须现算，不能用缓存）
+    const ar = rec.el.getBoundingClientRect();
+    if (ar.bottom < 0 || ar.top > innerHeight) return; // 锚点滚出视口则不画线
+    const card = document.getElementById("da-note-" + id);
+    if (!card) return;
+    const cr = card.querySelector(".da-no").getBoundingClientRect();
+    if (cr.bottom < 40 || cr.top > innerHeight - 8) return;
+    wirePath(ar.right, ar.top + ar.height / 2, innerWidth - PANEL_W + 1, cr.top + cr.height / 2, true);
+  }
+
+  /* ---------- 高亮联动 ---------- */
+  function applyActive() {
+    // 固定态优先：钉住某编号后，悬停其他锚点不改变高亮与连线
+    const id = pinnedId || activeId;
+    CS.changes.forEach(c => {
+      anchorEls[c.id].el.classList.toggle("da-active", c.id === id);
+      const card = document.getElementById("da-note-" + c.id);
+      if (card) card.classList.toggle("da-active", c.id === id);
+    });
+    drawWires();
+  }
+  function setActive(id) { activeId = id; applyActive(); }
+  function clearActive(id) { if (activeId === id) { activeId = null; applyActive(); } }
+  function togglePin(id) {
+    pinnedId = pinnedId === id ? null : id;
+    applyActive();
+  }
+
+  /* ---------- 定位 ---------- */
+  function locateChange(c) {
+    if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.locate === "function") window.DIFF_HOOKS.locate(c.page);
+    else if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.showPage === "function") window.DIFF_HOOKS.showPage(c.page);
+    setTimeout(() => {
+      const el = document.querySelector(c.target);
+      if (!el) return;
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      el.classList.remove("da-pulsing"); void el.offsetWidth; el.classList.add("da-pulsing");
+      setTimeout(() => el.classList.remove("da-pulsing"), 2000);
+      scheduleUpdate();
+    }, 160);
+  }
+  function locateModule(key) { locateChange(byModule[key][0]); }
+
+  /* ---------- 开关 ---------- */
+  function setOpen(open) {
+    state.open = open;
+    persist();
+    document.body.classList.toggle("da-open", open);
+    panel.style.display = open ? "" : "none";
+    launcher.style.display = open ? "none" : "";
+    syncAnnotations();
+  }
+  launcher.addEventListener("click", () => setOpen(true));
+
+  /* ---------- 更新调度 ---------- */
+  let frame = 0;
+  function scheduleUpdate() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(updateOverlay);
+  }
+  window.addEventListener("scroll", scheduleUpdate, { passive: true, capture: true });
+  window.addEventListener("resize", scheduleUpdate, { passive: true });
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-da]")) return;
+    setTimeout(scheduleUpdate, 60);
+    setTimeout(scheduleUpdate, 360);
+  }, true);
+  const mo = new MutationObserver(records => {
+    if (records.every(r => r.target && r.target.closest && r.target.closest("[data-da]"))) return;
+    scheduleUpdate();
+  });
+  mo.observe(document.body, { attributes: true, attributeFilter: ["class", "style"], childList: true, subtree: true });
+
+  /* ---------- 初始 ---------- */
+  renderPanel();
+  setOpen(state.open);
+  setTimeout(scheduleUpdate, 150);
+})();
+
+</script>
+</body>
+</html>
