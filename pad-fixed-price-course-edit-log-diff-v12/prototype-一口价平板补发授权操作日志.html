@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>一口价平板-补发授权管理｜课程编辑与操作日志</title>
+<style>
+:root{--blue:#409eff;--nav:#061d31;--line:#ebeef5;--text:#303133;--muted:#909399}
+*{box-sizing:border-box}body{margin:0;color:var(--text);background:#f2f4f7;font:14px/1.5 -apple-system,BlinkMacSystemFont,"PingFang SC","Microsoft YaHei",sans-serif}
+button,input,textarea,select{font:inherit}.shell{min-width:1180px}.topbar{position:fixed;z-index:10;left:168px;right:0;top:0;height:54px;display:flex;align-items:center;padding:0 22px;background:#fff;border-bottom:1px solid #e5e9ef}.brand{position:fixed;z-index:11;left:0;top:0;width:168px;height:54px;display:flex;align-items:center;padding:0 12px;color:#fff;background:var(--nav);font-weight:700}.hamb{margin-left:auto;color:#8492a6}
+.sidebar{position:fixed;z-index:9;left:0;top:54px;bottom:0;width:168px;color:#b7c5d3;background:var(--nav);overflow:auto}.menu{padding:13px 14px}.menu-title{margin:10px 0;color:#fff;font-weight:600}.menu-item{padding:10px 12px;border-radius:3px}.menu-item.indent{padding-left:26px}.menu-item.active{color:#fff;background:#12446f}.main{margin-left:168px;padding-top:54px}.page-title{height:55px;display:flex;align-items:center;padding:0 20px;background:#fff;border-bottom:1px solid #e5e9ef;font-size:18px;font-weight:600}.content{padding:16px}.panel{background:#fff;border:1px solid #e5e9ef;border-radius:3px}
+table{width:100%;border-collapse:collapse}th,td{padding:14px 10px;border:1px solid var(--line);text-align:left;vertical-align:top}th{color:#606266;background:#fafafa;font-weight:500}th.type,td.type{width:180px}th.time,td.time{width:180px;text-align:center}th.actions,td.actions{width:130px;text-align:center}.tags{display:flex;flex-wrap:wrap;gap:10px 12px}.tag{display:inline-flex;align-items:center;min-height:26px;padding:2px 9px;border:1px solid #dcdfe6;border-radius:4px;color:#606266;background:#fff;font-size:12px}.empty-cell{color:#909399}.link{border:0;padding:0;color:#409eff;background:none;cursor:pointer}.link+.link{margin-left:14px}.loading-row{padding:70px;text-align:center;color:#909399}
+.mask{position:fixed;z-index:1000;inset:0;background:#0007}.dialog{position:fixed;z-index:1001;left:50%;top:50%;width:560px;max-height:86vh;display:flex;flex-direction:column;transform:translate(-50%,-50%);border-radius:6px;background:#fff;box-shadow:0 20px 50px #0003}.dialog-head,.drawer-head{height:58px;display:flex;align-items:center;justify-content:space-between;padding:0 20px;border-bottom:1px solid var(--line);font-size:17px;font-weight:600}.icon-btn{border:0;background:none;color:#909399;font-size:22px;cursor:pointer}.dialog-body{padding:20px;overflow:auto}.dialog-foot{display:flex;justify-content:flex-end;gap:10px;padding:14px 20px;border-top:1px solid var(--line)}
+.form-row{display:grid;grid-template-columns:92px 1fr;align-items:start;margin-bottom:18px}.label{padding-top:8px;color:#606266}.required:before{content:"*";margin-right:4px;color:#f56c6c}.control,select,textarea{width:100%;border:1px solid #dcdfe6;border-radius:4px;background:#fff}.control,select{height:38px;padding:0 11px}textarea{min-height:92px;padding:9px 11px;resize:vertical}.control:focus,select:focus,textarea:focus{outline:0;border-color:#409eff}.seg{display:flex;width:230px;padding:3px;border-radius:5px;background:#f1f3f6}.seg button{flex:1;height:32px;border:0;border-radius:4px;color:#606266;background:transparent;cursor:pointer}.seg button.active{color:#409eff;background:#fff;box-shadow:0 1px 4px #0002}.help{margin-top:6px;color:#909399;font-size:12px}.error{margin-top:5px;color:#f56c6c;font-size:12px}.check-list{max-height:210px;overflow:auto;border:1px solid #e4e7ed;border-radius:4px}.check-row{display:flex;gap:8px;align-items:start;padding:9px 12px;border-bottom:1px solid #f0f2f5;cursor:pointer}.check-row:last-child{border-bottom:0}.check-row:hover{background:#f5f7fa}.check-row input{margin-top:4px}
+.upload-grid{display:flex;flex-wrap:wrap;gap:10px}.upload-item,.upload-add{position:relative;width:76px;height:76px;border-radius:6px;overflow:hidden}.upload-item{border:1px solid #dcdfe6;background:#edf2f7}.upload-item img{width:100%;height:100%;object-fit:cover;cursor:zoom-in}.upload-status{position:absolute;inset:auto 0 0;padding:3px 2px;color:#fff;background:#000a;text-align:center;font-size:10px}.upload-status.failed{background:#f56c6ce8;cursor:pointer}.remove-img{position:absolute;z-index:2;right:3px;top:3px;width:20px;height:20px;border:0;border-radius:50%;color:#fff;background:#000a;cursor:pointer}.upload-add{display:grid;place-items:center;border:1px dashed #c0c4cc;color:#909399;background:#fafafa;cursor:pointer;font-size:28px}.upload-add:hover{color:#409eff;border-color:#409eff}.upload-count{margin-top:7px;color:#909399;font-size:12px}.btn{height:34px;padding:0 16px;border:1px solid #dcdfe6;border-radius:4px;color:#606266;background:#fff;cursor:pointer}.btn:hover{color:#409eff;border-color:#a0cfff}.btn.primary{color:#fff;border-color:#409eff;background:#409eff}.btn.danger{color:#fff;border-color:#f56c6c;background:#f56c6c}.btn:disabled{cursor:not-allowed;opacity:.55}.confirm-card{padding:14px;border:1px solid #f3d19e;border-radius:5px;background:#fdf6ec}.confirm-card b{color:#e6a23c}.course-summary{max-height:100px;margin:10px 0;overflow:auto;color:#606266}.toast{position:fixed;z-index:1600;left:50%;top:74px;transform:translateX(-50%);padding:10px 18px;border-radius:5px;color:#277746;background:#f0f9eb;border:1px solid #b3e19d;box-shadow:0 5px 18px #0002}
+.drawer{position:fixed;z-index:1001;right:0;top:0;bottom:0;width:610px;display:flex;flex-direction:column;background:#fff;box-shadow:-12px 0 38px #0002}.drawer-body{flex:1;padding:18px 20px;overflow:auto}.drawer-meta{padding:12px 14px;margin-bottom:14px;border-radius:5px;background:#f5f7fa}.log-card{position:relative;margin:0 0 16px;padding:0 0 16px 20px;border-bottom:1px solid #edf0f4}.log-card:before{position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:#409eff;content:""}.log-title{display:flex;align-items:center;gap:8px;font-weight:600}.op-badge{padding:1px 7px;border-radius:10px;color:#409eff;background:#ecf5ff;font-size:11px}.op-badge.delete{color:#e6a23c;background:#fdf6ec}.log-sub{margin:4px 0 9px;color:#909399;font-size:12px}.reason-box{padding:9px 11px;border-radius:4px;background:#f7f8fa}.proofs{display:flex;gap:8px;margin-top:10px}.proof{width:68px;height:68px;display:grid;place-items:center;border-radius:5px;color:#fff;background:linear-gradient(145deg,#8aa7c2,#344c63);cursor:zoom-in;font-size:11px;text-align:center}.pager{display:flex;justify-content:flex-end;gap:7px}.state-box{padding:110px 20px;text-align:center;color:#909399}.retry{margin-top:12px}
+.preview{position:fixed;z-index:1800;inset:0;display:grid;place-items:center;background:#000c}.preview img{max-width:88vw;max-height:88vh;border-radius:4px}.preview button{position:absolute;right:24px;top:18px;border:0;color:#fff;background:none;font-size:32px;cursor:pointer}
+.entry-wrap{max-width:1040px;margin:24px auto}.entry-intro{margin-bottom:18px;color:#606266}.entry-grid{display:grid;grid-template-columns:1fr 1fr;gap:22px}.pad-card{position:relative;min-height:245px;padding:26px;border:1px solid #dfe5ec;border-radius:8px;background:#fff;box-shadow:0 4px 16px #102a4310}.pad-card:hover{border-color:#8cc5ff;box-shadow:0 8px 24px #409eff20}.pad-card h2{margin:12px 0 8px;font-size:20px}.pad-icon{width:46px;height:46px;display:grid;place-items:center;border-radius:12px;color:#fff;background:#409eff;font-size:22px}.pad-icon.school{background:#7b61d1}.card-desc{min-height:46px;color:#606266}.rule-list{margin:16px 0;padding-left:19px;color:#606266}.rule-list li{margin:6px 0}.permission-chip{display:inline-flex;padding:3px 9px;border-radius:12px;color:#53606e;background:#f0f2f5;font-size:12px}.card-actions{position:absolute;left:26px;right:26px;bottom:22px}.context-bar{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:13px 16px;border:1px solid #dcdfe6;border-radius:5px;background:#fff}.context-main{display:flex;align-items:center;gap:10px}.context-name{font-size:16px;font-weight:650}.type-badge{padding:3px 9px;border-radius:12px;color:#337ecc;background:#ecf5ff;font-size:12px}.type-badge.school{color:#654ba5;background:#f1edff}.back-link{border:0;color:#409eff;background:none;cursor:pointer}.guard{margin-bottom:12px;padding:11px 14px;border-left:4px solid #e6a23c;border-radius:4px;background:#fdf6ec;color:#6b573a}.guard.school{border-left-color:#7b61d1;background:#f4f1ff;color:#55447c}.no-permission{padding:80px 20px;text-align:center;color:#909399}.readonly{color:#909399;font-size:12px}
+@media(max-width:1280px){.shell{min-width:1000px}.sidebar,.brand{width:150px}.topbar{left:150px}.main{margin-left:150px}}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="brand">运营平台</div><div class="topbar"><span>一口价平板-补发授权管理</span><span class="hamb">☰</span></div>
+  <aside class="sidebar"><div class="menu"><div class="menu-title">▣ 分佣系统</div><div class="menu-title">▣ 应用管理</div><div class="menu-title">▣ 平板管理</div><div class="menu-item indent">平板管理</div><div class="menu-item indent">一口价平板</div><div class="menu-item indent active">一口价平板-补发授权</div><div class="menu-title">⚙ 配置管理</div><div class="menu-item indent">成员管理</div><div class="menu-item indent">权限管理</div></div></aside>
+  <main class="main" id="page-main" data-diff-page="补发授权管理">
+    <div class="page-title">一口价平板-补发授权管理</div>
+    <div class="content">
+      <section id="pad-type-entry" class="entry-wrap" data-diff-page="平板类型入口"></section>
+      <section id="config-view" hidden data-diff-page="分类型补发配置">
+        <div id="pad-context"></div>
+        <section class="panel"><table>
+          <thead><tr><th class="type">授权类型</th><th>授权明细</th><th class="time">更新时间</th><th class="actions">操作</th></tr></thead>
+          <tbody id="course-table"></tbody>
+        </table></section>
+      </section>
+    </div>
+  </main>
+</div>
+<div id="overlay-root"></div>
+<span id="page-edit" data-diff-page="课程编辑弹窗" hidden></span>
+<span id="page-pad-entry" data-diff-page="平板类型入口" hidden></span>
+<span id="page-fixed-config" data-diff-page="普通一口价平板配置" hidden></span>
+<span id="page-school-config" data-diff-page="智课项目平板配置" hidden></span>
+<span id="page-delete" data-diff-page="删除课程弹窗" hidden></span>
+<span id="page-delete-confirm" data-diff-page="删除二次确认弹窗" hidden></span>
+<span id="page-log" data-diff-page="操作日志抽屉" hidden></span>
+<input id="file-input" type="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+<script>
+const TYPE_CONFIG={
+  vip:{name:'同步课',addLabel:'新增同步课',fieldLabel:'学段 / 学科'},
+  specialCourse:{name:'培优课（原专项课）',addLabel:'新增培优课',fieldLabel:'培优课'},
+  examPaper:{name:'电子试卷',addLabel:'新增电子试卷',fieldLabel:'试卷包'}
+}
+const sharedFixtures={
+ vip:[
+  {id:'v01',targetId:'vip#1-1',name:'小学英语',version:1},{id:'v02',targetId:'vip#1-2',name:'小学数学',version:1},{id:'v03',targetId:'vip#1-3',name:'小学语文',version:1},{id:'v04',targetId:'vip#2-1',name:'初中英语',version:1},{id:'v05',targetId:'vip#2-2',name:'初中数学',version:1},{id:'v06',targetId:'vip#2-4',name:'初中物理',version:1},{id:'v07',targetId:'vip#2-5',name:'初中化学',version:1},{id:'v08',targetId:'vip#3-2',name:'高中数学',version:1},{id:'v09',targetId:'vip#3-1',name:'高中英语',version:1},{id:'v10',targetId:'vip#3-5',name:'高中化学',version:1},{id:'v11',targetId:'vip#3-4',name:'高中物理',version:1},{id:'v12',targetId:'vip#3-6',name:'高中生物',version:1},{id:'v13',targetId:'vip#3-7',name:'高中历史',version:1},{id:'v14',targetId:'vip#3-8',name:'高中思想政治',version:1},{id:'v15',targetId:'vip#3-9',name:'高中地理',version:1},{id:'v16',targetId:'vip#3-3',name:'高中语文',version:1}
+ ],
+ specialCourse:[
+  {id:'s01',targetId:'sp01',name:'初中化学重难点培优课-通用版',version:1},{id:'s02',targetId:'sp02',name:'初中数学重难点培优课-通用版',version:1},{id:'s03',targetId:'sp03',name:'初中英语重难点培优课-通用版',version:1},{id:'s04',targetId:'sp04',name:'高中化学重难点培优-人教版（新课标）',version:1},{id:'s05',targetId:'sp05',name:'高中数学重难点培优-湘教版（新课标）',version:1},{id:'s06',targetId:'sp06',name:'高中数学重难点培优-人教新课标B',version:1},{id:'s07',targetId:'sp07',name:'高中物理重难精讲培优课',version:1},{id:'s08',targetId:'sp08',name:'高中生物重难精讲培优课',version:1},{id:'s09',targetId:'sp09',name:'高中语文总复习培优课',version:1}
+ ],
+ examPaper:[
+  {id:'e01',targetId:'101',name:'名校试卷',version:1},{id:'e02',targetId:'102',name:'全科中高考试卷',version:1},{id:'e03',targetId:'103',name:'初中地理新中考试卷库',version:1},{id:'e04',targetId:'104',name:'初中生物新中考试卷库',version:1},{id:'e05',targetId:'105',name:'初中物理新中考试卷库',version:1},{id:'e06',targetId:'106',name:'初中英语新中考试卷库',version:1},{id:'e07',targetId:'107',name:'初中语文新中考试卷库',version:1},{id:'e08',targetId:'108',name:'初中数学新中考试卷库',version:1}
+ ]
+}
+const clone=value=>JSON.parse(JSON.stringify(value))
+const allFixtures={
+ fixed:{
+  vip:clone(sharedFixtures.vip.filter(x=>!x.name.includes('高中'))),
+  specialCourse:clone(sharedFixtures.specialCourse.filter(x=>!x.name.includes('高中'))),
+  examPaper:clone(sharedFixtures.examPaper.filter(x=>!/(高中|中高)/.test(x.name)))
+ },
+ schoolFixed:clone(sharedFixtures)
+}
+let fixtures=allFixtures.fixed
+const allTimes={
+ fixed:{vip:'2026-07-24 18:10:00',specialCourse:'2026-07-24 18:10:00',examPaper:'2026-07-24 18:10:00'},
+ schoolFixed:{vip:'2026-07-24 18:20:00',specialCourse:'2026-07-24 18:20:00',examPaper:'2026-07-24 18:20:00'}
+}
+let times=allTimes.fixed
+const stageOptions=[['1','小学'],['2','初中'],['3','高中']]
+const subjectOptions=[['1','英语'],['2','数学'],['3','语文'],['4','物理'],['5','化学'],['6','生物'],['7','历史'],['8','思想政治'],['9','地理']]
+const packages=['清晰学习科学','初中物理重难点培优课-通用版','初中生物新中考培优课','高中数学重难点培优-人教版（新课标）']
+const papers=['高中英语新中考试卷库','高中物理新中考试卷库','初中数学新中考试卷库','初中英语新中考试卷库']
+const schoolLogs={
+ vip:[{op:'delete',items:['高中数学','高中英语'],who:'朱楚茗',time:'2026-07-23 17:18:20',reason:'按市场策略邮件移除高中课程。',proofs:['fixture','fixture'],revokeGranted:true,deletedItemCount:2},{op:'add',items:['高中数学'],who:'王迪',time:'2026-07-23 17:02:51',reason:'补充一口价平板同步课范围。',proofs:[]}],
+ specialCourse:[{op:'delete',items:['高中物理重难精讲培优课'],who:'朱楚茗',time:'2026-07-23 17:10:08',reason:'依据审批邮件调整高中培优课范围。',proofs:['fixture'],revokeGranted:false,deletedItemCount:1}],
+ examPaper:[{op:'add',items:['初中数学新中考试卷库'],who:'王迪',time:'2026-07-23 16:58:17',reason:'增加初中数学中考复习试卷。',proofs:[]}]
+}
+const schoolLogArchive={
+ vip:[{op:'add',items:['初中化学'],who:'王迪',time:'2026-07-23 16:20:12',reason:'补充初中化学同步课。',proofs:[]}],
+ specialCourse:[{op:'add',items:['初中数学重难点培优课-通用版'],who:'王迪',time:'2026-07-23 16:19:33',reason:'补齐小升初培优课配置。',proofs:[]}],
+ examPaper:[{op:'delete',items:['高中英语新中考试卷库'],who:'朱楚茗',time:'2026-07-23 16:18:09',reason:'试卷包已下线，停止后续补发。',proofs:['fixture'],revokeGranted:true,deletedItemCount:1}]
+}
+const fixedLogs={
+ vip:[{op:'add',items:['初中数学'],who:'市场策略运营',time:'2026-07-24 18:10:00',reason:'普通一口价平板仅配置初中同步课，并按用户学段匹配。',proofs:[],padType:'fixed'}],
+ specialCourse:[{op:'add',items:['初中数学重难点培优课-通用版'],who:'市场策略运营',time:'2026-07-24 18:08:00',reason:'补齐普通一口价初中培优权益。',proofs:[],padType:'fixed'}],
+ examPaper:[{op:'add',items:['初中数学新中考试卷库'],who:'市场策略运营',time:'2026-07-24 18:06:00',reason:'增加初中试卷包。',proofs:[],padType:'fixed'}]
+}
+const fixedLogArchive={
+ vip:[{op:'delete',items:['高中数学'],who:'市场策略运营',time:'2026-07-24 16:20:00',reason:'普通一口价平板不允许高中权益。',proofs:['fixture'],revokeGranted:false,deletedItemCount:1,padType:'fixed'}],
+ specialCourse:[{op:'delete',items:['高中物理重难精讲培优课'],who:'市场策略运营',time:'2026-07-24 16:19:00',reason:'按市场策略移除高中培优权益。',proofs:[],revokeGranted:false,deletedItemCount:1,padType:'fixed'}],
+ examPaper:[{op:'delete',items:['全科中高考试卷'],who:'市场策略运营',time:'2026-07-24 16:18:00',reason:'普通一口价平板移除含高中内容的试卷包。',proofs:[],revokeGranted:false,deletedItemCount:1,padType:'fixed'}]
+}
+const allLogs={fixed:fixedLogs,schoolFixed:schoolLogs}
+const allLogArchives={fixed:fixedLogArchive,schoolFixed:schoolLogArchive}
+let logs=fixedLogs,logArchive=fixedLogArchive
+let editingType='vip',editMode='add',selectedDelete=new Set(),uploads=[],pendingAction=null,logState='normal',currentLogPage=1,revokeGranted=false,reasonDraft='',selectedPadType=null,permissionRole='admin'
+const root=document.querySelector('#overlay-root')
+function esc(v){return String(v).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))}
+const PAD_CONFIG={
+ fixed:{name:'普通一口价平板',badge:'普通一口价',icon:'▣',desc:'面向普通一口价零售用户，按市场策略配置补发权益。',rules:['禁止配置高中权益','同步课仅按当前用户学段匹配补发','学段未知时不补发同步课'],permission:'市场策略运营权限'},
+ schoolFixed:{name:'智课项目平板',badge:'智课项目',icon:'校',desc:'面向与学校合作的智课项目制管控平板。',rules:['允许配置小学、初中、高中权益','设备须标记 isSchoolFixed=true','同步课仍按当前用户学段匹配补发'],permission:'智课项目运营权限'}
+}
+const ROLE_PERMISSIONS={
+ admin:{fixed:{view:true,edit:true,log:true},schoolFixed:{view:true,edit:true,log:true}},
+ market:{fixed:{view:true,edit:true,log:true},schoolFixed:{view:false,edit:false,log:false}},
+ zhike:{fixed:{view:false,edit:false,log:false},schoolFixed:{view:true,edit:true,log:true}},
+ audit:{fixed:{view:true,edit:false,log:true},schoolFixed:{view:true,edit:false,log:true}}
+}
+function permissionFor(type){return ROLE_PERMISSIONS[permissionRole][type]}
+function renderEntry(){
+ const entry=document.querySelector('#pad-type-entry'),cards=Object.entries(PAD_CONFIG).filter(([type])=>permissionFor(type).view)
+ document.querySelector('#config-view').hidden=true;entry.hidden=false
+ entry.innerHTML=`<div class="entry-intro"><h2 style="margin:0 0 6px">选择要更新的平板类型</h2><div>补发配置、操作日志和权限均按平板类型隔离。选择后才进入对应配置。</div></div><div class="entry-grid" id="pad-type-cards">${cards.map(([type,cfg])=>`<article class="pad-card" id="card-${type}"><div class="pad-icon ${type==='schoolFixed'?'school':''}">${cfg.icon}</div><h2>${cfg.name}</h2><div class="card-desc">${cfg.desc}</div><ul class="rule-list">${cfg.rules.map(x=>`<li>${x}</li>`).join('')}</ul><span class="permission-chip">${cfg.permission}</span><div class="card-actions"><button class="btn primary" style="width:100%" onclick="selectPadType('${type}')">进入配置</button></div></article>`).join('')}</div>${cards.length?'' : '<div class="no-permission">当前账号没有任何平板类型的查看权限</div>'}`
+}
+function selectPadType(type){
+ if(!permissionFor(type).view){showToast('当前账号无该平板类型查看权限');return}
+ selectedPadType=type;fixtures=allFixtures[type];times=allTimes[type];logs=allLogs[type];logArchive=allLogArchives[type]
+ document.querySelector('#pad-type-entry').hidden=true;document.querySelector('#config-view').hidden=false
+ renderContext();renderTable()
+}
+function backToPadType(){selectedPadType=null;closeOverlay();renderEntry()}
+function renderContext(){
+ const cfg=PAD_CONFIG[selectedPadType],school=selectedPadType==='schoolFixed'
+ document.querySelector('#pad-context').innerHTML=`<div class="context-bar" id="pad-type-context"><div class="context-main"><button class="back-link" onclick="backToPadType()">← 返回选择平板类型</button><span class="context-name">${cfg.name}</span><span class="type-badge ${school?'school':''}">${cfg.badge}</span></div><span class="permission-chip">${cfg.permission}</span></div><div class="guard ${school?'school':''}" id="stage-guard"><b>${school?'智课项目规则':'普通一口价规则'}：</b>${school?'允许小初高权益；同步课只向用户当前学段补发，学段未知不补发。':'禁止高中权益；同步课只向用户当前学段补发，学段未知不补发。'}</div>`
+}
+function renderTable(){
+ const perm=permissionFor(selectedPadType),rows=Object.keys(TYPE_CONFIG).map(type=>{const cfg=TYPE_CONFIG[type],items=fixtures[type],actions=[perm.edit?`<button class="link" onclick="openEdit('${type}')">编辑</button>`:'',perm.log?`<button class="link" onclick="openLog('${type}')">操作日志</button>`:''].filter(Boolean).join('');return `<tr id="row-${type==='examPaper'?'exam':'-'+type}"><td class="type">${cfg.name}${type==='vip'?'<div class="readonly">按用户学段匹配</div>':''}</td><td>${items.length?`<div class="tags">${items.map(x=>`<span class="tag">${esc(x.name)}</span>`).join('')}</div>`:'<span class="empty-cell">暂无</span>'}</td><td class="time">${times[type]}</td><td class="actions" id="action-${type==='vip'?'sync':type}">${actions||'<span class="readonly">仅查看</span>'}</td></tr>`}).join('')
+ document.querySelector('#course-table').innerHTML=rows
+}
+function modalFrame(title,body,foot=''){
+ root.innerHTML=`<div class="mask"></div><section class="dialog" id="edit-dialog" data-diff-page="课程编辑弹窗"><header class="dialog-head"><span>${title}</span><button class="icon-btn" onclick="closeOverlay()">×</button></header><div class="dialog-body">${body}</div>${foot?`<footer class="dialog-foot">${foot}</footer>`:''}</section>`
+}
+function openEdit(type){
+ if(!selectedPadType||!permissionFor(selectedPadType).edit){showToast('当前账号无该平板类型编辑权限');return}
+ editingType=type;editMode='add';selectedDelete=new Set();uploads=[];revokeGranted=false;reasonDraft='';renderEdit()
+}
+function renderEdit(){
+ const cfg=TYPE_CONFIG[editingType]
+ const form=editMode==='add'?renderAddFields():renderDeleteFields()
+ modalFrame(`编辑${cfg.name}｜${PAD_CONFIG[selectedPadType].name}`,`
+  <div class="form-row" id="modal-pad-type"><div class="label">平板类型</div><div style="padding-top:8px"><span class="type-badge ${selectedPadType==='schoolFixed'?'school':''}">${PAD_CONFIG[selectedPadType].name}</span><div class="help">本次操作仅影响该平板类型，提交后不可跨类型变更。</div></div></div>
+  <div class="form-row" id="edit-mode"><div class="label required">编辑操作</div><div><div class="seg"><button class="${editMode==='add'?'active':''}" onclick="switchMode('add')">增加</button><button id="delete-mode-button" class="${editMode==='delete'?'active':''}" onclick="switchMode('delete')">删除</button></div></div></div>
+  <div id="course-form">${form}</div>
+  <div id="reason-block"><div class="form-row"><div class="label required">编辑原因</div><div><textarea id="reason-text" maxlength="500" placeholder="请说明本次增删依据，1–500 字">${esc(reasonDraft)}</textarea><div class="help"><span id="reason-count">${reasonDraft.length}</span>/500，文字必填，图片不能替代文字</div><div id="reason-error" class="error"></div></div></div>
+  <div class="form-row" id="image-uploader"><div class="label">原因图片</div><div><div class="upload-grid" id="upload-grid"></div><div class="upload-count">支持 JPEG、PNG、WebP；最多 9 张；单张不超过 10 MB。支持选择或拖入，点击缩略图可预览。</div><div id="upload-error" class="error"></div></div></div></div>
+ `,`<button class="btn" onclick="closeOverlay()">取消</button><button class="btn primary" id="submit-edit" onclick="submitEdit()">确认</button>`)
+ bindReason();renderUploads()
+}
+function switchMode(mode){reasonDraft=document.querySelector('#reason-text')?.value||reasonDraft;editMode=mode;selectedDelete=new Set();revokeGranted=false;renderEdit()}
+function renderAddFields(){
+ const availableStages=selectedPadType==='fixed'?stageOptions.filter(x=>x[0]!=='3'):stageOptions
+ if(editingType==='vip')return `<div class="form-row"><div class="label required">学段</div><select id="stage"><option value="">请选择学段</option>${availableStages.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select><div class="help" style="grid-column:2">${selectedPadType==='fixed'?'普通一口价不允许选择高中学段':'智课项目允许小初高；实际补发仍校验用户学段'}</div></div><div class="form-row"><div class="label required">学科</div><select id="subject"><option value="">请选择学科</option>${subjectOptions.map(x=>`<option value="${x[0]}">${x[1]}</option>`).join('')}</select></div><div id="course-error" class="error" style="margin:-10px 0 14px 92px"></div>`
+ const source=editingType==='specialCourse'?packages:papers,list=selectedPadType==='fixed'?source.filter(x=>!/(高中|中高)/.test(x)):source,label=editingType==='specialCourse'?'培优课':'试卷包'
+ return `<div class="form-row"><div class="label required">${label}</div><div><input id="course-search" class="control" list="course-options" placeholder="请选择${label}"><datalist id="course-options">${list.map(x=>`<option value="${esc(x)}"></option>`).join('')}</datalist><div class="help">支持输入课程名称搜索</div><div id="course-error" class="error"></div></div></div>`
+}
+function renderDeleteFields(){
+ return `<div class="form-row"><div class="label required">删除课程</div><div><input class="control" placeholder="搜索已配置课程" oninput="filterDelete(this.value)"><div class="check-list" id="delete-list">${deleteRows('')}</div><div id="delete-summary" class="drawer-meta" style="margin:10px 0 0">${deleteSummary()}</div><div id="course-error" class="error"></div></div></div><div class="form-row" id="revoke-option"><div class="label required">已发放权益</div><div><label style="margin-right:24px"><input type="radio" name="revoke" value="false" ${!revokeGranted?'checked':''} onchange="setRevokeGranted(false)"> 不回收（默认）</label><label><input type="radio" name="revoke" value="true" ${revokeGranted?'checked':''} onchange="setRevokeGranted(true)"> 同步回收</label><div class="help" id="revoke-summary">${revokeSummary()}</div></div></div>`
+}
+function selectedDeleteItems(){return fixtures[editingType].filter(x=>selectedDelete.has(x.id))}
+function deleteSummary(){return `即将删除的权益数量：<b>${selectedDelete.size}</b> 项`}
+function revokeSummary(){return revokeGranted?`将同步回收这 ${selectedDelete.size} 项权益已发放给用户的授权`:'仅删除补发配置，不回收已发放权益'}
+function deleteRows(q){const items=fixtures[editingType].filter(x=>x.name.toLowerCase().includes(q.toLowerCase()));return items.length?items.map(x=>`<label class="check-row"><input type="checkbox" value="${x.id}" ${selectedDelete.has(x.id)?'checked':''} onchange="toggleDelete('${x.id}',this.checked)"><span>${esc(x.name)}</span></label>`).join(''):'<div class="state-box" style="padding:26px">没有匹配课程</div>'}
+function filterDelete(q){document.querySelector('#delete-list').innerHTML=deleteRows(q)}
+function toggleDelete(id,on){on?selectedDelete.add(id):selectedDelete.delete(id);updateDeleteSummary()}
+function setRevokeGranted(value){revokeGranted=value;updateDeleteSummary()}
+function updateDeleteSummary(){const summary=document.querySelector('#delete-summary'),revoke=document.querySelector('#revoke-summary');if(summary)summary.innerHTML=deleteSummary();if(revoke)revoke.textContent=revokeSummary()}
+function bindReason(){const t=document.querySelector('#reason-text');t.oninput=()=>{reasonDraft=t.value;document.querySelector('#reason-count').textContent=t.value.length};const block=document.querySelector('#image-uploader');block.ondragover=e=>e.preventDefault();block.ondrop=e=>{e.preventDefault();handleFiles(e.dataTransfer.files)}}
+function renderUploads(){
+ const grid=document.querySelector('#upload-grid');if(!grid)return
+ grid.innerHTML=uploads.map((x,i)=>`<div class="upload-item"><img src="${x.url}" alt="${esc(x.name)}" onclick="previewImage('${x.url}')"><button class="remove-img" onclick="removeUpload(${i})">×</button>${x.status!=='success'?`<span class="upload-status ${x.status==='failed'?'failed':''}" ${x.status==='failed'?`onclick="retryUpload(${i})"`:''}>${x.status==='uploading'?'上传中…':'上传失败，重试'}</span>`:''}</div>`).join('')+(uploads.length<9?'<button class="upload-add" onclick="document.querySelector(\'#file-input\').click()" title="添加图片">＋</button>':'')
+ const submit=document.querySelector('#submit-edit');if(submit)submit.disabled=uploads.some(x=>x.status!=='success')
+}
+document.querySelector('#file-input').onchange=e=>{handleFiles(e.target.files);e.target.value=''}
+function handleFiles(files){
+ const err=document.querySelector('#upload-error');if(err)err.textContent=''
+ for(const f of files){if(uploads.length>=9){if(err)err.textContent='最多上传 9 张图片';break}if(!['image/jpeg','image/png','image/webp'].includes(f.type)){if(err)err.textContent=`${f.name}：仅支持 JPEG、PNG、WebP`;continue}if(f.size>10*1024*1024){if(err)err.textContent=`${f.name}：单张图片不能超过 10 MB`;continue}const item={name:f.name,url:URL.createObjectURL(f),size:f.size,status:'uploading'};uploads.push(item);const index=uploads.length-1;setTimeout(()=>{if(!uploads[index])return;uploads[index].status=f.name.toLowerCase().includes('fail')?'failed':'success';renderUploads()},650)}renderUploads()
+}
+function removeUpload(i){URL.revokeObjectURL(uploads[i].url);uploads.splice(i,1);renderUploads()}
+function retryUpload(i){uploads[i].status='uploading';renderUploads();setTimeout(()=>{if(uploads[i]){uploads[i].status='success';renderUploads()}},650)}
+function previewImage(url){document.body.insertAdjacentHTML('beforeend',`<div class="preview" id="preview" onclick="this.remove()"><button>×</button><img src="${url}" onclick="event.stopPropagation()"></div>`)}
+function validateEdit(){
+ const reason=document.querySelector('#reason-text').value.trim();document.querySelector('#reason-error').textContent='';document.querySelector('#course-error').textContent=''
+ if(!reason||reason.length>500){document.querySelector('#reason-error').textContent='请填写 1–500 字的编辑原因';return null}
+ if(editMode==='delete'){if(!selectedDelete.size){document.querySelector('#course-error').textContent='请选择需要删除的课程';return null}return {reason,items:selectedDeleteItems(),revokeGranted,deletedItemCount:selectedDelete.size}}
+ if(editingType==='vip'){const st=document.querySelector('#stage'),su=document.querySelector('#subject');if(!st.value||!su.value){document.querySelector('#course-error').textContent='请选择学段和学科';return null}const name=st.options[st.selectedIndex].text+su.options[su.selectedIndex].text,targetId=`vip#${st.value}-${su.value}`;if(fixtures.vip.some(x=>x.targetId===targetId)){document.querySelector('#course-error').textContent='该课程已在补发配置中';return null}return {reason,items:[{name,targetId}]}}
+ const input=document.querySelector('#course-search').value.trim(),source=editingType==='specialCourse'?packages:papers,allowed=selectedPadType==='fixed'?source.filter(x=>!/(高中|中高)/.test(x)):source;if(!input){document.querySelector('#course-error').textContent=`请选择${editingType==='specialCourse'?'培优课':'试卷包'}`;return null}if(!allowed.includes(input)){document.querySelector('#course-error').textContent='请选择下拉数据源中的有效选项';return null}if(fixtures[editingType].some(x=>x.name===input)){document.querySelector('#course-error').textContent='该课程已在补发配置中';return null}return {reason,items:[{name:input,targetId:String(Date.now())}]}
+}
+function submitEdit(){
+ if(uploads.some(x=>x.status!=='success')){document.querySelector('#upload-error').textContent='请等待图片上传完成或重试失败图片';return}
+ const data=validateEdit();if(!data)return
+ if(editMode==='delete'){pendingAction=data;renderDeleteConfirm(data);return}
+ pendingAction=data;applyEdit()
+}
+function renderDeleteConfirm(data){
+ const names=data.items.map(x=>x.name)
+ modalFrame(`确认删除${TYPE_CONFIG[editingType].name}`,`<div class="confirm-card"><b>请再次确认本次删除影响</b></div><div style="margin-top:18px"><div class="form-row"><div class="label">平板类型</div><div style="padding-top:8px"><b>${PAD_CONFIG[selectedPadType].name}</b></div></div><div class="form-row"><div class="label">删除权益</div><div><div class="course-summary">${names.map(esc).join('、')}</div></div></div><div class="form-row"><div class="label">权益总数</div><div style="padding-top:8px"><b style="font-size:20px;color:#f56c6c">${data.deletedItemCount}</b> 项</div></div><div class="form-row"><div class="label">回收方式</div><div style="padding-top:8px">${data.revokeGranted?'同步回收以上权益已发放给用户的授权':'不回收已发放权益'}</div></div><div class="form-row"><div class="label">编辑原因</div><div class="reason-box">${esc(data.reason)}</div></div>${uploads.length?`<div class="form-row"><div class="label">原因图片</div><div class="upload-grid">${uploads.map(x=>`<div class="upload-item"><img src="${x.url}" alt="${esc(x.name)}" onclick="previewImage('${x.url}')"></div>`).join('')}</div></div>`:''}</div>`,`<button class="btn" onclick="backToEdit()">返回修改</button><button class="btn danger" onclick="applyEdit()">确认删除</button>`)
+ document.querySelector('#edit-dialog').id='delete-confirm-page'
+}
+function openDeleteConfirmDemo(){selectPadType('schoolFixed');openEdit('vip');switchMode('delete');selectedDelete.add('v08');selectedDelete.add('v09');revokeGranted=true;reasonDraft='按智课项目确认删除高中课程';renderEdit();submitEdit()}
+function backToEdit(){renderEdit()}
+function applyEdit(){
+ const data=pendingAction;if(editMode==='delete'){const ids=new Set(data.items.map(x=>x.id));fixtures[editingType]=fixtures[editingType].filter(x=>!ids.has(x.id))}else data.items.forEach(x=>fixtures[editingType].push({id:'n'+Date.now()+Math.random(),targetId:x.targetId,name:x.name,version:1}))
+ logs[editingType].unshift({op:editMode,items:data.items.map(x=>x.name),who:'朱楚茗',time:'2026-07-24 19:20:00',reason:data.reason,proofs:uploads.map(x=>x.url),revokeGranted:!!data.revokeGranted,deletedItemCount:data.deletedItemCount||0,padType:selectedPadType})
+ times[editingType]='2026-07-24 19:20:00';renderTable();closeOverlay();showToast(editMode==='delete'?'删除成功':'增加成功')
+}
+function closeOverlay(){root.innerHTML='';pendingAction=null}
+function showToast(text){document.body.insertAdjacentHTML('beforeend',`<div class="toast" id="toast">${text}</div>`);setTimeout(()=>document.querySelector('#toast')?.remove(),1800)}
+function openLog(type){if(!selectedPadType||!permissionFor(selectedPadType).log){showToast('当前账号无该平板类型日志权限');return}editingType=type;logState='normal';currentLogPage=1;renderLog()}
+function renderLog(){
+ const cfg=TYPE_CONFIG[editingType]
+ root.innerHTML=`<div class="mask" onclick="closeOverlay()"></div><aside class="drawer" id="log-page" data-diff-page="操作日志抽屉"><header class="drawer-head"><span>${PAD_CONFIG[selectedPadType].name}｜${cfg.name}｜操作日志</span><button class="icon-btn" onclick="closeOverlay()">×</button></header><div class="drawer-body" id="log-drawer">${logBody()}</div></aside>`
+}
+function deleteLogSummary(log){if(log.op!=='delete')return '';return `<div class="drawer-meta" style="margin:9px 0 0">删除权益总数：${log.deletedItemCount||log.items.length} 项<br>是否回收已发放权益：${log.revokeGranted?'是':'否'}</div>`}
+function logBody(){
+ if(logState==='loading')return '<div class="state-box">操作日志加载中…</div>'
+ if(logState==='empty')return '<div class="state-box">暂无上线后的操作记录</div>'
+ if(logState==='error')return '<div class="state-box">操作日志加载失败<br><button class="btn retry" onclick="logState=\'normal\';renderLog()">重新加载</button></div>'
+ const pageOne=[...logs[editingType]];while(pageOne.length<20){const i=pageOne.length+1;pageOne.push({op:i%2?'add':'delete',items:[`上线后示例课程 ${i}`],who:'示例运营',time:`2026-07-24 16:${String(44-i).padStart(2,'0')}:00`,reason:'上线后操作日志分页验收数据。',proofs:[],revokeGranted:false,deletedItemCount:i%2?0:1,padType:selectedPadType})}const list=currentLogPage===1?pageOne:logArchive[editingType],total=pageOne.length+logArchive[editingType].length;return `<div class="drawer-meta">平板类型：${PAD_CONFIG[selectedPadType].name}<br>授权类型：${TYPE_CONFIG[editingType].name}<br><span class="help">按操作时间倒序，每页 20 条 · 共 ${total} 条 · 第 ${currentLogPage}/2 页</span></div>${list.map((x,i)=>`<article class="log-card"><div class="log-title"><span class="op-badge ${x.op==='delete'?'delete':''}">${x.op==='delete'?'删除':'增加'}</span>${x.items.map(esc).join('、')}</div><div class="log-sub">${esc(x.who)} · ${x.time}</div><div class="reason-box">${esc(x.reason)}</div>${deleteLogSummary(x)}${x.proofs.length?`<div class="proofs">${x.proofs.map((src,n)=>src==='fixture'?`<div class="proof" onclick="showProof()">原因图片<br>${n+1}</div>`:`<div class="upload-item" style="width:68px;height:68px"><img src="${src}" alt="原因图片${n+1}" onclick="previewImage('${src}')"></div>`).join('')}</div>`:''}</article>`).join('')}<div class="pager"><button class="btn" ${currentLogPage===1?'disabled':''} onclick="switchLogPage(${currentLogPage-1})">上一页</button><button class="btn ${currentLogPage===1?'primary':''}" onclick="switchLogPage(1)">1</button><button class="btn ${currentLogPage===2?'primary':''}" onclick="switchLogPage(2)">2</button><button class="btn" ${currentLogPage===2?'disabled':''} onclick="switchLogPage(${currentLogPage+1})">下一页</button></div>`
+}
+function switchLogPage(page){if(page<1||page>2)return;currentLogPage=page;document.querySelector('#log-drawer').innerHTML=logBody()}
+function showProof(){document.body.insertAdjacentHTML('beforeend','<div class="preview" onclick="this.remove()"><button>×</button><div style="width:70vw;height:70vh;display:grid;place-items:center;color:#fff;border-radius:8px;background:linear-gradient(145deg,#8aa7c2,#344c63);font-size:26px">市场策略确认邮件截图</div></div>')}
+let demoReady=false
+setTimeout(()=>{demoReady=true},0)
+window.DIFF_HOOKS={
+ locate(page){if(page==='page-main'||page==='page-pad-entry'){closeOverlay();backToPadType()}if(page==='page-fixed-config')selectPadType('fixed');if(page==='page-school-config')selectPadType('schoolFixed');if(page==='page-edit'){if(!selectedPadType)selectPadType('fixed');openEdit('vip')}if(page==='page-delete'){if(!selectedPadType)selectPadType('fixed');openEdit('vip');switchMode('delete')}if(page==='page-delete-confirm')openDeleteConfirmDemo();if(page==='page-log'){if(!selectedPadType)selectPadType('fixed');openLog('vip')}},
+ setDemoState(id,value){if(id==='logState'){logState=value;if(document.querySelector('#log-page'))renderLog();else if(demoReady&&selectedPadType)openLog('vip')}if(id==='permissionRole'){permissionRole=value;if(selectedPadType&&!permissionFor(selectedPadType).view)backToPadType();else if(selectedPadType){renderContext();renderTable()}else renderEntry()}}
+}
+renderEntry()
+</script>
+<script>
+window.DIFF_CHANGESET={
+ meta:{
+  sddUrl:"https://guanghe.feishu.cn/docx/VsEjdWO1UoP53GxrYdMcuIl8nWg",
+  sddTitle:"SDD v4.0",
+  demoControls:[
+   {id:"permissionRole",label:"权限身份",default:"admin",options:[{label:"管理员",value:"admin"},{label:"市场运营",value:"market"},{label:"智课运营",value:"zhike"},{label:"审计只读",value:"audit"}]},
+   {id:"logState",label:"操作日志状态",default:"normal",options:[{label:"正常",value:"normal"},{label:"加载",value:"loading"},{label:"空态",value:"empty"},{label:"错误",value:"error"}]}
+  ]
+ },
+ changes:[
+  {id:"pad-entry",page:"page-pad-entry",module:"平板类型入口",target:"#pad-type-cards",level:"page",type:"new",title:"先选择要更新的平板类型",desc:"进入配置前先区分普通一口价与智课项目平板。",before:"页面直接进入一份共享配置，无法判断影响哪类平板。",after:"先选择平板类型，再进入该类型独立配置。",examples:[{case:"普通一口价",input:"市场策略运营选择普通一口价",result:"进入不含高中权益的配置"},{case:"智课项目",input:"智课运营选择智课项目",result:"进入允许小初高的配置"}],sdd:{section:"4.1 平板类型入口",blockId:"doxcnAi2QAqObRziJlVUv8wRwc7"}},
+  {id:"permission-split",page:"page-pad-entry",module:"分类型权限",target:"#pad-type-cards",level:"module",type:"logic",title:"两类平板独立权限",desc:"入口、编辑和日志均按平板类型授权，可分配给不同角色或员工账号。",before:"一条新增权限控制整页操作。",after:"市场运营只操作普通一口价，智课运营只操作智课项目，审计角色仅查看。",examples:[{case:"市场运营",input:"权限身份=市场运营",result:"只显示普通一口价入口"},{case:"智课运营",input:"权限身份=智课运营",result:"只显示智课项目入口"},{case:"审计",input:"权限身份=审计只读",result:"两类可见但无编辑"}],sdd:{section:"4.2 分类型权限",blockId:"doxcnxUdIY0QIxNIdYCyMMjdSae"}},
+  {id:"fixed-context",page:"page-fixed-config",module:"普通一口价隔离",target:"#pad-type-context",level:"module",type:"new",title:"普通一口价独立配置上下文",desc:"页面持续展示当前平板类型，所有增删与日志只影响普通一口价。",before:"普通一口价与智课项目共用配置。",after:"普通一口价独立配置且禁止高中权益。",sdd:{section:"4.3 分类型配置展示",blockId:"doxcnpgTprBack6S32z8nSAadwR"}},
+  {id:"fixed-stage",page:"page-fixed-config",module:"学段匹配",target:"#stage-guard",level:"module",type:"logic",title:"普通一口价禁止高中并按学段补发",desc:"同步课仅补发与用户当前学段一致的权益；学段未知不补发。",before:"读取全部课程直接生成授权，初中用户可能看到高中同步课。",after:"小学只得小学、初中只得初中；高中配置写入和运行时均被拒绝。",examples:[{case:"初中用户",input:"配置含小学数学、初中数学",result:"仅补发初中数学"},{case:"学段未知",input:"用户学段=UNKNOWN",result:"不补发同步课并记录 STAGE_UNKNOWN"}],sdd:{section:"5. 同步课学段匹配",blockId:"doxcn1aHfKxfBBkG1IhNVsedIqd"}},
+  {id:"school-context",page:"page-school-config",module:"智课项目隔离",target:"#pad-type-context",level:"module",type:"new",title:"智课项目平板独立配置",desc:"复用 isSchoolFixed 识别项目平板，允许配置小学、初中和高中权益。",before:"与普通一口价共用一份课程列表。",after:"智课项目使用 SCHOOL_FIXED 配置集，高中权益不再影响普通一口价。",examples:[{case:"高中用户",input:"isSchoolFixed=true｜用户学段=高中",result:"仅补发智课项目配置中的高中同步课"}],sdd:{section:"4.3 分类型配置展示",blockId:"doxcnpgTprBack6S32z8nSAadwR"}},
+  {id:"operation-entry",page:"page-fixed-config",module:"操作入口",target:"#action-sync",level:"field",type:"modify",title:"新增改为编辑与操作日志",desc:"每个授权类型独立进入课程编辑和该类型日志。",before:"操作列仅有“新增”。",after:"操作列展示“编辑｜操作日志”。",sdd:{section:"4.4 增加权益",blockId:"doxcn6XSofB8qko2omhc7YtRAdh"}},
+  {id:"modal-pad-type",page:"page-edit",module:"操作类型锁定",target:"#modal-pad-type",level:"field",type:"new",title:"弹窗锁定平板类型",desc:"增删提交时持续展示平板类型，避免在错误配置集操作。",before:"新增请求不带平板类型。",after:"请求携带 padType，且后端按账号权限再次校验。",sdd:{section:"4.4 增加权益",blockId:"doxcn6XSofB8qko2omhc7YtRAdh"}},
+  {id:"mode-add",page:"page-edit",module:"课程增删",target:"#edit-mode",level:"module",type:"flow",title:"增加沿用线上新增交互",desc:"同步课沿用学段学科，培优课和试卷包沿用可搜索单选。",before:"新增不区分平板类型。",after:"普通一口价过滤高中选项，智课项目允许小初高。",examples:[{case:"普通一口价",input:"尝试选择高中数学",result:"高中学段不在选项中"},{case:"智课项目",input:"选择高中数学",result:"允许保存到 SCHOOL_FIXED"}],sdd:{section:"4.4 增加权益",blockId:"doxcn6XSofB8qko2omhc7YtRAdh"}},
+  {id:"delete-entry",page:"page-edit",module:"删除操作入口",target:"#delete-mode-button",level:"field",type:"new",title:"新增删除操作",desc:"编辑弹窗新增“删除”入口，仅展示当前平板类型的配置。",before:"线上弹窗只支持增加。",after:"可删除当前类型权益并选择是否回收已发放权益。",sdd:{section:"4.5 删除权益与回收",blockId:"doxcnzlHq00QIHoNFv8j8ST21Gb"}},
+  {id:"mode-delete",page:"page-delete",module:"课程删除",target:"#delete-summary",level:"module",type:"new",title:"实时更新删除权益数量",desc:"每次勾选或取消均更新即将删除数量。",before:"没有删除能力。",after:"实时展示“即将删除的权益数量：N 项”。",examples:[{case:"勾选",input:"依次勾选 2 项",result:"数量由 0 更新为 1、2"}],sdd:{section:"4.5 删除权益与回收",blockId:"doxcnzlHq00QIHoNFv8j8ST21Gb"}},
+  {id:"revoke-rights",page:"page-delete",module:"权益回收",target:"#revoke-option",level:"field",type:"new",title:"选择是否回收已发放权益",desc:"默认不回收；二次确认与日志均记录选择。",before:"业务删除必须求助产研。",after:"业务可自助删除并明确回收策略。",sdd:{section:"4.5 删除权益与回收",blockId:"doxcnzlHq00QIHoNFv8j8ST21Gb"}},
+  {id:"delete-confirm",page:"page-delete-confirm",module:"二次确认",target:"#delete-confirm-page",level:"page",type:"flow",title:"替换为删除二次确认",desc:"展示平板类型、权益清单、总数、回收选择、原因与图片。",before:"无删除确认。",after:"返回修改保留输入；确认后才执行。",sdd:{section:"4.5 删除权益与回收",blockId:"doxcnzlHq00QIHoNFv8j8ST21Gb"}},
+  {id:"reason",page:"page-edit",module:"编辑原因",target:"#reason-block",level:"field",type:"new",title:"文字原因必填",desc:"每次增加或删除均需说明业务依据。",before:"新增不要求原因。",after:"原因去除首尾空格后须为 1–500 字。",sdd:{section:"4.5 删除权益与回收",blockId:"doxcnzlHq00QIHoNFv8j8ST21Gb"}},
+  {id:"images",page:"page-edit",module:"编辑原因",target:"#image-uploader",level:"module",type:"new",title:"社交式原因图片",desc:"支持选择、拖入、预览、逐张删除和失败重试。",before:"不支持图片凭证。",after:"JPEG/PNG/WebP，最多 9 张，单张不超过 10 MB。",sdd:{section:"4.5 删除权益与回收",blockId:"doxcnzlHq00QIHoNFv8j8ST21Gb"}},
+  {id:"logs",page:"page-log",module:"操作日志",target:"#log-drawer",level:"page",type:"new",title:"日志按平板类型隔离",desc:"记录 padType、增删项、操作人、原因图片、回收选择与权益数量。",before:"无法追溯且两类平板混用。",after:"普通一口价与智课项目日志互不混入。",sdd:{section:"4.6 操作日志",blockId:"doxcnLxQwDv3XbETszUh5BLVr7c"}}
+ ]
+}
+</script>
+<script>
+/* ============ 原型变更标注引擎 diff-annotator v3（零依赖，可整段复用） ============
+   布局参考：固定右侧深色批注栏 + 页面编号锚点 + canvas 连线（axure 批注风格）
+   规则：默认不显示任何标注；按模块勾选显示；只联动 SDD（不展示 PRD） */
+(function () {
+  const CS = window.DIFF_CHANGESET;
+  if (!CS || !CS.changes || !CS.changes.length) return;
+
+  const TYPE_LABEL = { new: "新增", modify: "修改", copy: "文案", enum: "口径", logic: "逻辑", flow: "流程", remove: "删除" };
+  const LEVEL_LABEL = { page: "页面级", module: "模块级", field: "字段级" };
+  const LS_KEY = "diff-annotator-v3:" + location.pathname;
+  const PANEL_W = 360;
+
+  CS.changes.forEach((c, i) => { c._no = String(i + 1).padStart(2, "0"); });
+
+  /* ---------- 状态 ---------- */
+  const moduleKeys = [];
+  const byModule = {};
+  CS.changes.forEach(c => {
+    const key = c.page + "::" + c.module;
+    if (!byModule[key]) { byModule[key] = []; moduleKeys.push(key); }
+    byModule[key].push(c);
+  });
+  const byTarget = {};
+  CS.changes.forEach(c => { (byTarget[c.target] = byTarget[c.target] || []).push(c); });
+  const keyOf = c => c.page + "::" + c.module;
+
+  let state = { open: true, enabled: {}, demo: {} };
+  try { state = Object.assign(state, JSON.parse(localStorage.getItem(LS_KEY) || "{}")); } catch (e) {}
+  state.enabled = state.enabled || {};
+  state.demo = state.demo || {};
+  moduleKeys.forEach(k => { if (!(k in state.enabled)) state.enabled[k] = false; });
+  const demoControls = Array.isArray(CS.meta.demoControls) ? CS.meta.demoControls : [];
+  demoControls.forEach(control => {
+    if (!(control.id in state.demo)) {
+      const firstOption = Array.isArray(control.options) ? control.options[0] : null;
+      state.demo[control.id] = control.default ?? (firstOption && firstOption.value);
+    }
+  });
+  const persist = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} };
+  const isOn = c => state.enabled[keyOf(c)];
+
+  function pageName(pid) {
+    const el = document.getElementById(pid);
+    return (el && el.getAttribute("data-diff-page")) || pid;
+  }
+
+  /* ---------- 样式 ---------- */
+  const style = document.createElement("style");
+  style.setAttribute("data-da", "1");
+  style.textContent = `
+  :root { --da-navy:#071d2f; --da-blue:#1479d1; --da-blue-soft:#2c93e8; --da-sky:#72c4ff; --da-panel-w:${PANEL_W}px; }
+  html.da-open { overflow-x:auto !important; }
+  body.da-open { padding-right:0 !important; overflow-x:visible !important; }
+  .da-scroll-spacer { position:absolute; top:0; width:var(--da-panel-w); height:1px; pointer-events:none; visibility:hidden; }
+
+  .da-launch { position:fixed; top:14px; right:14px; z-index:1200; display:inline-flex; align-items:center; gap:8px;
+    background:var(--da-navy); color:#fff; border:0; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:600;
+    cursor:pointer; box-shadow:0 6px 20px rgba(7,29,47,.28); }
+  .da-launch .da-launch-n { color:var(--da-sky); font-weight:700; }
+
+  .da-panel { position:fixed; z-index:1100; top:0; right:0; bottom:0; width:var(--da-panel-w); overflow-y:auto;
+    color:rgba(255,255,255,.78); border-left:1px solid rgba(255,255,255,.08);
+    background:radial-gradient(circle at 100% 0, rgba(44,147,232,.16), transparent 20rem), var(--da-navy);
+    box-shadow:-18px 0 50px rgba(7,29,47,.12); font-size:12px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.2) transparent; }
+  .da-panel-inner { padding:20px 20px 40px; }
+  .da-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .da-top h2 { margin:0; color:#fff; font-size:17px; font-weight:740; letter-spacing:-.01em; }
+  .da-top h2 small { margin-left:6px; color:var(--da-sky); font-size:12px; font-weight:700; }
+  .da-top-actions { display:flex; align-items:center; gap:8px; }
+  .da-sdd-doc { color:var(--da-sky); font-size:11px; font-weight:650; text-decoration:none; white-space:nowrap; }
+  .da-sdd-doc:hover { text-decoration:underline; }
+  .da-hide { width:28px; height:28px; flex:0 0 auto; border:1px solid rgba(255,255,255,.14); border-radius:8px;
+    color:#fff; background:rgba(255,255,255,.06); font-size:14px; line-height:1; cursor:pointer; }
+  .da-hide:hover { background:rgba(255,255,255,.12); }
+
+  .da-demo { margin-bottom:12px; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:11px; background:rgba(255,255,255,.045); }
+  .da-demo-title { margin-bottom:8px; color:#fff; font-size:12px; font-weight:700; }
+  .da-demo-row + .da-demo-row { margin-top:9px; }
+  .da-demo-label { display:block; margin-bottom:5px; color:rgba(255,255,255,.45); font-size:10px; font-weight:650; }
+  .da-segments { display:flex; padding:2px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(5,17,28,.4); }
+  .da-segment { min-width:0; flex:1; min-height:28px; border:0; border-radius:6px; color:rgba(255,255,255,.58);
+    background:transparent; font-size:11px; cursor:pointer; }
+  .da-segment:hover { color:#fff; }
+  .da-segment.da-selected { color:#fff; background:rgba(44,147,232,.42); box-shadow:0 1px 5px rgba(0,0,0,.16); }
+
+  .da-mods { margin-bottom:20px; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:11px; background:rgba(255,255,255,.045); }
+  .da-mods-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .da-mods-head span { color:#fff; font-size:12px; font-weight:700; }
+  .da-bulk { display:flex; gap:10px; }
+  .da-bulk button { border:0; background:none; padding:0; color:rgba(255,255,255,.5); font-size:11px; cursor:pointer; }
+  .da-bulk button:hover { color:var(--da-sky); }
+  .da-mod-group { margin-top:8px; }
+  .da-mod-group-name { margin-bottom:2px; color:rgba(255,255,255,.4); font-size:10px; font-weight:650; letter-spacing:.04em; }
+  .da-mod { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:7px; cursor:pointer; }
+  .da-mod:hover { background:rgba(255,255,255,.06); }
+  .da-mod input { margin:0; flex:0 0 auto; accent-color:var(--da-blue-soft); cursor:pointer; }
+  .da-mod-name { flex:1; min-width:0; color:rgba(255,255,255,.86); font-size:12px; font-weight:550; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .da-mod-types { flex:0 0 auto; color:rgba(255,255,255,.34); font-size:10px; }
+
+  .da-note-section { margin-bottom:18px; }
+  .da-note-heading { display:flex; align-items:center; gap:9px; margin-bottom:10px; color:#fff; font-size:12px; font-weight:700; }
+  .da-note-heading::after { height:1px; flex:1; background:rgba(255,255,255,.1); content:""; }
+  .da-empty { padding:10px 2px; color:rgba(255,255,255,.35); font-size:11px; }
+
+  .da-note { position:relative; scroll-margin-top:16px; margin-bottom:9px; padding:12px 13px; border:1px solid rgba(255,255,255,.1);
+    border-radius:11px; background:rgba(255,255,255,.045); cursor:pointer;
+    transition:border-color .18s ease, background .18s ease, transform .18s ease; }
+  .da-note::before { content:""; position:absolute; top:23px; left:-15px; width:14px; height:1px;
+    background:rgba(114,196,255,.32); transition:background .16s ease, box-shadow .16s ease; }
+  .da-note::after { content:""; position:absolute; top:20px; left:-19px; width:7px; height:7px; border-radius:50%;
+    border:1px solid rgba(114,196,255,.55); background:var(--da-navy); transition:background .16s ease, box-shadow .16s ease; }
+  .da-note:hover, .da-note.da-active { border-color:rgba(114,196,255,.65); background:rgba(44,147,232,.13); transform:translateX(-3px); }
+  .da-note.da-active::before { background:#72c4ff; box-shadow:0 0 12px rgba(44,147,232,.62); }
+  .da-note.da-active::after { background:#72c4ff; box-shadow:0 0 0 4px rgba(44,147,232,.18); }
+  .da-note-head { display:flex; align-items:center; gap:9px; margin-bottom:6px; color:#fff; font-size:12px; font-weight:700; }
+  .da-no { display:inline-grid; width:22px; height:22px; flex:0 0 auto; place-items:center; border:1px solid rgba(114,196,255,.3);
+    border-radius:50%; color:#8fd1ff; background:rgba(44,147,232,.09); font-size:9px; font-weight:800; }
+  .da-note.da-active .da-no { color:var(--da-navy); border-color:#bfe6ff; background:#bfe6ff; }
+  .da-note-kind { flex:0 0 auto; margin-left:auto; color:rgba(255,255,255,.35); font-size:10px; font-weight:500; }
+  .da-note p { margin:0; color:rgba(255,255,255,.62); font-size:11px; line-height:1.75; }
+  .da-note-ba { margin-top:8px; padding:7px 9px; border-radius:7px; background:rgba(5,17,28,.52); font-size:10px; line-height:1.7; color:rgba(255,255,255,.55); }
+  .da-note-ba b { color:#bfe6ff; font-weight:650; }
+  .da-examples { margin-top:8px; overflow:hidden; border:1px solid rgba(114,196,255,.15); border-radius:7px; background:rgba(5,17,28,.34); }
+  .da-example { display:grid; grid-template-columns:58px minmax(0,1fr); gap:4px 8px; padding:7px 9px; font-size:10px; line-height:1.55; }
+  .da-example + .da-example { border-top:1px solid rgba(255,255,255,.07); }
+  .da-example-case { grid-row:1 / span 2; color:#bfe6ff; font-weight:650; }
+  .da-example-input { min-width:0; color:#fff; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap:anywhere; }
+  .da-example-result { color:rgba(255,255,255,.5); }
+  .da-example-result::before { content:"→ "; color:rgba(114,196,255,.55); }
+  .da-note-sdd { display:inline-flex; align-items:center; gap:5px; margin-top:9px; color:var(--da-sky); font-size:10.5px;
+    font-weight:650; text-decoration:none; }
+  .da-note-sdd:hover { text-decoration:underline; }
+
+  .da-anchors { position:absolute; left:0; top:0; width:0; height:0; z-index:1050; pointer-events:none; }
+  .da-anchor { position:absolute; display:grid; width:22px; height:22px; place-items:center; border:1px solid rgba(20,121,209,.28);
+    border-radius:50%; color:var(--da-blue); background:#eff8ff; font-size:9px; font-weight:800; cursor:pointer;
+    pointer-events:auto; box-shadow:0 2px 8px rgba(7,29,47,.14); transition:transform .15s ease, background .15s ease; }
+  .da-anchor:hover { transform:scale(1.1); }
+  .da-anchor.da-active { color:#fff; border-color:var(--da-blue-soft); background:var(--da-blue);
+    box-shadow:0 0 0 4px rgba(44,147,232,.16), 0 5px 14px rgba(20,121,209,.24); transform:scale(1.08); }
+
+  .da-outlined { outline:1.5px dashed rgba(20,121,209,.45) !important; outline-offset:2px; }
+  @keyframes da-pulse { 0% { box-shadow:0 0 0 0 rgba(44,147,232,.4); } 100% { box-shadow:0 0 0 14px rgba(44,147,232,0); } }
+  .da-pulsing { animation:da-pulse .9s ease-out 2; }
+
+  .da-wires { position:fixed; inset:0; z-index:1040; width:100vw; height:100vh; pointer-events:none; }
+
+  @media print { .da-panel, .da-anchors, .da-wires, .da-launch, .da-scroll-spacer { display:none !important; }
+    html.da-open { overflow-x:visible !important; } body.da-open { padding-right:0 !important; } }
+  `;
+  document.head.appendChild(style);
+
+  /* ---------- DOM 骨架 ---------- */
+  const launcher = document.createElement("button");
+  launcher.className = "da-launch";
+  launcher.setAttribute("data-da", "1");
+  launcher.innerHTML = '变更导览 <span class="da-launch-n">' + CS.changes.length + "</span>";
+  document.body.appendChild(launcher);
+
+  const panel = document.createElement("aside");
+  panel.className = "da-panel";
+  panel.setAttribute("data-da", "1");
+  document.body.appendChild(panel);
+
+  const scrollSpacer = document.createElement("div");
+  scrollSpacer.className = "da-scroll-spacer";
+  scrollSpacer.setAttribute("data-da", "1");
+  document.body.appendChild(scrollSpacer);
+
+  const anchorLayer = document.createElement("div");
+  anchorLayer.className = "da-anchors";
+  anchorLayer.setAttribute("data-da", "1");
+  document.body.appendChild(anchorLayer);
+
+  const wires = document.createElement("canvas");
+  wires.className = "da-wires";
+  wires.setAttribute("data-da", "1");
+  document.body.appendChild(wires);
+  const wctx = wires.getContext("2d");
+
+  let activeId = null;   // 悬停中的变更
+  let pinnedId = null;   // 点击固定的变更（再次点击取消）
+
+  /* ---------- 面板渲染 ---------- */
+  const pages = [];
+  const modsByPage = {};
+  moduleKeys.forEach(k => {
+    const p = k.split("::")[0];
+    if (!modsByPage[p]) { modsByPage[p] = []; pages.push(p); }
+    modsByPage[p].push(k);
+  });
+
+  function renderPanel() {
+    let html = '<div class="da-panel-inner">';
+    html += '<div class="da-top"><h2>变更导览<small>' + CS.changes.length + "</small></h2><div class=\"da-top-actions\">";
+    if (CS.meta.sddUrl) html += '<a class="da-sdd-doc" target="_blank" href="' + CS.meta.sddUrl + '">' + (CS.meta.sddTitle || "SDD") + " ↗</a>";
+    html += '<button class="da-hide" title="收起">✕</button></div></div>';
+
+    if (demoControls.length && window.DIFF_HOOKS && typeof window.DIFF_HOOKS.setDemoState === "function") {
+      html += '<section class="da-demo"><div class="da-demo-title">演示状态</div>';
+      demoControls.forEach(control => {
+        html += '<div class="da-demo-row"><span class="da-demo-label">' + control.label + '</span><div class="da-segments">';
+        (control.options || []).forEach(option => {
+          const selected = state.demo[control.id] === option.value;
+          html += '<button class="da-segment' + (selected ? " da-selected" : "") + '" data-demo-control="' + control.id +
+            '" data-demo-value="' + option.value + '">' + option.label + "</button>";
+        });
+        html += "</div></div>";
+      });
+      html += "</section>";
+    }
+
+    html += '<div class="da-mods"><div class="da-mods-head"><span>模块</span><span class="da-bulk"><button data-all="on">全部显示</button><button data-all="off">全部隐藏</button></span></div>';
+    pages.forEach(p => {
+      html += '<div class="da-mod-group"><div class="da-mod-group-name">' + pageName(p) + "</div>";
+      modsByPage[p].forEach(k => {
+        const mod = k.split("::")[1];
+        const types = [...new Set(byModule[k].map(c => TYPE_LABEL[c.type] || "变更"))].join("·");
+        html += '<label class="da-mod" data-key="' + k + '"><input type="checkbox"' + (state.enabled[k] ? " checked" : "") + ">";
+        html += '<span class="da-mod-name">' + mod + '</span><span class="da-mod-types">' + types + "</span></label>";
+      });
+      html += "</div>";
+    });
+    html += "</div>";
+
+    const anyOn = CS.changes.some(isOn);
+    if (!anyOn) {
+      html += '<div class="da-empty">勾选模块后展示对应标注与连线</div>';
+    } else {
+      pages.forEach(p => {
+        const list = CS.changes.filter(c => c.page === p && isOn(c));
+        if (!list.length) return;
+        html += '<section class="da-note-section"><h3 class="da-note-heading">' + pageName(p) + "</h3>";
+        list.forEach(c => {
+          html += '<article class="da-note" id="da-note-' + c.id + '" data-chg="' + c.id + '">';
+          html += '<div class="da-note-head"><span class="da-no">' + c._no + '</span><span>' + c.title + '</span>';
+          html += '<span class="da-note-kind">' + (TYPE_LABEL[c.type] || "变更") + " · " + (LEVEL_LABEL[c.level] || "") + "</span></div>";
+          html += "<p>" + c.desc + "</p>";
+          if (c.before && c.after) html += '<div class="da-note-ba"><b>前</b>　' + c.before + '<br><b>后</b>　' + c.after + "</div>";
+          if (Array.isArray(c.examples) && c.examples.length) {
+            html += '<div class="da-examples">';
+            c.examples.forEach(example => {
+              html += '<div class="da-example"><span class="da-example-case">' + example.case + '</span>' +
+                '<code class="da-example-input">' + example.input + '</code>' +
+                '<span class="da-example-result">' + example.result + "</span></div>";
+            });
+            html += "</div>";
+          }
+          if (c.sdd && CS.meta.sddUrl && c.sdd.blockId) {
+            html += '<a class="da-note-sdd" target="_blank" href="' + CS.meta.sddUrl + "#" + c.sdd.blockId + '">SDD · ' + c.sdd.section + " ↗</a>";
+          } else if (c.sdd && c.sdd.section) {
+            html += '<span class="da-note-sdd" style="color:rgba(255,255,255,.4)">SDD · ' + c.sdd.section + "</span>";
+          }
+          html += "</article>";
+        });
+        html += "</section>";
+      });
+    }
+    html += "</div>";
+    panel.innerHTML = html;
+    bindPanel();
+  }
+
+  function bindPanel() {
+    panel.querySelector(".da-hide").addEventListener("click", () => setOpen(false));
+    panel.querySelectorAll("[data-demo-control]").forEach(button => {
+      button.addEventListener("click", () => {
+        const controlId = button.getAttribute("data-demo-control");
+        const value = button.getAttribute("data-demo-value");
+        state.demo[controlId] = value;
+        persist();
+        window.DIFF_HOOKS.setDemoState(controlId, value);
+        renderPanel();
+        setTimeout(scheduleUpdate, 80);
+      });
+    });
+    panel.querySelectorAll(".da-mod input").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const k = cb.closest(".da-mod").getAttribute("data-key");
+        state.enabled[k] = cb.checked;
+        if (pinnedId && !isOn(CS.changes.find(x => x.id === pinnedId))) pinnedId = null;
+        persist();
+        renderPanel();
+        syncAnnotations();
+        applyActive();
+        if (cb.checked) locateModule(k);
+      });
+    });
+    panel.querySelectorAll("[data-all]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const on = btn.getAttribute("data-all") === "on";
+        moduleKeys.forEach(k => { state.enabled[k] = on; });
+        if (!on) pinnedId = null;
+        persist(); renderPanel(); syncAnnotations(); applyActive();
+      });
+    });
+    panel.querySelectorAll(".da-note").forEach(card => {
+      const id = card.getAttribute("data-chg");
+      card.addEventListener("mouseenter", () => setActive(id));
+      card.addEventListener("mouseleave", () => clearActive(id));
+      card.addEventListener("click", e => {
+        if (e.target.closest("a")) return;
+        const c = CS.changes.find(x => x.id === id);
+        if (!c) return;
+        pinnedId = id;
+        applyActive();
+        locateChange(c);
+      });
+    });
+    panel.addEventListener("scroll", scheduleUpdate, { passive: true });
+  }
+
+  /* ---------- 锚点浮层 ---------- */
+  const anchorEls = {};   // change.id -> { el, last:{x,y,shown} }
+  CS.changes.forEach(c => {
+    const a = document.createElement("button");
+    a.className = "da-anchor";
+    a.setAttribute("data-da", "1");
+    a.textContent = c._no;
+    a.style.display = "none";
+    a.addEventListener("mouseenter", () => setActive(c.id));
+    a.addEventListener("mouseleave", () => clearActive(c.id));
+    a.addEventListener("click", () => {
+      togglePin(c.id);
+      if (pinnedId === c.id) {
+        const card = document.getElementById("da-note-" + c.id);
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+    anchorLayer.appendChild(a);
+    anchorEls[c.id] = { el: a, last: { x: -1, y: -1, shown: false } };
+  });
+
+  function targetVisible(el, rect) {
+    if (!el.getClientRects().length) return false;
+    // 遮挡检测（仅当取样点在视口内才有意义）：取样点若不属于目标元素（如被弹窗蒙层盖住），视为不可见。
+    // 目标滚出视口时不做钳制、不强行隐藏——锚点随文档自然滚出即可。
+    const inViewport = (x, y) => x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    if (inViewport(cx, cy)) {
+      const top = document.elementFromPoint(cx, cy);
+      if (top && (el === top || el.contains(top) || top.contains(el))) return true;
+      const sx = rect.left + 10, sy = rect.top + 10;
+      if (inViewport(sx, sy)) {
+        const top2 = document.elementFromPoint(sx, sy);
+        return !!(top2 && (el === top2 || el.contains(top2) || top2.contains(el)));
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function syncAnnotations() {
+    Object.keys(byTarget).forEach(t => {
+      const el = document.querySelector(t);
+      if (!el) return;
+      const on = byTarget[t].some(isOn) && state.open;
+      el.classList.toggle("da-outlined", on);
+    });
+    scheduleUpdate();
+  }
+
+  function updateOverlay() {
+    // 锚点钉在目标左上角，使用文档坐标（以锚点层自身为基准），随页面原生滚动——
+    // 杜绝 fixed 浮层"滚动事件追帧"造成的抖动漂移，也不做视口钳制（滚出即自然滚出）
+    const layerRect = anchorLayer.getBoundingClientRect();
+    Object.keys(byTarget).forEach(t => {
+      const el = document.querySelector(t);
+      const rect = el ? el.getBoundingClientRect() : null;
+      const visible = el && state.open && rect && targetVisible(el, rect);
+      byTarget[t].forEach((c, slot) => {
+        const rec = anchorEls[c.id];
+        const show = visible && isOn(c);
+        if (!show) {
+          if (rec.last.shown) { rec.el.style.display = "none"; rec.last.shown = false; }
+          return;
+        }
+        const x = Math.max(rect.left - 11, 2) + slot * 25 - layerRect.left;
+        const y = rect.top - 11 - layerRect.top;
+        if (!rec.last.shown) { rec.el.style.display = "grid"; rec.last.shown = true; }
+        if (rec.last.x !== x || rec.last.y !== y) {
+          rec.el.style.left = x + "px";
+          rec.el.style.top = y + "px";
+          rec.last.x = x; rec.last.y = y;
+        }
+      });
+    });
+    drawWires();
+  }
+
+  /* ---------- 连线 ---------- */
+  function setWireSize() {
+    const ratio = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round(innerWidth * ratio));
+    const h = Math.max(1, Math.round(innerHeight * ratio));
+    if (wires.width !== w || wires.height !== h) { wires.width = w; wires.height = h; }
+    wctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+
+  function wirePath(sx, sy, ex, ey, active) {
+    const gap = Math.max(38, ex - sx);
+    wctx.save();
+    wctx.beginPath();
+    wctx.moveTo(sx, sy);
+    wctx.bezierCurveTo(sx + Math.min(120, gap * 0.42), sy, ex - Math.min(82, gap * 0.28), ey, ex, ey);
+    wctx.lineWidth = active ? 2 : 1.3;
+    wctx.strokeStyle = active ? "rgba(44,147,232,.96)" : "rgba(44,147,232,.42)";
+    wctx.shadowColor = active ? "rgba(44,147,232,.7)" : "transparent";
+    wctx.shadowBlur = active ? 9 : 0;
+    wctx.stroke();
+    wctx.shadowBlur = 0;
+    wctx.beginPath(); wctx.arc(sx, sy, active ? 3.2 : 2.1, 0, Math.PI * 2);
+    wctx.fillStyle = active ? "#2c93e8" : "rgba(44,147,232,.5)"; wctx.fill();
+    wctx.beginPath(); wctx.arc(ex - 1, ey, active ? 3 : 2, 0, Math.PI * 2);
+    wctx.fillStyle = active ? "#72c4ff" : "rgba(114,196,255,.45)"; wctx.fill();
+    wctx.restore();
+  }
+
+  function drawWires() {
+    setWireSize();
+    wctx.clearRect(0, 0, innerWidth, innerHeight);
+    if (!state.open) return;
+    // 一个编号一条线：固定态优先于悬停态（滚动中误触发的 hover 不得篡改已选中的连线）
+    const id = pinnedId || activeId;
+    if (!id) return;
+    const c = CS.changes.find(x => x.id === id);
+    if (!c || !isOn(c)) return;
+    const rec = anchorEls[id];
+    if (!rec.last.shown) return;
+    // 起点取锚点实时视口坐标（锚点在文档流中，滚动时坐标必须现算，不能用缓存）
+    const ar = rec.el.getBoundingClientRect();
+    if (ar.bottom < 0 || ar.top > innerHeight) return; // 锚点滚出视口则不画线
+    const card = document.getElementById("da-note-" + id);
+    if (!card) return;
+    const cr = card.querySelector(".da-no").getBoundingClientRect();
+    if (cr.bottom < 40 || cr.top > innerHeight - 8) return;
+    wirePath(ar.right, ar.top + ar.height / 2, innerWidth - PANEL_W + 1, cr.top + cr.height / 2, true);
+  }
+
+  /* ---------- 高亮联动 ---------- */
+  function applyActive() {
+    // 固定态优先：钉住某编号后，悬停其他锚点不改变高亮与连线
+    const id = pinnedId || activeId;
+    CS.changes.forEach(c => {
+      anchorEls[c.id].el.classList.toggle("da-active", c.id === id);
+      const card = document.getElementById("da-note-" + c.id);
+      if (card) card.classList.toggle("da-active", c.id === id);
+    });
+    drawWires();
+  }
+  function setActive(id) { activeId = id; applyActive(); }
+  function clearActive(id) { if (activeId === id) { activeId = null; applyActive(); } }
+  function togglePin(id) {
+    pinnedId = pinnedId === id ? null : id;
+    applyActive();
+  }
+
+  /* ---------- 定位 ---------- */
+  function locateChange(c) {
+    if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.locate === "function") window.DIFF_HOOKS.locate(c.page);
+    else if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.showPage === "function") window.DIFF_HOOKS.showPage(c.page);
+    setTimeout(() => {
+      const el = document.querySelector(c.target);
+      if (!el) return;
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      el.classList.remove("da-pulsing"); void el.offsetWidth; el.classList.add("da-pulsing");
+      setTimeout(() => el.classList.remove("da-pulsing"), 2000);
+      scheduleUpdate();
+    }, 160);
+  }
+  function locateModule(key) { locateChange(byModule[key][0]); }
+
+  /* ---------- 内容视口 ---------- */
+  function syncScrollSpace() {
+    if (!state.open) return;
+    scrollSpacer.style.display = "none";
+    const contentWidth = Math.max(document.documentElement.clientWidth, document.documentElement.scrollWidth);
+    scrollSpacer.style.left = contentWidth + "px";
+    scrollSpacer.style.display = "block";
+  }
+
+  /* ---------- 开关 ---------- */
+  function setOpen(open) {
+    state.open = open;
+    persist();
+    document.documentElement.classList.toggle("da-open", open);
+    document.body.classList.toggle("da-open", open);
+    panel.style.display = open ? "" : "none";
+    launcher.style.display = open ? "none" : "";
+    if (open) {
+      syncScrollSpace();
+    } else {
+      scrollSpacer.style.display = "none";
+      if (scrollX) window.scrollTo(0, scrollY);
+    }
+    syncAnnotations();
+  }
+  launcher.addEventListener("click", () => setOpen(true));
+
+  /* ---------- 更新调度 ---------- */
+  let frame = 0;
+  function scheduleUpdate() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(updateOverlay);
+  }
+  window.addEventListener("scroll", scheduleUpdate, { passive: true, capture: true });
+  window.addEventListener("resize", () => {
+    syncScrollSpace();
+    scheduleUpdate();
+  }, { passive: true });
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-da]")) return;
+    setTimeout(scheduleUpdate, 60);
+    setTimeout(scheduleUpdate, 360);
+  }, true);
+  const mo = new MutationObserver(records => {
+    if (records.every(r => r.target && r.target.closest && r.target.closest("[data-da]"))) return;
+    syncScrollSpace();
+    scheduleUpdate();
+  });
+  mo.observe(document.body, { attributes: true, attributeFilter: ["class", "style"], childList: true, subtree: true });
+
+  /* ---------- 初始 ---------- */
+  if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.setDemoState === "function") {
+    demoControls.forEach(control => window.DIFF_HOOKS.setDemoState(control.id, state.demo[control.id]));
+  }
+  renderPanel();
+  setOpen(state.open);
+  setTimeout(scheduleUpdate, 150);
+})();
+
+</script>
+</body>
+</html>
