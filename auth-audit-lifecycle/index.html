@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>原型｜运营后台 · 内容权限全生命周期审计 v8.5</title>
+<title>原型｜运营后台 · 内容权限全生命周期审计 v9.0</title>
 <style>
   :root {
     --ink:#1a1f2b; --ink-2:#3f4859; --muted:#6b7385; --subtle:#9aa1b1; --line:#e6e8ee; --line-soft:#eef0f4;
@@ -223,6 +223,45 @@
   @keyframes spin { to { transform:rotate(360deg);} }
   .err-banner { background:#fef0f0; border:1px solid #fde2e2; color:#f56c6c; border-radius:4px; padding:10px 12px; margin-bottom:12px; display:none; }
   .err-banner .btn { margin-left:8px; }
+  /* v9.0：覆盖索引与持续可见的改动标记 */
+  .delta-legend { display:flex; align-items:center; gap:7px; color:#cbd5e1; font-size:11px; }
+  .delta-badge { display:inline-flex; align-items:center; justify-content:center; min-width:31px; height:18px; padding:0 5px; border-radius:3px; font:700 9px/1 ui-monospace,SFMono-Regular,Menlo,monospace; letter-spacing:.04em; vertical-align:1px; }
+  .delta-badge.new { color:#fff; background:#b54708; }
+  .delta-badge.changed { color:#fff; background:#2456d6; }
+  .delta-badge.retained { color:#344054; background:#e4e7ec; }
+  .coverage-launch { max-width:1760px; margin:0 0 14px; padding:15px 18px; border-radius:11px; background:linear-gradient(110deg,#172033,#1f3154); color:#fff; display:grid; grid-template-columns:minmax(260px,1fr) repeat(3,minmax(104px,150px)) auto; align-items:center; gap:14px; box-shadow:0 12px 28px rgba(23,32,51,.15); }
+  .coverage-launch h2 { font-size:16px; letter-spacing:-.015em; margin-bottom:2px; }
+  .coverage-launch p { color:#b9c5d8; font-size:11.5px; }
+  .coverage-metric { padding-left:14px; border-left:1px solid rgba(255,255,255,.14); }
+  .coverage-metric b { display:block; color:#fff; font-size:18px; line-height:1.2; font-variant-numeric:tabular-nums; }
+  .coverage-metric span { color:#aebbd0; font-size:10px; }
+  .coverage-launch .btn { border-color:rgba(255,255,255,.28); background:rgba(255,255,255,.1); color:#fff; }
+  .coverage-launch .btn:hover { background:rgba(255,255,255,.18); border-color:rgba(255,255,255,.45); }
+  .coverage-head { display:flex; align-items:flex-start; justify-content:space-between; gap:18px; margin-bottom:14px; }
+  .coverage-head h2 { font-size:22px; letter-spacing:-.025em; }
+  .coverage-head p { color:var(--muted); margin-top:3px; max-width:72ch; }
+  .coverage-tabs { display:flex; gap:4px; padding:4px; border-radius:9px; background:var(--gray-soft); margin-bottom:14px; width:fit-content; }
+  .coverage-tab { border:0; background:transparent; color:var(--muted); padding:7px 13px; border-radius:6px; cursor:pointer; font-size:12px; }
+  .coverage-tab.active { color:var(--ink); background:#fff; box-shadow:0 1px 3px rgba(21,26,36,.10); font-weight:600; }
+  .coverage-filters { display:grid; grid-template-columns:minmax(240px,2fr) repeat(2,minmax(150px,1fr)); gap:10px; margin-bottom:12px; }
+  .coverage-filters input,.coverage-filters select { width:100%; padding:8px 10px; border:1px solid #d5d9e0; border-radius:6px; background:#fff; color:var(--ink); }
+  .coverage-summary { display:flex; gap:8px; flex-wrap:wrap; align-items:center; color:var(--muted); font-size:11px; margin-bottom:10px; }
+  .coverage-summary strong { color:var(--ink); font-variant-numeric:tabular-nums; }
+  #coverage-table { min-width:1180px; }
+  .case-name { font-weight:600; color:var(--ink); }
+  .case-code { font:500 11px/1.4 ui-monospace,SFMono-Regular,Menlo,monospace; color:var(--accent-ink); overflow-wrap:anywhere; }
+  .case-note { color:var(--muted); font-size:11px; max-width:44ch; }
+  .boundary-card { background:#fff8ed; border:1px solid #f1d6ae; border-radius:9px; padding:14px 16px; margin-bottom:14px; }
+  .boundary-card h4 { color:#8a4b12; margin-bottom:6px; }
+  .mark-changed-row td { background:#f5f8ff !important; }
+  .drawer-kicker .delta-badge { margin-left:6px; }
+  @media (max-width:980px) {
+    .sidebar { width:158px; }
+    .filters,.coverage-filters { grid-template-columns:1fr; }
+    .coverage-launch { grid-template-columns:1fr 1fr; }
+    .coverage-launch > div:first-child,.coverage-launch > button { grid-column:1/-1; }
+    .delta-legend { display:none; }
+  }
 </style>
 </head>
 <body>
@@ -230,7 +269,12 @@
   <span class="logo">运营平台</span>
   <span class="crumb" id="top-crumb">用户管理 / 用户信息 / <b style="color:#fff">内容权限</b></span>
   <span class="spacer"></span>
-  <span class="tag-proto">交互原型 v8.5 · 生命周期审计</span>
+  <div class="delta-legend" aria-label="改动标记图例">
+    <span>改动图例</span><span class="delta-badge new">NEW</span><span>新增</span>
+    <span class="delta-badge changed">CHG</span><span>变更</span>
+    <span class="delta-badge retained">KEEP</span><span>保留</span>
+  </div>
+  <span class="tag-proto">交互原型 v9.0 · 生命周期审计</span>
 </div>
 
 <div class="pagemap">
@@ -261,6 +305,13 @@
     <a onclick="openDrawer('A-027');togglePM()">㉓ 抽屉：家庭组共享（原始受益人口径）</a>
     <a onclick="toggleSvcPane();togglePM()">㉔ 服务期归属（独立体系·边界说明）</a>
     <a onclick="openDrawer('A-028');togglePM()">㉕ 抽屉：账号转换（A用户转B用户）</a>
+    <a onclick="showView('coverage');togglePM()">㉖ 案例覆盖索引（110 来源 / 16 事件 / 8 特殊）【新增】</a>
+    <a onclick="openDrawer('A-032');togglePM()">㉗ 延迟授权：已激活变体【新增】</a>
+    <a onclick="openDrawer('A-033');togglePM()">㉘ 延迟授权：激活前撤销变体【新增】</a>
+    <a onclick="openDrawer('A-030');togglePM()">㉙ 扣减撤销事件【新增】</a>
+    <a onclick="openDrawer('A-031');togglePM()">㉚ 恢复事件【新增】</a>
+    <a onclick="openBoundaryCase('fixed-tablet');togglePM()">㉛ 一口价平板边界【新增】</a>
+    <a onclick="openDrawer('A-034');togglePM()">㉜ 风控批量撤销【新增】</a>
   </div>
 </div>
 
@@ -271,12 +322,20 @@
     <div class="menu-item sub active" id="menu-user" onclick="showView('user')">用户信息</div>
     <div class="menu-item sub">服务期管理</div>
     <div class="menu-item sub" id="menu-reward" onclick="showView('reward')">批量用户奖励</div>
+    <div class="menu-item sub" id="menu-coverage" onclick="showView('coverage')">案例覆盖索引 <span class="delta-badge new">NEW</span></div>
     <div class="menu-item">订单管理</div>
     <div class="menu-item">退款管理</div>
     <div class="menu-item">营销工具</div>
   </div>
 
   <div class="main">
+    <section class="coverage-launch" aria-label="案例覆盖概览">
+      <div><h2><span class="delta-badge new">NEW</span> 案例覆盖索引</h2><p>完整登记来源、事件与隐式边界，可搜索并打开对应生命周期或案例详情。</p></div>
+      <div class="coverage-metric"><b>110 / 110</b><span>source_type 已覆盖</span></div>
+      <div class="coverage-metric"><b>16 / 16</b><span>event_type 已覆盖</span></div>
+      <div class="coverage-metric"><b>8 / 8</b><span>特殊案例已覆盖</span></div>
+      <button class="btn" onclick="showView('coverage')">打开覆盖清单 →</button>
+    </section>
     <div class="card" id="view-user">
       <div class="userhead">
         <div class="avatar">王</div>
@@ -319,7 +378,7 @@
             <div class="chips" id="stateChips"></div></div>
           <div class="f-item"><span class="f-lab">授权类型:</span><select id="pf-type"><option value="">请选择授权类型</option><option>同步课</option><option>培优课</option><option>电子试卷</option><option>洋葱服务</option></select></div>
           <div class="f-item"><span class="f-lab">授权名称:</span><select id="pf-name"><option value="">请选择授权名称</option><option>初中数学</option><option>初中英语</option><option>初中物理</option><option>初中语文</option><option>初中全科</option><option>高中数学</option><option>小学数学</option><option>教师全科</option></select></div>
-          <div class="f-item"><span class="f-lab">来源类型:</span><select id="pf-src"><option value="">请选择来源类型</option><option>购买获得</option><option>后台手动发放</option><option>兑换码兑换</option><option>授权转换</option><option>抖店订单</option><option>B端进校</option><option>活动发放</option><option>规则补发</option><option>教师升级赠送</option><option>一口价平板激活</option></select></div>
+          <div class="f-item"><span class="f-lab">来源类型:</span><select id="pf-src"><option value="">请选择来源类型</option><option>购买获得</option><option>后台手动发放</option><option>兑换码兑换</option><option>授权转换</option><option>抖店订单</option><option>B端进校</option><option>活动发放</option><option>规则补发</option><option>教师升级赠送</option><option>华为教育中心绑定用户</option></select></div>
           <div class="f-item"><span class="f-lab">来源/凭据ID:</span><input id="pf-srcid" placeholder="来源ID或凭据ID，多个用;分隔"></div>
           <div class="f-item"><span class="f-lab">创建日期:</span><input type="date" id="pf-d1" style="max-width:120px"><span class="date-sep">至</span><input type="date" id="pf-d2" style="max-width:120px"></div>
         </div>
@@ -336,7 +395,7 @@
         </div>
         <div class="table-scroll"><table class="grid" id="tbl-personal">
           <thead><tr>
-            <th></th><th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源/凭据ID</th><th>创建时间</th><th>操作</th>
+            <th></th><th>授权名称</th><th>授权类型</th><th>状态</th><th>生效时间</th><th>截止时间</th><th>剩余时长</th><th>来源类型</th><th>来源/凭据ID <span class="delta-badge changed">CHG</span></th><th>创建时间</th><th>操作 <span class="delta-badge new">NEW</span></th>
           </tr></thead>
           <tbody id="tbody-personal"></tbody>
         </table></div>
@@ -401,6 +460,26 @@
         </table>
       </div>
     </div>
+    <div class="card" id="view-coverage" style="display:none">
+      <div class="coverage-head">
+        <div><h2>案例覆盖索引 <span class="delta-badge new">NEW</span></h2><p>用于原型验收与后续文档引用。来源注册表按权威清单逐行生成；所有操作都会打开可解释的生命周期或边界详情。</p></div>
+        <button class="btn" onclick="showView('user')">返回用户授权</button>
+      </div>
+      <div class="coverage-tabs" role="tablist">
+        <button class="coverage-tab active" id="ctab-source" onclick="switchCoverageTab('source')">来源覆盖 110</button>
+        <button class="coverage-tab" id="ctab-event" onclick="switchCoverageTab('event')">事件覆盖 16</button>
+        <button class="coverage-tab" id="ctab-special" onclick="switchCoverageTab('special')">特殊 / 边界 8</button>
+      </div>
+      <div class="coverage-filters">
+        <input id="coverage-q" placeholder="搜索 source_type、中文名、授权名或案例 ID" oninput="renderCoverage()">
+        <select id="coverage-status" onchange="renderCoverage()"><option value="">全部状态</option></select>
+        <select id="coverage-cred" onchange="renderCoverage()"><option value="">全部凭据类型</option></select>
+      </div>
+      <div class="coverage-summary" id="coverage-summary"></div>
+      <div class="table-scroll" style="max-height:calc(100vh - 365px)">
+        <table class="grid" id="coverage-table"><thead id="coverage-thead"></thead><tbody id="coverage-tbody"></tbody></table>
+      </div>
+    </div>
   </div>
 </div>
 
@@ -408,7 +487,7 @@
 <div class="drawer-mask" id="mask" onclick="closeDrawer()"></div>
 <div class="drawer" id="drawer">
   <div class="drawer-head">
-    <div style="flex:1"><div class="drawer-kicker">授权生命周期</div><h3 id="d-title">权益名称</h3></div>
+    <div style="flex:1"><div class="drawer-kicker">授权生命周期 <span class="delta-badge new">NEW</span></div><h3 id="d-title">权益名称</h3></div>
     <span class="authid-chip" id="d-authid" onclick="copyAuthId()" title="点击复制">授权 ID：—</span>
     <span class="drawer-close" onclick="closeDrawer()">✕</span>
   </div>
@@ -420,10 +499,10 @@
   <div class="modal">
     <div class="modal-head"><h3>添加权益</h3><span class="drawer-close" onclick="closeModal('addMask')">✕</span></div>
     <div class="modal-body">
-      <div class="anno">📌 PRD §4.4：绿标=线上已有字段（保留）；红标=本需求新增/升格。提交与发放同事务落「发放」事件。硬件权益 tab=线上「添加硬件权益」能力（线上现状位于 运营后台-平板管理/平板一口价管理 页面，入口位置不迁移；此处为规格演示），按 device 凭据对齐。</div>
+      <div class="anno">📌 PRD §4.4：绿标=线上已有字段（保留）；红标=本需求新增/升格。提交与发放同事务落「发放」事件。硬件权益 tab 改为演示 huaweiEduKitBindUser0318 设备绑定发放，按 device 凭据对齐。一口价平板设备权益/补时不经过 userauth，不进 auth_audit_event，详见案例覆盖索引。</div>
       <div class="subtabs" style="margin-bottom:14px">
         <div class="subtab active" id="addtab-course" onclick="switchAddTab('course')">课程权益</div>
-        <div class="subtab" id="addtab-hw" onclick="switchAddTab('hw')">硬件权益 <span class="old-tag">线上已有入口</span></div>
+        <div class="subtab" id="addtab-hw" onclick="switchAddTab('hw')">设备绑定权益 <span class="delta-badge changed">CHG</span></div>
       </div>
       <div id="addpane-course">
       <div class="frow"><div class="lab"><span class="req">*</span>权益类型<span class="old-tag">线上已有</span></div><div class="ctl">
@@ -438,18 +517,18 @@
       <div class="frow"><div class="lab"><span class="req">*</span>硬件 SN 码<span class="old-tag">线上已有</span></div><div class="ctl" style="display:flex;gap:6px">
         <input type="text" id="hw-sn" placeholder="请输入硬件 SN 码查询设备详情" style="flex:1">
         <button class="btn mini" onclick="hwQuery()">查询设备</button></div>
-        <div class="tip" id="hw-device" style="display:none">✓ 设备已找到：一口价学习平板 · 脱敏标识 omvd-8f3…a2 · 已绑定本用户（审计凭据类型=设备，落脱敏标识）</div></div>
-      <div class="frow"><div class="lab"><span class="req">*</span>权益类型<span class="old-tag">线上已有</span></div><div class="ctl"><select><option>平板权益（按设备预设配置发放课程）</option></select></div></div>
-      <div class="frow"><div class="lab"><span class="req">*</span>权益时长<span class="old-tag">线上已有</span></div><div class="ctl"><input type="text" value="7300"><div class="tip">一口价平板默认 20 年（7300 天）</div></div></div>
+        <div class="tip" id="hw-device" style="display:none">✓ 设备已找到：华为教育中心绑定设备 · 脱敏标识 omvd-8f3…a2 · 已绑定本用户（审计凭据类型=device）</div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>权益类型<span class="old-tag">线上已有</span></div><div class="ctl"><select><option>华为教育中心设备绑定课程权益</option></select></div></div>
+      <div class="frow"><div class="lab"><span class="req">*</span>权益时长<span class="old-tag">线上已有</span></div><div class="ctl"><input type="text" value="365"><div class="tip">设备绑定来源按业务配置发放；一口价平板不走此入口</div></div></div>
       </div>
-      <div class="frow" id="f-reason-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增·两级</span></div><div class="ctl">
+      <div class="frow" id="f-reason-code"><div class="lab"><span class="req">*</span>原因分类<span class="delta-badge changed">CHG</span></div><div class="ctl">
         <div style="display:flex;gap:8px">
           <select id="add-rcode" style="flex:1" onchange="onReasonL1('add')"><option value="">请选择大类</option><option>客服补偿</option><option>运营发放</option><option>达人体验</option><option>客服AI流程</option><option>测试账号</option><option>其他（须详述）</option></select>
           <select id="add-rcode2" style="flex:1;display:none"><option value="">请选择次级分类</option></select>
         </div>
         <div class="tip">「客服补偿」「客服AI流程」须点选次级分类（不满意/挽单/禁止电联/BUG…），便于后手客服业务场景核实；审计落叶子代号</div>
         <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
-      <div class="frow" id="f-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
+      <div class="frow" id="f-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="delta-badge new">NEW</span></div><div class="ctl">
         <div style="display:flex;gap:8px">
           <input type="text" id="add-basis" placeholder="填工单号（如 WO-88121），或邮件/大象沟通结论等文字说明" style="flex:1">
           <button class="btn" title="可附图片 1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp" onclick="addMockAttachment('add')">＋ 图片</button>
@@ -457,7 +536,7 @@
         <div class="attachment-list" id="add-attachments"></div>
         <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
         <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div></div></div>
-      <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（登录态自动带出，不可修改）→ 落审计「操作人」</div></div></div>
+      <div class="frow"><div class="lab">操作人 / 部门<span class="delta-badge new">NEW</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（登录态自动带出，不可修改）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('addMask')">取消</button>
@@ -473,10 +552,10 @@
     <div class="modal-body">
       <div class="anno">📌 PRD §4.5：线上批量撤销的"先选中→仅查看已选中→再撤销"流程保留；撤销理由（线上已有）改造为 两级原因分类+操作依据（工单号或图文依据，图文文字即审计原因说明）；不再单设「原因说明」输入框；批量自动生成批次号。</div>
       <div class="batch-preview" id="batch-preview" style="display:none"></div>
-      <div class="frow" id="f-c-code"><div class="lab"><span class="req">*</span>撤销原因分类<span class="new-tag">改造</span></div><div class="ctl">
+      <div class="frow" id="f-c-code"><div class="lab"><span class="req">*</span>撤销原因分类<span class="delta-badge changed">CHG</span></div><div class="ctl">
         <select id="c-rcode"><option value="">请选择</option><option>客服处理</option><option>退款补录</option><option>风控</option><option>发放错误</option><option>其他（须详述）</option></select>
         <div class="err">请选择撤销原因分类</div></div></div>
-      <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
+      <div class="frow" id="f-c-ticket"><div class="lab"><span class="req">*</span>操作依据<span class="delta-badge new">NEW</span></div><div class="ctl">
         <div style="display:flex;gap:8px">
           <input type="text" id="cancel-basis" placeholder="填工单号（如 WO-99217），或邮件/大象沟通结论等文字说明" style="flex:1">
           <button class="btn" title="可附图片 1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp" onclick="addMockAttachment('cancel')">＋ 图片</button>
@@ -484,7 +563,7 @@
         <div class="attachment-list" id="cancel-attachments"></div>
         <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
         <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div></div></div>
-      <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）→ 落审计「操作人」</div></div></div>
+      <div class="frow"><div class="lab">操作人 / 部门<span class="delta-badge new">NEW</span></div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）→ 落审计「操作人」</div></div></div>
     </div>
     <div class="modal-foot">
       <button class="btn" onclick="closeModal('cancelMask')">取消</button>
@@ -504,14 +583,14 @@ user_88202
 user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个；提交后按用户逐条写 grant 事件，共享同一 batch_id。</div></div></div>
       <div class="frow"><div class="lab"><span class="req">*</span>所属业务群<span class="old-tag">线上已有</span></div><div class="ctl"><select id="reward-group"><option>教师与学校业务群</option><option>用户增长业务群</option><option>客户服务业务群</option></select></div></div>
       <div class="frow"><div class="lab"><span class="req">*</span>奖励内容<span class="old-tag">线上已有</span></div><div class="ctl"><select id="reward-target"><option>培优课｜初中数学｜30 天</option><option>VIP｜小学全科｜7 天</option></select></div></div>
-      <div class="frow" id="f-reward-code"><div class="lab"><span class="req">*</span>原因分类<span class="new-tag">新增·两级</span></div><div class="ctl">
+      <div class="frow" id="f-reward-code"><div class="lab"><span class="req">*</span>原因分类<span class="delta-badge changed">CHG</span></div><div class="ctl">
         <div style="display:flex;gap:8px">
           <select id="reward-code" style="flex:1" onchange="onReasonL1('reward')"><option value="">请选择大类</option><option>运营发放</option><option>客服补偿</option><option>达人体验</option><option>客服AI流程</option><option>测试账号</option><option>其他（须详述）</option></select>
           <select id="reward-code2" style="flex:1;display:none"><option value="">请选择次级分类</option></select>
         </div>
         <div class="tip">「客服补偿」「客服AI流程」须点选次级分类，与添加权益表单同一套枚举</div>
         <div class="err">请选择原因分类；客服补偿 / 客服AI流程须同时选择次级分类</div></div></div>
-      <div class="frow" id="f-reward-basis"><div class="lab"><span class="req">*</span>操作依据<span class="new-tag">新增</span></div><div class="ctl">
+      <div class="frow" id="f-reward-basis"><div class="lab"><span class="req">*</span>操作依据<span class="delta-badge new">NEW</span></div><div class="ctl">
         <div style="display:flex;gap:8px">
           <input type="text" id="reward-basis" value="WO-20260715-32" placeholder="填工单号，或邮件/大象审批结论等文字说明" style="flex:1">
           <button class="btn" title="可附图片 1~5 张，单张 ≤10MB，支持 png/jpg/jpeg/gif/webp" onclick="addMockAttachment('reward')">＋ 图片</button>
@@ -520,7 +599,7 @@ user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个
         <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
         <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div>
       </div></div>
-      <div class="frow"><div class="lab">操作人 / 部门<span class="new-tag">新增展示</span></div><div class="ctl"><div class="ro-chip">张怡婷 · 教师与学校业务群（登录态自动带出，不可修改）</div></div></div>
+      <div class="frow"><div class="lab">操作人 / 部门<span class="delta-badge new">NEW</span></div><div class="ctl"><div class="ro-chip">张怡婷 · 教师与学校业务群（登录态自动带出，不可修改）</div></div></div>
     </div>
     <div class="modal-foot"><button class="btn" onclick="closeModal('rewardMask')">取消</button><button class="btn primary" onclick="submitReward()">提交</button></div>
   </div>
@@ -584,6 +663,37 @@ user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个
 const CRED_NAME = { order:"订单", redeem_code:"兑换码", voucher:"体验券",
   business_auth:"B端授权", activity:"活动记录", auth:"前驱授权", work_order:"工单",
   send_rule:"补发规则", device:"设备", none:"—" };
+
+/* v9.0 权威 source_type 注册表：由指定 registry dump 逐行生成，共 110 条。 */
+const SOURCE_REGISTRY = [{"sourceType":"buy","displayName":"购买获得","status":"使用中","credentialType":"order","credentialName":"order 订单","authName":"购买获得 · 来源覆盖授权","meaning":"订单支付成功后发放","sourceIdGuide":"填 go-order 订单表主键（洋葱订单号）。去哪拿：订单管理页-订单详情「洋葱订单号」。","relationship":"新口径通常相同：source_id=订单ID，credential_id=同一订单ID。","entry":"运营后台 → 订单管理 → 订单详情（按洋葱订单号）"},{"sourceType":"redeem","displayName":"兑换码兑换","status":"使用中","credentialType":"redeem_code","credentialName":"redeem_code 兑换码","authName":"兑换码兑换 · 来源覆盖授权","meaning":"兑换码兑换权益","sourceIdGuide":"填兑换码记录ID（redeemCode 服务主键，不是用户手输的码面文字）。去哪拿：兑换码管理-记录详情。","relationship":"新口径通常相同：source_id=兑换码记录ID，credential_id=同一记录ID；存量需按来源逐条确认。","entry":"运营后台 → 兑换码管理 → 兑换记录详情"},{"sourceType":"admin","displayName":"后台发放","status":"使用中","credentialType":"work_order","credentialName":"work_order 工单","authName":"后台发放 · 来源覆盖授权","meaning":"后台管理操作发放","sourceIdGuide":"保留当前主表 source_id 口径（通常由系统写入操作者ID），禁止改写为工单号。标准操作依据另写审计事件：有工单填 credential_type=work_order；无工单填 none，并在 extras.manual_evidence 保存文字+截图引用。","relationship":"不清洗：source_id 保留操作者ID/空等历史原值；credential_id 仅在有工单时填工单号。无工单时 credential_id 为空，图文依据写 extras。","entry":"source_id 是存量原值，不作为操作依据查询；有工单查工单系统，无工单在生命周期查看图文依据"},{"sourceType":"present","displayName":"彩票抽取","status":"使用中","credentialType":"activity","credentialName":"activity 活动","authName":"彩票抽取 · 来源覆盖授权","meaning":"彩票/抽奖发放","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"上线后通常相同：source_id=lotteryId，credential_type=activity，credential_id=同一 lotteryId；来源枚举 present 不是凭据ID。","entry":"当前无统一活动详情页：分别由抽奖业务按 lotteryId、任务业务按 subtaskId 查询；页面/API与 owner 待补录"},{"sourceType":"trialChance","displayName":"体验机会兑换","status":"使用中","credentialType":"voucher","credentialName":"voucher 体验券","authName":"体验机会兑换 · 来源覆盖授权","meaning":"体验机会兑换","sourceIdGuide":"填体验券/体验机会记录ID。去哪拿：用户详情-体验券记录 tab。","relationship":"新口径通常相同：source_id=券/机会记录ID，credential_id=同一记录ID。","entry":"运营后台 → 用户管理 → 用户信息 → 体验券记录"},{"sourceType":"auth","displayName":"授权转换","status":"使用中","credentialType":"auth","credentialName":"auth 前驱授权","authName":"授权转换 · 来源覆盖授权","meaning":"授权兑换，新授权指向原授权。覆盖两种场景【代码已核】：①同用户升学/学科转换（如初数转高数）；②跨用户账号转换（客服把 A 用户授权转给 B 用户，sp-userauth POST /exchange，A 侧撤销 cancelReason=exchange、B 侧新建本来源）","sourceIdGuide":"填前驱授权ID（userauth 主表 uuid）。系统自动写入，人工无需填。","relationship":"相同：source_id=前驱授权ID，credential_id=同一授权ID。账号转换时前驱授权在另一用户（转出方）名下，audit 事件的 user_id 各记各的（A/B），extras 标 exchange_kind=账号转换","entry":"运营后台 → 用户管理 → 内容权限 → 生命周期（按授权ID）"},{"sourceType":"unfreeze","displayName":"授权冻结（解冻）","status":"使用中","credentialType":"auth","credentialName":"auth 前驱授权","authName":"授权冻结（解冻） · 来源覆盖授权","meaning":"退款取消后解冻生成新授权","sourceIdGuide":"填前驱授权ID（userauth 主表 uuid）。系统自动写入，人工无需填。","relationship":"相同：source_id=前驱授权ID，credential_id=同一授权ID。","entry":"运营后台 → 用户管理 → 内容权限 → 生命周期（按授权ID）"},{"sourceType":"subtask","displayName":"完成任务获得","status":"使用中","credentialType":"activity","credentialName":"activity 活动","authName":"完成任务获得 · 来源覆盖授权","meaning":"完成任务奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"上线后通常相同：source_id=subtaskId，credential_type=activity，credential_id=同一 subtaskId；来源枚举 subtask 不是凭据ID。","entry":"当前无统一活动详情页：分别由抽奖业务按 lotteryId、任务业务按 subtaskId 查询；页面/API与 owner 待补录"},{"sourceType":"teacherLevelUp","displayName":"教师用户升级赠送","status":"使用中","credentialType":"none","credentialName":"none 无凭据","authName":"教师用户升级赠送 · 来源覆盖授权","meaning":"教师等级提升赠送","sourceIdGuide":"无需填ID；「原因说明」必填写清发放依据（仅存量场景允许，新业务禁用）。","relationship":"两者均为空；必须用reason_text说明。仅存量兼容，新业务禁用。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"parentsReward","displayName":"家长端赠送","status":"使用中","credentialType":"none","credentialName":"none 无凭据","authName":"家长端赠送 · 来源覆盖授权","meaning":"家长端赠7天会员","sourceIdGuide":"无需填ID；「原因说明」必填写清发放依据（仅存量场景允许，新业务禁用）。","relationship":"两者均为空；必须用reason_text说明。仅存量兼容，新业务禁用。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"entryTripVip","displayName":"渠道赠送VIP","status":"使用中","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"渠道赠送VIP · 来源覆盖授权","meaning":"渠道工单赠1个月VIP（2018-11）","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"teacherAuth","displayName":"教师认证赠送","status":"使用中","credentialType":"activity","credentialName":"activity 活动","authName":"教师认证赠送 · 来源覆盖授权","meaning":"教师认证奖励（2019-03）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"trialVouchers","displayName":"体验券兑换","status":"使用中","credentialType":"voucher","credentialName":"voucher 体验券","authName":"体验券兑换 · 来源覆盖授权","meaning":"体验券兑换","sourceIdGuide":"填体验券/体验机会记录ID。去哪拿：用户详情-体验券记录 tab。","relationship":"新口径通常相同：source_id=券/机会记录ID，credential_id=同一记录ID。","entry":"运营后台 → 用户管理 → 用户信息 → 体验券记录"},{"sourceType":"businessAuth","displayName":"B端订单售卖增加用户授权","status":"使用中","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"B端订单售卖增加用户授权 · 来源覆盖授权","meaning":"B端售卖开通（2019-09）","sourceIdGuide":"系统自动写：source_id取BusinessAuthDetail.sourceId；credential_id取调用入参businessAuthId（B端主键）。businessAuthId具体格式以B端真实数据模型为准，待接口摸底确认，禁止擅自假设uuid格式。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId；credential_id=businessAuthId（查询B端详情的主键）。历史早期数据可能直接用businessAuthId作source_id。","entry":"B端授权详情入口/API待 B 端 owner 补录；运营页按 businessAuthId 展示"},{"sourceType":"entryTeacherTrialVIP","displayName":"渠道教师VIP试用","status":"使用中","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"渠道教师VIP试用 · 来源覆盖授权","meaning":"渠道工单教师试用（2019-09）","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"entryCollectionCourses","displayName":"渠道集合商品","status":"使用中","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"渠道集合商品 · 来源覆盖授权","meaning":"渠道工单教师集合授权（2019-11）","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"huaweiEduKitBindUser0318","displayName":"华为教育中心绑定用户","status":"使用中","credentialType":"device","credentialName":"device 设备","authName":"华为教育中心绑定用户 · 来源覆盖授权","meaning":"华为教育中心设备绑定","sourceIdGuide":"填脱敏设备标识（omvd）或平板SN记录ID；合规禁止填可读设备号/明文SN。去哪拿：平板管理-设备详情。","relationship":"通常不相同：存量source_id可能是设备号+用户ID拼接；credential_id=规范化脱敏设备标识omvd或SN记录ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fresh_gift","displayName":"新手礼包","status":"使用中","credentialType":"activity","credentialName":"activity 活动","authName":"新手礼包 · 来源覆盖授权","meaning":"中学活跃-新手礼包活动","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"award","displayName":"后台批量发放奖励","status":"使用中","credentialType":"work_order","credentialName":"work_order 工单","authName":"后台批量发放奖励 · 来源覆盖授权","meaning":"shadow 批量发奖（2020-05）","sourceIdGuide":"【代码已核】source_id=bonusId（批量操作ID，同时作为审计 batch_id；服务端未传自动生成 UUID）。枚举注释“sourceId 为操作者 ID”是旧口径，现操作人从登录态 ShadowUid 获取。操作依据另记：有工单填 credential_id=工单号；无工单走图文依据","relationship":"source_id=bonusId=审计 batch_id（批量撤回也按 source_type=award+bonusId 定位）；credential_id=工单号或空（无工单时走 extras.manual_evidence），与 source_id 不同","entry":"运营后台 → 用户管理 → 批量用户奖励（按 bonusId/批次号）；具体授权在批次明细与生命周期查询"},{"sourceType":"qimen","displayName":"奇门项目","status":"使用中","credentialType":"activity","credentialName":"activity 活动","authName":"奇门项目 · 来源覆盖授权","meaning":"中学奇门项目（2020-06）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"shadow","displayName":"后台手动发放","status":"使用中","credentialType":"work_order","credentialName":"work_order 工单","authName":"后台手动发放 · 来源覆盖授权","meaning":"shadow 手动发放","sourceIdGuide":"保留当前主表 source_id 口径（通常由系统写入操作者ID），禁止改写为工单号。审计事件另写标准操作依据：工单，或无工单文字+邮件/大象截图。","relationship":"不清洗：source_id 保留原操作者ID/空；有工单时 credential_id=工单号，无工单时 credential_id 为空、图文依据写 extras.manual_evidence。","entry":"source_id 是存量原值，不作为操作依据查询；有工单查工单系统，无工单在生命周期查看图文依据"},{"sourceType":"homework","displayName":"教师勾选知识点组合","status":"已废弃","credentialType":"activity","credentialName":"activity 活动","authName":"教师勾选知识点组合 · 来源覆盖授权","meaning":"教师线勾选知识点（2021-01，2021-03废除）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"telesaleFree","displayName":"电销体验赠送","status":"使用中","credentialType":"activity","credentialName":"activity 活动","authName":"电销体验赠送 · 来源覆盖授权","meaning":"电销体验（2021-05）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"integral","displayName":"积分兑换","status":"使用中","credentialType":"redeem_code","credentialName":"redeem_code 兑换码","authName":"积分兑换 · 来源覆盖授权","meaning":"积分商品兑换（2021-06）","sourceIdGuide":"填兑换码记录ID（redeemCode 服务主键，不是用户手输的码面文字）。去哪拿：兑换码管理-记录详情。","relationship":"新口径通常相同：source_id=兑换码记录ID，credential_id=同一记录ID；存量需按来源逐条确认。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"doudian","displayName":"抖店售卖","status":"使用中","credentialType":"order","credentialName":"order 订单","authName":"抖店售卖 · 来源覆盖授权","meaning":"抖店订单兑换（2021-06）","sourceIdGuide":"source_id 填抖店平台单号原值；credential_id 填对应洋葱订单号（三方订单表 yc_order_id 可查）。新三方接入一律走通用兑换链路（source_type=buy、source_id=洋葱订单ID）","relationship":"source_id=抖店平台单号（历史原值，保留不清洗）；credential_id=对应洋葱订单号。每笔三方订单都有对应洋葱订单（映射存于三方订单表 yc_order_id）：存量凭据由展示层读时关联，上线后新事件直接写洋葱订单号","entry":"运营后台 → 订单管理 → 订单详情（按洋葱订单号）"},{"sourceType":"telesaleExchange","displayName":"电销积分兑换","status":"使用中","credentialType":"activity","credentialName":"activity 活动","authName":"电销积分兑换 · 来源覆盖授权","meaning":"电销积分兑换（2022-03）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"新禧活动课程补发","displayName":"新禧活动课程补发","status":"使用中","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"新禧活动课程补发 · 来源覆盖授权","meaning":"全学科学段补发","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"新课程补发","displayName":"新课程补发","status":"使用中","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"新课程补发 · 来源覆盖授权","meaning":"课程上新补发","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"公域订单补发","displayName":"公域订单补发","status":"使用中","credentialType":"order","credentialName":"order 订单","authName":"公域订单补发 · 来源覆盖授权","meaning":"订单追加授权","sourceIdGuide":"填 go-order 订单表主键（洋葱订单号）。去哪拿：订单管理页-订单详情「洋葱订单号」。","relationship":"新口径通常相同：source_id=订单ID，credential_id=同一订单ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"用户自行转换","displayName":"用户自行转换","status":"使用中","credentialType":"auth","credentialName":"auth 前驱授权","authName":"用户自行转换 · 来源覆盖授权","meaning":"用户自助转换授权","sourceIdGuide":"填前驱授权ID（userauth 主表 uuid）。系统自动写入，人工无需填。","relationship":"相同：source_id=前驱授权ID，credential_id=同一授权ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"课桌整洁大作战-7天","displayName":"课桌整洁大作战-7天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"课桌整洁大作战-7天 · 来源覆盖授权","meaning":"课桌整洁活动奖励7天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"课桌整洁大作战-1天","displayName":"课桌整洁大作战-1天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"课桌整洁大作战-1天 · 来源覆盖授权","meaning":"课桌整洁活动奖励1天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"课桌整洁大作战-14天","displayName":"课桌整洁大作战-14天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"课桌整洁大作战-14天 · 来源覆盖授权","meaning":"课桌整洁活动奖励14天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"四川文轩合作","displayName":"四川文轩合作","status":"存量无主","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"四川文轩合作 · 来源覆盖授权","meaning":"四川文轩渠道合作","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"十周年集卡社-3天","displayName":"十周年集卡社-3天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"十周年集卡社-3天 · 来源覆盖授权","meaning":"十周年集卡活动3天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"十周年集卡社-7天","displayName":"十周年集卡社-7天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"十周年集卡社-7天 · 来源覆盖授权","meaning":"十周年集卡活动7天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"十周年集卡社-30天","displayName":"十周年集卡社-30天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"十周年集卡社-30天 · 来源覆盖授权","meaning":"十周年集卡活动30天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"xinkao","displayName":"xinkao","status":"存量无主","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"xinkao · 来源覆盖授权","meaning":"【外部合作】鑫考专项课VIP","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"十周年集卡社-1天","displayName":"十周年集卡社-1天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"十周年集卡社-1天 · 来源覆盖授权","meaning":"十周年集卡活动1天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"电销抽奖","displayName":"电销抽奖","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"电销抽奖 · 来源覆盖授权","meaning":"武汉电销抽奖","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"签到28天-奖励VIP14天","displayName":"签到28天-奖励VIP14天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"签到28天-奖励VIP14天 · 来源覆盖授权","meaning":"签到活动奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"签到21天-奖励VIP5天","displayName":"签到21天-奖励VIP5天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"签到21天-奖励VIP5天 · 来源覆盖授权","meaning":"签到活动奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"签到14天-奖励VIP5天","displayName":"签到14天-奖励VIP5天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"签到14天-奖励VIP5天 · 来源覆盖授权","meaning":"签到活动奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"签到7天-奖励VIP5天","displayName":"签到7天-奖励VIP5天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"签到7天-奖励VIP5天 · 来源覆盖授权","meaning":"签到活动奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"签到1天-奖励VIP1天","displayName":"签到1天-奖励VIP1天","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"签到1天-奖励VIP1天 · 来源覆盖授权","meaning":"签到活动奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"渠道活码自动发放奖励","displayName":"渠道活码自动发放奖励","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"渠道活码自动发放奖励 · 来源覆盖授权","meaning":"电销渠道活码","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"视频号引流","displayName":"视频号引流","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"视频号引流 · 来源覆盖授权","meaning":"电销视频号小程序引流","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"渠道活码","displayName":"渠道活码","status":"测试","credentialType":"activity","credentialName":"activity 活动","authName":"渠道活码 · 来源覆盖授权","meaning":"电销测试","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"视频号测试","displayName":"视频号测试","status":"测试","credentialType":"activity","credentialName":"activity 活动","authName":"视频号测试 · 来源覆盖授权","meaning":"电销添加企微测试","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"商品测试二期奖励","displayName":"商品测试二期奖励","status":"测试","credentialType":"activity","credentialName":"activity 活动","authName":"商品测试二期奖励 · 来源覆盖授权","meaning":"商品测试观看视频奖励专项课","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fission0312","displayName":"fission0312","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"fission0312 · 来源覆盖授权","meaning":"植树节活动","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"注册绑定手机新人礼","displayName":"注册绑定手机新人礼","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"注册绑定手机新人礼 · 来源覆盖授权","meaning":"注册绑定手机奖励（短信）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"种子用户VIP","displayName":"种子用户VIP","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"种子用户VIP · 来源覆盖授权","meaning":"种子用户活动发放VIP","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"推广二维码赠送","displayName":"推广二维码赠送","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"推广二维码赠送 · 来源覆盖授权","meaning":"推广二维码赠送","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"电销春节礼品卡","displayName":"电销春节礼品卡","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"电销春节礼品卡 · 来源覆盖授权","meaning":"电销春节礼品卡","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"新高三二轮课程包上线赠送(超3年)","displayName":"新高三二轮课程包上线赠送(超3年)","status":"存量无主","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"新高三二轮课程包上线赠送(超3年) · 来源覆盖授权","meaning":"新旧课程包等时长补偿","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"新高三二轮课程包上线赠送","displayName":"新高三二轮课程包上线赠送","status":"存量无主","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"新高三二轮课程包上线赠送 · 来源覆盖授权","meaning":"新旧课程包等时长补偿","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"体验营拉新","displayName":"体验营拉新","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"体验营拉新 · 来源覆盖授权","meaning":"体验营小程序拉新","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"体验营引流","displayName":"体验营引流","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"体验营引流 · 来源覆盖授权","meaning":"体验营家长用户试用引流","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"签到拉新","displayName":"签到拉新","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"签到拉新 · 来源覆盖授权","meaning":"新用户签到领周边","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"新用户签到","displayName":"新用户签到","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"新用户签到 · 来源覆盖授权","meaning":"新用户签到领周边奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"datisendvip","displayName":"datisendvip","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"datisendvip · 来源覆盖授权","meaning":"流量答题活动送VIP","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"盲盒抽奖活动","displayName":"盲盒抽奖活动","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"盲盒抽奖活动 · 来源覆盖授权","meaning":"学习工具抽奖活动","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"补充赠送复习课","displayName":"补充赠送复习课","status":"存量无主","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"补充赠送复习课 · 来源覆盖授权","meaning":"购3个月以上数学课用户补发复习课","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"赠送高中期末复习专项课","displayName":"赠送高中期末复习专项课","status":"存量无主","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"赠送高中期末复习专项课 · 来源覆盖授权","meaning":"赠送高中期末复习专项课","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"漫画活动赠送","displayName":"漫画活动赠送","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"漫画活动赠送 · 来源覆盖授权","meaning":"漫画活动赠送","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"学在温州","displayName":"学在温州","status":"存量无主","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"学在温州 · 来源覆盖授权","meaning":"【对外合作】学在温州 To G 合作","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"漫画活动","displayName":"漫画活动","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"漫画活动 · 来源覆盖授权","meaning":"漫画活动邀请获得","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"破冰活动","displayName":"破冰活动","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"破冰活动 · 来源覆盖授权","meaning":"破冰活动观看视频奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"chemistryTestSend3Vip","displayName":"chemistryTestSend3Vip","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"chemistryTestSend3Vip · 来源覆盖授权","meaning":"初中化学实验赠3天会员","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"vip_free_activity_v2","displayName":"vip_free_activity_v2","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"vip_free_activity_v2 · 来源覆盖授权","meaning":"流量拉新活动","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"spring_festival_2022_vip","displayName":"spring_festival_2022_vip","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"spring_festival_2022_vip · 来源覆盖授权","meaning":"春节红包雨活动","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"天喻教育云","displayName":"天喻教育云","status":"存量无主","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"天喻教育云 · 来源覆盖授权","meaning":"天喻教育云教师分配1年初数VIP","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"奖学金","displayName":"奖学金","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"奖学金 · 来源覆盖授权","meaning":"奖学金活动赠送","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"小学春季未转化2021-07","displayName":"小学春季未转化2021-07","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"小学春季未转化2021-07 · 来源覆盖授权","meaning":"21春季网课赠送","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"vip_free_activity","displayName":"vip_free_activity","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"vip_free_activity · 来源覆盖授权","meaning":"会员课免费学拉新","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"primary_referrals","displayName":"primary_referrals","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"primary_referrals · 来源覆盖授权","meaning":"小学转介绍","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"teachertask2","displayName":"teachertask2","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"teachertask2 · 来源覆盖授权","meaning":"教师任务","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"高中轻课转换2021-08-30","displayName":"高中轻课转换2021-08-30","status":"存量无主","credentialType":"auth","credentialName":"auth 前驱授权","authName":"高中轻课转换2021-08-30 · 来源覆盖授权","meaning":"高中网课转轻课","sourceIdGuide":"填前驱授权ID（userauth 主表 uuid）。系统自动写入，人工无需填。","relationship":"相同：source_id=前驱授权ID，credential_id=同一授权ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"school_open_2021_fall","displayName":"school_open_2021_fall","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"school_open_2021_fall · 来源覆盖授权","meaning":"2021秋开学活动iOS送课","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"new_user_send_3_days","displayName":"new_user_send_3_days","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"new_user_send_3_days · 来源覆盖授权","meaning":"新注册送3天初中全科体验","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"小学轻课转换2021-07-16","displayName":"小学轻课转换2021-07-16","status":"存量无主","credentialType":"auth","credentialName":"auth 前驱授权","authName":"小学轻课转换2021-07-16 · 来源覆盖授权","meaning":"小学轻课转换发放","sourceIdGuide":"填前驱授权ID（userauth 主表 uuid）。系统自动写入，人工无需填。","relationship":"相同：source_id=前驱授权ID，credential_id=同一授权ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"diffPriceActivity","displayName":"diffPriceActivity","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"diffPriceActivity · 来源覆盖授权","meaning":"补差价活动","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"teachertask1","displayName":"teachertask1","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"teachertask1 · 来源覆盖授权","meaning":"陈仓教师任务","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fission604_vip_7","displayName":"fission604_vip_7","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"fission604_vip_7 · 来源覆盖授权","meaning":"裂变领取倒计时7天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fission604_vip_5","displayName":"fission604_vip_5","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"fission604_vip_5 · 来源覆盖授权","meaning":"裂变领取倒计时5天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fission604_vip_4","displayName":"fission604_vip_4","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"fission604_vip_4 · 来源覆盖授权","meaning":"裂变领取倒计时4天","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fission604_vip_3","displayName":"fission604_vip_3","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"fission604_vip_3 · 来源覆盖授权","meaning":"裂变领取倒计时72小时","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fission604_vip_2","displayName":"fission604_vip_2","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"fission604_vip_2 · 来源覆盖授权","meaning":"裂变领取倒计时48小时","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"fission604_vip_1","displayName":"fission604_vip_1","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"fission604_vip_1 · 来源覆盖授权","meaning":"裂变领取倒计时24小时","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"电销体验赠送二期","displayName":"电销体验赠送二期","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"电销体验赠送二期 · 来源覆盖授权","meaning":"电销坐席申请体验VIP","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"电销三天体验一期","displayName":"电销三天体验一期","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"电销三天体验一期 · 来源覆盖授权","meaning":"呼叫中心电销体验VIP","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"vacationActivity1","displayName":"vacationActivity1","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"vacationActivity1 · 来源覆盖授权","meaning":"寒暑假作业教师活动赠送","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"vacationActivity","displayName":"vacationActivity","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"vacationActivity · 来源覆盖授权","meaning":"寒暑假作业教师活动奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"中台授权测试01","displayName":"中台授权测试01","status":"测试","credentialType":"none","credentialName":"none 无凭据","authName":"中台授权测试01 · 来源覆盖授权","meaning":"测试","sourceIdGuide":"无需填ID；「原因说明」必填写清发放依据（仅存量场景允许，新业务禁用）。","relationship":"两者均为空；必须用reason_text说明。仅存量兼容，新业务禁用。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"teachertask","displayName":"teachertask","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"teachertask · 来源覆盖授权","meaning":"陈仓教师带动学生","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"英语space平台授权","displayName":"英语space平台授权","status":"存量无主","credentialType":"auth","credentialName":"auth 前驱授权","authName":"英语space平台授权 · 来源覆盖授权","meaning":"space后台班期转换/账号迁移","sourceIdGuide":"填前驱授权ID（userauth 主表 uuid）。系统自动写入，人工无需填。","relationship":"相同：source_id=前驱授权ID，credential_id=同一授权ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"购买中考二轮课程的用户补发冲刺课","displayName":"购买中考二轮课程的用户补发冲刺课","status":"存量无主","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"购买中考二轮课程的用户补发冲刺课 · 来源覆盖授权","meaning":"会员权益维护补发（教育局合规）","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"全国B端中考专项赠送","displayName":"全国B端中考专项赠送","status":"存量无主","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"全国B端中考专项赠送 · 来源覆盖授权","meaning":"B端中考专项赠送","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"河南中考专项赠送","displayName":"河南中考专项赠送","status":"存量无主","credentialType":"business_auth","credentialName":"business_auth B端授权","authName":"河南中考专项赠送 · 来源覆盖授权","meaning":"B端河南中考专项赠送","sourceIdGuide":"填 B端系统 businessAuth 表主键（uuid）。去哪拿：B端后台-授权/工单详情。","relationship":"通常不相同：source_id=BusinessAuthDetail.sourceId（写入userauth的统一来源键）；credential_id=businessAuthId（查询B端详情的主键，格式以B端真实主键为准，待接口摸底确认）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"洋葱课件分享活动","displayName":"洋葱课件分享活动","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"洋葱课件分享活动 · 来源覆盖授权","meaning":"课件推广活动（2020-12）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"老拉新2020","displayName":"老拉新2020","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"老拉新2020 · 来源覆盖授权","meaning":"邀新完成任务奖励1天VIP","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"教师拉新-VIP-200608","displayName":"教师拉新-VIP-200608","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"教师拉新-VIP-200608 · 来源覆盖授权","meaning":"暑期教师拉新VIP","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"教师拉新-VIP-200507","displayName":"教师拉新-VIP-200507","status":"存量无主","credentialType":"activity","credentialName":"activity 活动","authName":"教师拉新-VIP-200507 · 来源覆盖授权","meaning":"教师拉新","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"湖北教师及班级延长VIP至0506","displayName":"湖北教师及班级延长VIP至0506","status":"存量无主","credentialType":"send_rule","credentialName":"send_rule 补发规则","authName":"湖北教师及班级延长VIP至0506 · 来源覆盖授权","meaning":"疫情期间湖北师生延长VIP","sourceIdGuide":"填补发规则ID（send_rule 表主键 uuid）。去哪拿：shadow-授权补发规则列表。","relationship":"新口径相同：source_id=补发规则ID，credential_id=同一规则ID；存量中文补发来源可能没有规则ID。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"4-22测试数据","displayName":"4-22测试数据","status":"测试","credentialType":"none","credentialName":"none 无凭据","authName":"4-22测试数据 · 来源覆盖授权","meaning":"测试","sourceIdGuide":"无需填ID；「原因说明」必填写清发放依据（仅存量场景允许，新业务禁用）。","relationship":"两者均为空；必须用reason_text说明。仅存量兼容，新业务禁用。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"新用户引导签到活动","displayName":"新用户引导签到活动","status":"已废弃","credentialType":"activity","credentialName":"activity 活动","authName":"新用户引导签到活动 · 来源覆盖授权","meaning":"新用户引导签到","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"新用户绑定手机号","displayName":"新用户绑定手机号","status":"已废弃","credentialType":"activity","credentialName":"activity 活动","authName":"新用户绑定手机号 · 来源覆盖授权","meaning":"绑定手机号奖励","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"学员试用vip","displayName":"学员试用vip","status":"已废弃","credentialType":"activity","credentialName":"activity 活动","authName":"学员试用vip · 来源覆盖授权","meaning":"学员试用","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"},{"sourceType":"星阶","displayName":"星阶","status":"已废弃","credentialType":"activity","credentialName":"activity 活动","authName":"星阶 · 来源覆盖授权","meaning":"星阶任务奖励（来源ID为 task:时间戳）","sourceIdGuide":"source_type 填「来源枚举」列的注册代号；source_id 填单次发放的活动业务记录ID（如彩票ID/任务ID/认证记录ID）。若业务没有逐用户记录，登记时必须声明可替代的活动批次ID；禁止把来源枚举本身当 source_id。","relationship":"source_type=注册的活动来源枚举；source_id=单次活动业务记录ID/批次ID；credential_id=规范化后的同一业务记录ID（新口径通常与source_id相同）。","entry":"待业务 owner 补录：当前未确认统一页面/API；补录前按 sourceId 填写说明和负责人排查"}];
+const EVENT_COVERAGE = [
+  {type:"grant",label:"发放",auth:"A-001",note:"订单支付成功发放"},
+  {type:"grant_supplement",label:"补发",auth:"A-009",note:"规则补发并进入排队"},
+  {type:"grant_delayed",label:"延迟登记",auth:"A-023",note:"待激活；另有已激活和激活前撤销变体"},
+  {type:"activate",label:"生效",auth:"A-032",note:"延迟权益到约定时间自动激活"},
+  {type:"freeze",label:"冻结",auth:"A-002",note:"退款处理中冻结"},
+  {type:"unfreeze",label:"解冻",auth:"A-019",note:"退款取消后新授权接续"},
+  {type:"exchange_out",label:"转换出",auth:"A-004",focus:"A-000X",note:"前驱授权转出"},
+  {type:"exchange_in",label:"转换入",auth:"A-028",note:"跨用户账号转换转入"},
+  {type:"deduct_revoke",label:"扣减撤销",auth:"A-030",note:"扣减已发放时长并撤销"},
+  {type:"restore",label:"恢复",auth:"A-031",note:"撤销后按原时长恢复"},
+  {type:"adjust",label:"人工调整",auth:"A-024",note:"客服延期调整截止时间"},
+  {type:"expire",label:"自然到期",auth:"A-026",note:"到期对账补记"},
+  {type:"revoke",label:"撤销",auth:"A-034",note:"风控批量撤销；延迟授权激活前撤销另见 A-033"},
+  {type:"archive",label:"归档",auth:"A-101",note:"主库迁移前写归档事件"},
+  {type:"repair",label:"修复重建",auth:"A-025",note:"旧授权映射到重建授权"},
+  {type:"correction",label:"审计冲正",auth:"A-026",note:"只增不改的审计更正"}
+];
+const SPECIAL_CASES = [
+  {id:"S-01",key:"attach-auth",name:"附加权益 attach-auth",status:"随本体生效",credential:"规则 + 本体授权",authName:"初中数学重难点培优课·附加权益",action:"attach",mark:"NEW",note:"无独立授权记录；本体生命周期 + 关联规则共同追溯"},
+  {id:"S-02",key:"delay_vip_auth.pending",name:"延迟授权 · 待激活",status:"待激活",credential:"order",authName:"寒假班延迟授权（待激活）",auth:"A-023",mark:"KEEP",note:"保留 A-023"},
+  {id:"S-03",key:"delay_vip_auth.activated",name:"延迟授权 · 已激活",status:"使用中",credential:"order",authName:"寒假班延迟授权（已激活）",auth:"A-032",mark:"NEW",note:"grant_delayed → activate"},
+  {id:"S-04",key:"delay_vip_auth.revoked",name:"延迟授权 · 激活前撤销",status:"已取消",credential:"order",authName:"暑期班延迟授权（激活前撤销）",auth:"A-033",mark:"NEW",note:"grant_delayed → revoke，不产生 activate"},
+  {id:"S-05",key:"family-share-rewrite",name:"家庭共享查询改写",status:"使用中",credential:"原始订单",authName:"家庭组共享授权（孩子侧查询态）",auth:"A-027",mark:"KEEP",note:"查询层改写，审计保留原始受益人与订单"},
+  {id:"S-06",key:"service-period-boundary",name:"服务期边界",status:"独立体系",credential:"—",authName:"新媒体 / 研学家庭服务期",action:"service",mark:"NEW",note:"按 familyId 记账，不进入授权审计"},
+  {id:"S-07",key:"fixed-price-tablet-boundary",name:"一口价平板设备权益 / 补时边界",status:"不入审计",credential:"—",authName:"一口价平板设备权益与补时",action:"fixed-tablet",mark:"NEW",note:"不进入 auth_audit_event；credential_type 不赋值"},
+  {id:"S-08",key:"cross-user-transfer",name:"跨用户账号转换",status:"使用中",credential:"auth",authName:"账号 A 转入账号 B 的授权",auth:"A-028",mark:"KEEP",note:"exchange_kind=账号转换，转出/转入分属不同 user_id"}
+];
 const SOURCE_HELP = {
   buy:"凭据 ID 为洋葱订单号，可跳转订单管理-订单详情。三方通用兑换链路先生成洋葱订单再发权益，来源 ID 即洋葱订单号。",
   doudian:"来源 ID 为抖店平台单号（历史原值）；每笔三方订单都有对应洋葱订单，凭据 ID 统一用洋葱订单号（展示时按三方订单表实时关联，不改历史数据），可跳订单详情。",
@@ -758,8 +868,8 @@ const AUTHS = {
    start:"—", end:"—", remain:"排队中", total:"90天", src:"新课程补发", sourceCode:"send_rule", sourceId:"sr_67ea5749…4b0c", credT:"send_rule", credId:"sr_67ea5749…4b0c", created:"2026-12-05 03:00:00", creator:"system", reason:"大会员补发", archived:false },
  "A-010": { name:"教师版 全科 VIP", type:"同步课", subject:"教师全科", state:"using", stateTxt:"使用中",
    start:"2026-10-20 00:00:00", end:"2027-10-19 23:59:59", remain:"312 天", total:"365天", src:"教师升级赠送(teacherLevelUp)", sourceId:"", sourceIdTip:"历史无sourceId", credT:"none", credId:"", created:"2026-10-20 10:00:00", creator:"system", reason:"教师升级", archived:false },
- "A-011": { name:"初中数学 同步课 VIP（平板权益）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
-   start:"2026-10-05 00:00:00", end:"2046-10-04 23:59:59", remain:"7200+ 天", total:"20年", src:"一口价平板激活(school)", sourceId:"device123:user_58f2（历史拼接）", sourceIdTip:"存量设备号+用户ID拼接；新凭据改用脱敏omvd", credT:"device", credId:"omvd-8f3…a2", created:"2026-10-05 14:00:00", creator:"system", reason:"平板激活", archived:false },
+ "A-011": { name:"华为教育中心设备绑定课程权益", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中", delta:"changed",
+   start:"2026-10-05 00:00:00", end:"2027-10-04 23:59:59", remain:"296 天", total:"365天", src:"华为教育中心绑定用户(huaweiEduKitBindUser0318)", sourceId:"legacy-device:user_58f2（历史拼接）", sourceIdTip:"存量设备标识+用户ID拼接；新凭据使用脱敏 omvd 或 SN 记录ID", credT:"device", credId:"omvd-8f3…a2", created:"2026-10-05 14:00:00", creator:"system", reason:"华为教育中心设备绑定用户后按配置发放", archived:false },
  "A-012": { name:"初中数学 同步课 VIP（抽奖7天）", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
    start:"2026-12-02 00:00:00", end:"2026-12-08 23:59:59", remain:"5 天", total:"7天", src:"彩票抽取(present)", sourceId:"LTY-2026NY-0088", sourceIdTip:"抽奖业务传入的 lotteryId（原型格式示例）", credT:"activity", credId:"LTY-2026NY-0088", created:"2026-12-02 09:00:00", creator:"system", reason:"彩票抽取", archived:false },
  "A-013": { name:"初中英语 同步课 VIP（体验机会）", type:"同步课", subject:"初中英语", state:"unused", stateTxt:"未使用",
@@ -774,7 +884,7 @@ const AUTHS = {
    start:"2026-12-07 00:00:00", end:"2027-12-06 23:59:59", remain:"365 天", total:"365天", src:"教师认证赠送(teacherAuth)", sourceId:"authcert_56c2…18f0", sourceIdTip:"教师认证记录UUID", credT:"activity", credId:"authcert_56c2…18f0", created:"2026-12-07 15:00:00", creator:"教师认证系统", reason:"教师认证通过", archived:false },
  "A-018": { name:"积分兑换 VIP（3天）", type:"同步课", subject:"初中数学", state:"canceled", stateTxt:"已取消",
    start:"2026-12-08 00:00:00", end:"2026-12-09 10:12:00", remain:"—", total:"3天", src:"积分兑换(integral)", sourceId:"integral_bill_99182", sourceIdTip:"积分兑换/账单记录ID", credT:"redeem_code", credId:"integral_bill_99182", created:"2026-12-08 16:00:00", creator:"积分商城", reason:"积分商品兑换", archived:false },
- "A-019": { name:"退款取消恢复 VIP", type:"同步课", subject:"初中物理", state:"unused", stateTxt:"未使用",
+ "A-019": { name:"退款取消恢复 VIP", type:"同步课", subject:"初中物理", state:"unused", stateTxt:"未使用", delta:"changed",
    start:"—", end:"—", remain:"排队中", total:"20天", src:"授权解冻(unfreeze)", sourceId:"A-OLD-778", sourceIdTip:"原授权ID（退款取消后解冻新建授权）", credT:"auth", credId:"A-OLD-778", created:"2026-12-09 17:00:00", creator:"system", reason:"退款取消解冻", archived:false },
  "A-020": { name:"初中化学 同步课 VIP（无工单补偿）", type:"同步课", subject:"初中化学", state:"using", stateTxt:"使用中",
    start:"2026-12-10 16:20:00", end:"2027-01-08 23:59:59", remain:"29 天", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_04af…25cc", sourceIdTip:"存量来源ID保留操作人ID；本次操作依据为图文记录", credT:"none", credId:"", evidenceId:"EV-20261210-0042", created:"2026-12-10 16:20:00", creator:"李思思", reason:"无工单图文补偿", archived:false },
@@ -792,6 +902,16 @@ const AUTHS = {
    start:"2026-09-02 00:00:00", end:"2027-09-01 23:59:59", remain:"411 天", total:"365天", src:"家庭组共享（查询改写值）", sourceId:"", sourceIdTip:"线上现状：查询返回时 sourceType 被改写为「家庭组共享」、sourceId 被清空、userId 被替换为查询者；原始值见生命周期", credT:"none", credId:"", created:"2026-09-02 10:05:00", creator:"—", reason:"家庭组共享（原始授权属于家长）", archived:false },
  "A-028": { name:"初中数学 同步课 VIP〔账号转换case：A用户转入B（本账号）〕", type:"同步课", subject:"初中数学", state:"using", stateTxt:"使用中",
    start:"2026-12-12 14:00:00", end:"2027-06-09 23:59:59", remain:"178 天", total:"180天", src:"授权转换(auth)", sourceId:"A-EXT-901", sourceIdTip:"账号转换：前驱授权 A-EXT-901 在另一用户（转出方）名下；转出方同时被撤销（cancelReason=exchange）", credT:"auth", credId:"A-EXT-901", created:"2026-12-12 14:00:00", creator:"李思思", reason:"账号转换（买错账号迁移）", archived:false },
+ "A-030": { name:"初中地理 VIP（扣减撤销案例）", type:"同步课", subject:"初中地理", state:"canceled", stateTxt:"已取消", delta:"new",
+   start:"2026-12-14 09:00:00", end:"2026-12-15 11:20:00", remain:"—", total:"30天", src:"后台手动发放(shadow)", sourceId:"shadowUser_991…771", credT:"work_order", credId:"WO-20261215-22", created:"2026-12-14 09:00:00", creator:"李思思", reason:"重复补偿，扣减撤销", archived:false },
+ "A-031": { name:"初中地理 VIP（撤销恢复案例）", type:"同步课", subject:"初中地理", state:"unused", stateTxt:"未使用", delta:"new",
+   start:"—", end:"—", remain:"排队中", total:"30天", src:"授权恢复(auth)", sourceId:"A-030", credT:"auth", credId:"A-030", created:"2026-12-15 16:30:00", creator:"周敏", reason:"复核确认原撤销错误，恢复授权", archived:false },
+ "A-032": { name:"初中英语 VIP（寒假班延迟授权·已激活）", type:"同步课", subject:"初中英语", state:"using", stateTxt:"使用中", delta:"new",
+   start:"2027-01-15 00:00:00", end:"2027-03-15 23:59:59", remain:"60 天", total:"60天", src:"购买获得(buy)", sourceId:"O2026122010", credT:"order", credId:"O2026122010", created:"2026-12-20 10:18:00", creator:"system", reason:"寒假班延迟开通订单（已到激活日）", archived:false },
+ "A-033": { name:"高中数学 VIP（暑期班延迟授权·激活前撤销）", type:"同步课", subject:"高中数学", state:"canceled", stateTxt:"已取消", delta:"new",
+   start:"—", end:"—", remain:"—", total:"45天", src:"购买获得(buy)", sourceId:"O2026122011", credT:"order", credId:"O2026122011", created:"2026-12-20 10:24:00", creator:"system", reason:"延迟开通订单在激活前退款撤销", archived:false },
+ "A-034": { name:"初中生物 VIP（风控批量撤销）", type:"同步课", subject:"初中生物", state:"canceled", stateTxt:"已取消", delta:"new",
+   start:"2026-12-18 09:00:00", end:"2026-12-22 02:10:00", remain:"—", total:"365天", src:"购买获得(buy)", sourceId:"O2026121807", credT:"order", credId:"O2026121807", created:"2026-12-18 09:00:00", creator:"system", reason:"风控识别灰产刷单并按批次收权", archived:false },
  "A-101": { name:"初中化学 体验课（7天）", type:"同步课", subject:"初中化学", state:"canceled", stateTxt:"已取消",
    start:"2026-10-03 00:00:00", end:"2026-10-09 23:59:59", remain:"—", total:"7天", src:"体验券兑换(trialVouchers)", sourceId:"tv_3301", credT:"voucher", credId:"tv_3301", created:"2026-10-03 12:00:00", creator:"system", reason:"体验券兑换", archived:true, archivedAt:"2026-12-01 02:10:00" },
 };
@@ -914,10 +1034,10 @@ const EVENTS = {
      tech:{"事件编号":"E-9901","事件序号":"1","调用方服务":"教师成长服务"} }
  ]},
  "A-011": { chain:null, events:[
-   { et:"grant", cls:"birth", label:"发放", time:"2026-10-05 14:00:00", op:"系统（平板管理）",
-     body:"原因：一口价平板激活 ｜ 平板激活时按预设配置发放课程权益（20 年）。设备标识按合规要求脱敏展示。",
+   { et:"grant", cls:"birth", label:"设备绑定发放", time:"2026-10-05 14:00:00", op:"系统（华为教育中心绑定服务）",
+     body:"原因：huaweiEduKitBindUser0318 设备绑定用户成功，按设备绑定来源配置发放 365 天课程权益。该案例已从原错误的『一口价平板』改正；设备凭据仅展示脱敏 omvd。",
      diff:[["状态","—","使用中"]], cred:{t:"device", id:"omvd-8f3…a2"},
-     tech:{"事件编号":"E-9A01","事件序号":"1","调用方服务":"device 平板管理","受益范围":"设备"} }
+     tech:{"事件编号":"E-9A01","事件序号":"1","调用方服务":"Huawei EduKit Bind","source_type":"huaweiEduKitBindUser0318"} }
  ]},
  "A-018": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-12-08 16:00:00", op:"系统（积分商城）",
@@ -952,6 +1072,53 @@ const EVENTS = {
      body:"寒假班订单支付成功，权益登记为延迟开通：约定 2027-01-15 00:00 自动激活，届时另写「生效」事件。激活前用户不可学，客服可据此回答「付了钱为什么还不能学」。",
      diff:[["状态","—","待激活"]], cred:{t:"order", id:"O2026122009"},
      tech:{"事件编号":"E-9D01","事件序号":"1","激活截止":"2027-01-15"} }
+ ]},
+ "A-019": { chain:null, events:[
+   { et:"unfreeze", cls:"birth", label:"解冻并接续", time:"2026-12-09 17:00:00", op:"系统（退款服务）",
+     body:"退款申请取消。原冻结授权 A-OLD-778 不做原地回滚，系统新建本授权并接续剩余 20 天。",
+     diff:[["状态","已冻结","未使用"],["时长变化","","+20 天"]], cred:{t:"auth", id:"A-OLD-778"},
+     tech:{"事件编号":"E-9U01","事件序号":"1","调用方服务":"refund-userauth"} }
+ ]},
+ "A-030": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-12-14 09:00:00", op:"李思思（客服一部）",
+     body:"客服补偿发放 30 天。", diff:[["状态","—","使用中"]], cred:{t:"work_order", id:"WO-20261214-18"},
+     tech:{"事件编号":"E-9K01","事件序号":"1"} },
+   { et:"deduct_revoke", cls:"death", label:"扣减撤销", time:"2026-12-15 11:20:00", op:"李思思（客服一部）",
+     body:"复核发现重复补偿，扣减剩余时长并撤销整条授权；保留原发放与本次扣减事件。",
+     diff:[["状态","使用中","已取消"],["时长变化","29 天","-29 天"]], cred:{t:"work_order", id:"WO-20261215-22"},
+     tech:{"事件编号":"E-9K02","事件序号":"2"} }
+ ]},
+ "A-031": { chain:null, events:[
+   { et:"restore", cls:"birth", label:"恢复", time:"2026-12-15 16:30:00", op:"周敏（运营）",
+     body:"二次复核确认 A-030 的扣减撤销依据有误，按原授权剩余 30 天恢复为新授权；通过前驱授权 ID 互查。",
+     diff:[["状态","已取消","未使用"],["时长变化","","+30 天"]], cred:{t:"auth", id:"A-030"},
+     tech:{"事件编号":"E-9R01","事件序号":"1","restore_from_auth_id":"A-030"} }
+ ]},
+ "A-032": { chain:null, events:[
+   { et:"grant_delayed", cls:"birth", label:"延迟登记", time:"2026-12-20 10:18:00", op:"系统（订单服务）",
+     body:"订单支付成功，约定 2027-01-15 自动激活。", diff:[["状态","—","待激活"]], cred:{t:"order", id:"O2026122010"},
+     tech:{"事件编号":"E-9L01","事件序号":"1"} },
+   { et:"activate", cls:"", label:"按约生效", time:"2027-01-15 00:00:00", op:"系统（延迟激活任务）",
+     body:"到达约定激活时间，延迟权益开始计时并可学习。", diff:[["状态","待激活","使用中"]], cred:{t:"order", id:"O2026122010"},
+     tech:{"事件编号":"E-9L02","事件序号":"2"} }
+ ]},
+ "A-033": { chain:null, events:[
+   { et:"grant_delayed", cls:"birth", label:"延迟登记", time:"2026-12-20 10:24:00", op:"系统（订单服务）",
+     body:"暑期班订单支付成功，约定 2027-07-01 自动激活。", diff:[["状态","—","待激活"]], cred:{t:"order", id:"O2026122011"},
+     tech:{"事件编号":"E-9V01","事件序号":"1"} },
+   { et:"revoke", cls:"death", label:"激活前撤销", time:"2026-12-28 18:10:00", op:"系统（退款服务）",
+     body:"用户在约定激活日前完成退款，本条延迟授权撤销，不再产生 activate 事件。",
+     diff:[["状态","待激活","已取消"]], cred:{t:"order", id:"O2026122011"},
+     tech:{"事件编号":"E-9V02","事件序号":"2"} }
+ ]},
+ "A-034": { chain:null, events:[
+   { et:"grant", cls:"birth", label:"发放", time:"2026-12-18 09:00:00", op:"系统（订单服务）",
+     body:"订单支付成功后发放初中生物 VIP 365 天。", diff:[["状态","—","使用中"]], cred:{t:"order", id:"O2026121807"},
+     tech:{"事件编号":"E-9N01","事件序号":"1","调用方服务":"go-order"} },
+   { et:"revoke", cls:"death", label:"撤销（风控）", time:"2026-12-22 02:10:00", op:"系统（风控服务）",
+     body:"原因：风控收权 ｜ 灰产刷单命中风险策略，按风控批次 RISK-20261222-03 批量撤销；用户申诉时可区分于退款或客服操作。",
+     diff:[["状态","使用中","已取消"]], cred:{t:"order", id:"O2026121807"},
+     tech:{"事件编号":"E-9N02","事件序号":"2","reason_code":"risk","operator_type":"risk","operator_id":"svc:riskmgr","batch_id":"RISK-20261222-03"} }
  ]},
  "A-024": { chain:null, events:[
    { et:"grant", cls:"birth", label:"发放", time:"2026-11-01 09:00:00", op:"系统（订单服务）",
@@ -1020,15 +1187,15 @@ const EVENTS = {
 const selected = new Set();
 function rowHtml(id, a){
   const chk = `<input type="checkbox" ${selected.has(id)?'checked':''} onchange="toggleSel('${id}',this.checked)">`;
-  return `<tr>
+  return `<tr class="${a.delta==='changed'?'mark-changed-row':''}">
     <td>${a.state==='using'||a.state==='unused'||a.state==='freeze'?chk:''}</td>
-    <td><b>${a.name}</b><div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
+    <td><b>${a.name}</b> ${a.delta?`<span class="delta-badge ${a.delta}">${a.delta==='changed'?'CHG':'NEW'}</span>`:''}<div style="color:#909399;font-size:11px">授权 ID：${id}</div></td>
     <td class="nowrap">${a.type}</td>
     <td class="nowrap"><span class="st ${a.state}">${a.stateTxt}</span></td>
     <td class="nowrap">${a.start.slice(0,10)}</td><td class="nowrap">${a.end.slice(0,10)}</td><td class="nowrap">${a.remain}</td>
     <td>${sourceCell(a)}</td><td>${authCredentialCell(a)}</td>
     <td class="nowrap">${a.created.slice(0,10)}</td>
-    <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
+    <td><span class="lc-btn" onclick="openDrawer('${id}')">生命周期</span> <span class="delta-badge new">NEW</span> · <a onclick="openCancelModal('${id}',false)">撤销</a></td>
   </tr>`;
 }
 function archRowHtml(id, a){
@@ -1363,15 +1530,120 @@ function toggleSvcPane(){
     <div style="margin-top:8px;color:#667085;line-height:1.7">服务期（新媒体/研学）由 revenue-clue-manage 按<b>家庭 familyId</b> 记账，<b>完全不经过 userauth</b>，与家庭组共享授权是两码事。按 PRD §2.2 边界决策：服务期<b>不混入</b>授权审计事件表；建议二期按相同事件范式独立建 service_period_audit_event，本 tab 届时加同样的时间线，两域用 trace_id 串联。因此本原型的生命周期抽屉不提供服务期事件流——这是边界，不是遗漏。</div></div>`;
   document.getElementById('credMask').classList.add('open');
 }
+
+/* ============ v9.0 案例覆盖索引 ============ */
+let coverageTab = 'source';
+function initCoverageFilters(){
+  const status=[...new Set(SOURCE_REGISTRY.map(r=>r.status))].sort();
+  const creds=[...new Set(SOURCE_REGISTRY.map(r=>r.credentialType))].sort();
+  document.getElementById('coverage-status').innerHTML='<option value="">全部状态</option>'+status.map(v=>`<option>${v}</option>`).join('');
+  document.getElementById('coverage-cred').innerHTML='<option value="">全部凭据类型</option>'+creds.map(v=>`<option>${v}</option>`).join('');
+}
+function switchCoverageTab(tab){
+  coverageTab=tab;
+  ['source','event','special'].forEach(x=>document.getElementById('ctab-'+x).classList.toggle('active',x===tab));
+  const sourceOnly=tab==='source';
+  document.getElementById('coverage-status').style.display=sourceOnly?'':'none';
+  document.getElementById('coverage-cred').style.display=sourceOnly?'':'none';
+  document.getElementById('coverage-q').placeholder=sourceOnly?'搜索 source_type、中文名、授权名或凭据类型':'搜索事件、案例 ID、授权名或说明';
+  renderCoverage();
+}
+function coverageIncludes(values,q){ return !q || values.join(' ').toLowerCase().includes(q.toLowerCase()); }
+function renderCoverage(){
+  const q=val('coverage-q'), status=val('coverage-status'), cred=val('coverage-cred');
+  const thead=document.getElementById('coverage-thead'), body=document.getElementById('coverage-tbody'), summary=document.getElementById('coverage-summary');
+  if(coverageTab==='source'){
+    const rows=SOURCE_REGISTRY.map((r,i)=>({...r,index:i})).filter(r=>
+      (!status||r.status===status)&&(!cred||r.credentialType===cred)&&
+      coverageIncludes([r.sourceType,r.displayName,r.authName,r.credentialName,`SRC-${String(r.index+1).padStart(3,'0')}`],q));
+    thead.innerHTML='<tr><th>案例</th><th>source_type</th><th>中文展示名</th><th>状态</th><th>凭据类型</th><th>案例授权名称</th><th>操作</th></tr>';
+    body.innerHTML=rows.map(r=>`<tr>
+      <td class="case-code">SRC-${String(r.index+1).padStart(3,'0')}</td><td class="case-code">${r.sourceType}</td>
+      <td>${r.displayName}</td><td><span class="st ${sourceRegistryStatusClass(r.status)}">${r.status}</span></td>
+      <td>${r.credentialName||'none 无凭据'}</td><td class="case-name">${r.authName}</td>
+      <td><a onclick="openRegistryCase(${r.index})">查看案例生命周期 →</a></td></tr>`).join('')||'<tr><td colspan="7" class="empty">无匹配来源案例</td></tr>';
+    summary.innerHTML=`显示 <strong>${rows.length}</strong> / 110 条来源案例 <span class="delta-badge new">NEW</span><span>每一行均有授权名称与可打开详情</span>`;
+  }else if(coverageTab==='event'){
+    const rows=EVENT_COVERAGE.filter(r=>coverageIncludes([r.type,r.label,r.auth,r.note],q));
+    thead.innerHTML='<tr><th>event_type</th><th>中文事件</th><th>状态</th><th>案例授权 ID</th><th>覆盖说明</th><th>操作</th></tr>';
+    body.innerHTML=rows.map(r=>`<tr><td class="case-code">${r.type}</td><td class="case-name">${r.label}</td>
+      <td><span class="st ${statusClass(eventAfterStatus({et:r.type,diff:[]}))}">${eventAfterStatus({et:r.type,diff:[]})}</span></td>
+      <td class="case-code">${r.auth}</td><td class="case-note">${r.note}</td>
+      <td><a onclick="openDrawer('${r.auth}'${r.focus?`,'${r.focus}'`:''})">打开事件案例 →</a></td></tr>`).join('');
+    summary.innerHTML=`显示 <strong>${rows.length}</strong> / 16 个事件类型；注册清单覆盖率 <strong>100%</strong>`;
+  }else{
+    const rows=SPECIAL_CASES.filter(r=>coverageIncludes([r.id,r.key,r.name,r.authName,r.note],q));
+    thead.innerHTML='<tr><th>案例</th><th>特殊 / 边界类型</th><th>状态</th><th>凭据类型</th><th>案例授权名称</th><th>说明</th><th>操作</th></tr>';
+    body.innerHTML=rows.map(r=>`<tr class="${r.key==='fixed-price-tablet-boundary'?'mark-changed-row':''}">
+      <td class="case-code">${r.id}</td><td class="case-name">${r.name} <span class="delta-badge ${r.mark==='NEW'?'new':'retained'}">${r.mark}</span></td>
+      <td>${r.status}</td><td>${r.credential}</td><td>${r.authName}</td><td class="case-note">${r.note}</td>
+      <td><a onclick="openSpecialCase('${r.id}')">查看案例 →</a></td></tr>`).join('');
+    summary.innerHTML=`显示 <strong>${rows.length}</strong> / 8 个特殊案例；含延迟授权三态与两项域外边界`;
+  }
+}
+function sourceRegistryStatusClass(status){
+  if(status.includes('使用中'))return 'using';
+  if(status.includes('废弃'))return 'canceled';
+  if(status.includes('测试'))return 'freeze';
+  return 'unused';
+}
+function openRegistryCase(index){
+  const r=SOURCE_REGISTRY[index], caseId=`SRC-${String(index+1).padStart(3,'0')}`;
+  const canCreateNew=r.status==='使用中';
+  curDrawerAuth=null;
+  document.getElementById('d-title').textContent=r.authName;
+  document.getElementById('d-authid').textContent=`案例 ID：${caseId}`;
+  document.getElementById('d-body').innerHTML=`
+    <div class="boundary-card"><h4>来源注册案例 · ${r.displayName}</h4>
+      <div><b>source_type</b>：<span class="case-code">${r.sourceType}</span>　<b>登记状态</b>：${r.status}</div>
+      <div><b>凭据类型</b>：${r.credentialName||'none 无凭据'}</div>
+      <div style="margin-top:6px">${r.meaning}</div></div>
+    <div class="nowcard">
+      <div class="metric"><div class="metric-label">案例状态</div><div class="metric-value">${r.status}</div></div>
+      <div class="metric"><div class="metric-label">凭据类型</div><div class="metric-value">${r.credentialType}</div></div>
+      <div class="metric"><div class="metric-label">来源中文名</div><div class="metric-value">${r.displayName}</div></div>
+      <div class="metric"><div class="metric-label">案例编号</div><div class="metric-value">${caseId}</div></div>
+    </div>
+    <div class="section-title">代表性案例生命周期</div><div class="tl">
+      <div class="ev birth"><div class="ev-head"><span class="ev-title">来源登记 / 业务触发</span><span class="st unused">来源已识别</span></div>
+        <div class="body">${r.sourceIdGuide}</div><div class="event-meta"><span>${r.entry}</span></div></div>
+      <div class="ev"><div class="ev-head"><span class="ev-title">${canCreateNew?'新增授权写入':'存量授权事件双写'}</span><span class="st ${sourceRegistryStatusClass(r.status)}">${r.status}</span></div>
+        <div class="body">${r.relationship}${canCreateNew?'':'<br><b>边界：</b>该来源禁止再用于新增发放；此案例表示存量授权在审计上线后发生撤销、归档等变化时，仍须将原 source_type 同值写入事件。'}</div><div class="event-meta"><span>案例授权：${r.authName}</span><span class="m-cred">凭据 ${r.credentialName||'none 无凭据'}</span></div></div>
+    </div>`;
+  document.getElementById('drawer').classList.add('open');
+  document.getElementById('mask').classList.add('open');
+}
+function openSpecialCase(id){
+  const r=SPECIAL_CASES.find(x=>x.id===id);
+  if(!r)return;
+  if(r.auth){ openDrawer(r.auth); return; }
+  if(r.action==='attach'){ gotoTab('summary'); setTimeout(()=>{ const row=document.getElementById('sr-0-0'); if(row&&!row.classList.contains('open'))toggleSum(0,0); },80); return; }
+  if(r.action==='service'){ toggleSvcPane(); return; }
+  if(r.action==='fixed-tablet'){ openBoundaryCase('fixed-tablet'); }
+}
+function openBoundaryCase(kind){
+  if(kind!=='fixed-tablet')return;
+  document.getElementById('cred-body').innerHTML=`<div class="boundary-card">
+    <h4>一口价平板设备权益 / 补时边界 <span class="delta-badge new">NEW</span></h4>
+    <div><b>结论：</b>该案例不进入 <span class="case-code">auth_audit_event</span>，且不赋值 <span class="case-code">credential_type</span>。</div>
+    <div style="margin-top:8px;color:#667085;line-height:1.75">一口价平板的设备权益与补时由平板设备域自己的设备权益账本承接，不生成 userauth 授权，也不应伪装成 device 凭据事件。A-011 已改为合法的 <span class="case-code">huaweiEduKitBindUser0318</span> 设备绑定发放案例，两者必须分开查询与解释。</div>
+    <div style="margin-top:10px"><span class="delta-badge changed">CHG</span> 原 A-011 的“一口价平板发放”表述已移除。</div></div>`;
+  document.getElementById('credMask').classList.add('open');
+}
+
 /* ============ tab / 五态 / 其它 ============ */
 function showView(view){
-  const isUser=view==='user';
+  const isUser=view==='user', isReward=view==='reward', isCoverage=view==='coverage';
   document.getElementById('view-user').style.display=isUser?'':'none';
-  document.getElementById('view-reward').style.display=isUser?'none':'';
+  document.getElementById('view-reward').style.display=isReward?'':'none';
+  document.getElementById('view-coverage').style.display=isCoverage?'':'none';
   document.getElementById('menu-user').classList.toggle('active',isUser);
-  document.getElementById('menu-reward').classList.toggle('active',!isUser);
-  document.getElementById('top-crumb').innerHTML=isUser?'用户管理 / 用户信息 / <b style="color:#fff">内容权限</b>':'用户管理 / <b style="color:#fff">批量用户奖励</b>';
-  if(!isUser) renderRewardTable();
+  document.getElementById('menu-reward').classList.toggle('active',isReward);
+  document.getElementById('menu-coverage').classList.toggle('active',isCoverage);
+  document.getElementById('top-crumb').innerHTML=isUser?'用户管理 / 用户信息 / <b style="color:#fff">内容权限</b>':
+    isReward?'用户管理 / <b style="color:#fff">批量用户奖励</b>':'用户管理 / <b style="color:#fff">案例覆盖索引</b>';
+  if(isReward) renderRewardTable();
+  if(isCoverage) renderCoverage();
 }
 function gotoTab(t){
   showView('user');
@@ -1404,6 +1676,8 @@ renderStateChips();
 renderTables();
 renderSummary();
 renderRewardTable();
+initCoverageFilters();
+renderCoverage();
 </script>
 </body>
 </html>
