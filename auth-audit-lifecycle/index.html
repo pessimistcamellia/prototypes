@@ -492,7 +492,7 @@
         </div>
         <div class="attachment-list" id="add-attachments"></div>
         <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
-        <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div></div></div>
+        <div class="err">请填写操作依据：工单号，或不少于 3 字的说明</div></div></div>
       <div class="frow" id="f-operator-add"><div class="lab">操作人 / 部门</div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（登录态自动带出，不可修改）</div></div></div>
     </div>
     <div class="modal-foot">
@@ -518,7 +518,7 @@
         </div>
         <div class="attachment-list" id="cancel-attachments"></div>
         <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
-        <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div></div></div>
+        <div class="err">请填写操作依据：工单号，或不少于 3 字的说明</div></div></div>
       <div class="frow" id="f-operator-cancel"><div class="lab">操作人 / 部门</div><div class="ctl"><div class="ro-chip">李思思 · 客服一部（自动带出）</div></div></div>
     </div>
     <div class="modal-foot">
@@ -552,7 +552,7 @@ user_88203</textarea><div class="tip">每行一个账号，单次最多 1000 个
         </div>
         <div class="attachment-list" id="reward-attachments"></div>
         <div class="tip">工单号或其他依据说明均可；点「＋ 图片」附邮件/大象截图（1~5 张，单张 ≤10MB，png/jpg/jpeg/gif/webp）</div>
-        <div class="err">请填写操作依据：工单号，或不少于 5 字的说明</div>
+        <div class="err">请填写操作依据：工单号，或不少于 3 字的说明</div>
       </div></div>
       <div class="frow" id="f-operator-reward"><div class="lab">操作人 / 部门</div><div class="ctl"><div class="ro-chip">张怡婷 · 教师与学校业务群（登录态自动带出，不可修改）</div></div></div>
     </div>
@@ -1414,7 +1414,7 @@ function validBasis(prefix){
   const v=(document.getElementById(prefix+'-basis').value||'').trim();
   if(!v) return false;
   if(validTicket(v,false)) return true;
-  return v.length>=5 && v.length<=500 && !/^\d+$/.test(v);
+  return v.length>=3 && v.length<=500 && !/^\d+$/.test(v);
 }
 function toggleDurType(){
   const v = document.getElementById('add-dur-type').value;
@@ -1445,7 +1445,7 @@ function openCancelModal(id, isBatch){
   document.getElementById('cancelMask').classList.add('open');
 }
 function closeModal(mid){ document.getElementById(mid).classList.remove('open'); }
-function validText(t){ if(!t) return false; t=t.trim(); if(t.length<5||t.length>200) return false; if(/^\d+$/.test(t)) return false; if(/^(.)\1+$/.test(t)) return false; return true; }
+function validText(t){ if(!t) return false; t=t.trim(); if(t.length<3||t.length>200) return false; if(/^\d+$/.test(t)) return false; if(/^(.)\1+$/.test(t)) return false; return true; }
 function validTicket(v, noTicket){ if(noTicket) return true; return /^WO-\w{3,}$/i.test((v||'').trim()); }
 function mark(fid, bad){ document.getElementById(fid).classList.toggle('invalid', bad); return !bad; }
 function submitAdd(){
@@ -1756,11 +1756,11 @@ window.DIFF_CHANGESET = {
     { id:"chg-add-basis", level:"field", page:"addMask", module:"原因与依据", target:"#f-ticket",
       type:"new", title:"新增必填「操作依据」，支持工单号或图文说明",
       desc:"一个输入框：填工单号则凭据类型记工单；填文字说明则作为审计原因说明，可附邮件/大象截图 1~5 张。",
-      before:"无此字段（后台发放无凭据可查，事后无法举证）", after:"必填操作依据，工单号或不少于 5 字的说明＋可选附图",
+      before:"无此字段（后台发放无凭据可查，事后无法举证）", after:"必填操作依据，工单号或不少于 3 字的说明＋可选附图",
       examples:[
         { case:"有工单", input:"WO-88121", result:"校验通过，凭据类型记为工单" },
         { case:"无工单文字依据", input:"邮件确认赠30天，见附图", result:"校验通过，作为审计原因说明" },
-        { case:"说明过短", input:"补偿", result:"校验失败，提示需工单号或不少于 5 字说明" },
+        { case:"说明过短", input:"补偿", result:"校验失败，提示需工单号或不少于 3 字说明" },
         { case:"纯数字", input:"123456", result:"校验失败（既非工单号格式也非有效说明）" }
       ],
       sdd:{ section:"功能点 3：审计事件字段与写入规则" } },
