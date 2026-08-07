@@ -1,0 +1,1537 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>平板管理 · 操作日志与转移授权追溯（原型）</title>
+<link rel="stylesheet" href="https://unpkg.com/element-ui@2.15.14/lib/theme-chalk/index.css" />
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; background: #f5f6f7; font-family: "Helvetica Neue", Helvetica, "PingFang SC", "Microsoft YaHei", Arial, sans-serif; color: #303133; }
+  .layout { display: flex; min-height: 100vh; }
+  .sidebar { width: 200px; flex: 0 0 200px; background: #fff; border-right: 1px solid #e6e6e6; }
+  .sidebar .side-title { padding: 18px 20px 10px; font-size: 15px; font-weight: 700; color: #303133; }
+  .side-menu-item { padding: 12px 20px; font-size: 14px; color: #606266; cursor: pointer; }
+  .side-menu-item:hover { background: #f5f7fa; }
+  .side-menu-item.active { color: #409eff; background: #ecf5ff; border-right: 2px solid #409eff; }
+  .side-menu-item.offline { color: #c0c4cc; text-decoration: line-through; }
+  .content { flex: 1; min-width: 0; }
+  .heading { padding: 16px 24px; background: #fff; border-bottom: 1px solid #e8e8e8; font-size: 20px; font-weight: 600; }
+  .main { margin: 20px; padding: 20px; background: #fff; border-radius: 4px; }
+  .box { margin-bottom: 20px; }
+  .box span { font-size: 14px; color: #606266; }
+  .bread-crumb { margin-bottom: 16px; }
+  .info .info-item { display: flex; padding: 8px 0; font-size: 14px; }
+  .info .info-label { width: 200px; color: #909399; }
+  .info .info-text { color: #303133; }
+  .content-item { margin-bottom: 28px; }
+  .content-title { font-size: 15px; font-weight: 600; margin: 0 0 10px; }
+  .no-list-hint { padding: 28px 0 8px; color: #909399; font-size: 13px; }
+  .transfer-hint { margin: 0 0 14px 100px; padding: 8px 12px; border-radius: 4px; background: #f4f4f5; color: #606266; font-size: 13px; line-height: 1.6; }
+  .transfer-hint.warn { background: #fdf6ec; color: #e6a23c; }
+  .log-banner { margin-bottom: 14px; }
+  .log-filter { margin-bottom: 14px; display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+  .dialog-kv { display: flex; margin-bottom: 12px; font-size: 14px; }
+  .dialog-kv .k { width: 90px; color: #909399; flex: 0 0 90px; }
+  .cell-fail { color: #f56c6c; }
+  /* Element UI 弹窗 z-index 从 2000+ 起，抬高标注层保证弹窗内锚点可见（引擎默认 1040~1200） */
+  .da-wires { z-index: 8990 !important; }
+  .da-anchors { z-index: 9000 !important; }
+  .da-panel { z-index: 9100 !important; }
+  .da-launch { z-index: 9200 !important; }
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="side-title">运营后台</div>
+      <div class="side-menu-item active" id="menu-item-current" @click="goList">平板管理</div>
+      <div class="side-menu-item offline" id="menu-item-old" @click="oldMenuTip">平板管理（旧 · 已下线）</div>
+      <div class="side-menu-item" @click="otherMenuTip">一口价平板-补发授权管理</div>
+    </aside>
+
+    <main class="content">
+      <!-- ========== 列表页 ========== -->
+      <div v-show="view === 'list'" id="view-list" data-diff-page="平板管理 · 列表页">
+        <div class="heading" id="page-heading">平板管理</div>
+        <div class="main">
+          <div class="box" id="list-search">
+            <span>sn码：</span>
+            <el-input v-model="keyword" placeholder="请输入硬件SN码" style="width: 300px" @keyup.enter.native="search"></el-input>
+            <el-button type="primary" @click="search">查询</el-button>
+          </div>
+
+          <div v-if="!perm.list" class="no-list-hint" id="no-list-hint">
+            当前账号无「列表数据」权限，仅支持输入完整 SN 码精确查询并查看设备详情。
+          </div>
+
+          <template v-if="perm.list">
+            <el-table :data="pagedList" style="margin-bottom: 20px" id="device-table">
+              <el-table-column prop="sn" label="SN码"></el-table-column>
+              <el-table-column prop="isFixed" label="是否一口价平板" width="120">
+                <template slot-scope="scope">{{ scope.row.isFixed ? '是' : '否' }}</template>
+              </el-table-column>
+              <el-table-column prop="isSchoolFixed" label="是否智课一口价平板" width="140">
+                <template slot-scope="scope">{{ scope.row.isSchoolFixed ? '是' : '否' }}</template>
+              </el-table-column>
+              <el-table-column label="转移次数" width="100" label-class-name="col-count-th">
+                <template slot-scope="scope">{{ chainCountText(scope.row) }}</template>
+              </el-table-column>
+              <el-table-column prop="onionId" label="最近一次登录用户洋葱ID" width="180"></el-table-column>
+              <el-table-column prop="createdAt" label="第一次授权一口价时间" width="170"></el-table-column>
+              <el-table-column label="操作" width="170" label-class-name="col-actions-th">
+                <template slot-scope="scope">
+                  <el-button type="text" @click="openDetail(scope.row.sn)">查看详情</el-button>
+                  <el-button v-if="perm.transfer && scope.row.isFixed" type="text" @click="openTransfer(scope.row)">转移授权</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+            <el-pagination layout="prev, pager, next, total" :total="listData.length" :page-size="pageSize" :current-page.sync="currentPage"></el-pagination>
+          </template>
+        </div>
+      </div>
+
+      <!-- ========== 设备详情 ========== -->
+      <div v-show="view === 'detail'" id="view-detail" data-diff-page="平板管理 · 设备详情">
+        <div class="heading">平板管理</div>
+        <div class="main">
+          <div class="bread-crumb">
+            <el-breadcrumb separator-class="el-icon-arrow-right">
+              <el-breadcrumb-item><a @click.prevent="goList" href="#">平板管理</a></el-breadcrumb-item>
+              <el-breadcrumb-item>详情</el-breadcrumb-item>
+            </el-breadcrumb>
+          </div>
+
+          <el-tabs type="card" v-model="currentTab">
+            <el-tab-pane v-for="t in tabMap" :key="t.id" :label="t.title" :name="t.id"></el-tab-pane>
+          </el-tabs>
+
+          <!-- 基本信息 -->
+          <div v-show="currentTab === 'info'" class="info">
+            <div class="info-item"><div class="info-label">平板SN码：</div><div class="info-text">{{ detailSn }}</div></div>
+            <div class="info-item"><div class="info-label">最近一次登录用户洋葱ID：</div><div class="info-text">{{ detailDevice.onionId }}</div></div>
+            <div class="info-item"><div class="info-label">平板第一次授权时间：</div><div class="info-text">{{ detailDevice.createdAt }}</div></div>
+            <div class="info-item"><div class="info-label">平板激活时间：</div><div class="info-text">{{ detailDevice.activeTime }}</div></div>
+          </div>
+
+          <!-- 内容权限 -->
+          <div v-show="currentTab === 'permission'">
+            <div v-for="sec in paramsData" :key="sec.targetType" class="content-item">
+              <p class="content-title">{{ sec.title }}</p>
+              <el-button type="primary" size="small" @click="openAddVip(sec.targetType)">{{ sec.subtitle }}</el-button>
+              <el-table :data="authRecordsOf(sec.targetType)" size="mini" border style="margin-top: 10px">
+                <el-table-column label="课程名称" min-width="140" prop="name"></el-table-column>
+                <el-table-column label="来源类型" min-width="90" prop="sourceType"></el-table-column>
+                <el-table-column label="来源ID" min-width="130" prop="sourceId"></el-table-column>
+                <el-table-column label="生效时间" min-width="100" prop="startTime"></el-table-column>
+                <el-table-column label="截止时间" min-width="100" prop="endTime"></el-table-column>
+                <el-table-column label="总时长" min-width="80" prop="duration"></el-table-column>
+                <el-table-column label="剩余时长" min-width="80" prop="remainDays"></el-table-column>
+                <el-table-column label="状态" min-width="80">
+                  <template slot-scope="scope">{{ stateText(scope.row.state) }}</template>
+                </el-table-column>
+                <el-table-column label="创建人" min-width="90" prop="createdBy"></el-table-column>
+                <el-table-column label="创建时间" min-width="100" prop="createdAt"></el-table-column>
+                <el-table-column label="创建原因" min-width="110" show-overflow-tooltip prop="createReason"></el-table-column>
+                <el-table-column label="撤销人" min-width="90" prop="cancelBy"></el-table-column>
+                <el-table-column label="撤销时间" min-width="100" prop="cancelAt"></el-table-column>
+                <el-table-column label="撤销理由" min-width="110" show-overflow-tooltip prop="cancelReason"></el-table-column>
+                <el-table-column label="操作" min-width="90" align="center">
+                  <template slot-scope="scope">
+                    <el-button v-if="scope.row.state === 'canceled'" type="primary" size="mini" disabled>已撤销</el-button>
+                    <el-button v-else type="primary" size="mini" @click="openCancelDlg(scope.row)">撤销</el-button>
+                  </template>
+                </el-table-column>
+              </el-table>
+            </div>
+          </div>
+
+          <!-- 相关订单 -->
+          <div v-show="currentTab === 'order'">
+            <el-table :data="ordersOfDetail" size="mini">
+              <el-table-column label="订单号" prop="id" min-width="180"></el-table-column>
+              <el-table-column label="商品名称" prop="goodName" min-width="220"></el-table-column>
+              <el-table-column label="支付金额" prop="amount" min-width="100"></el-table-column>
+              <el-table-column label="支付时间" prop="payTime" min-width="160"></el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 登录账号 -->
+          <div v-show="currentTab === 'account'">
+            <el-table :data="accountsOfDetail" size="mini">
+              <el-table-column prop="userName" label="用户名称"></el-table-column>
+              <el-table-column prop="onionId" label="用户洋葱ID"></el-table-column>
+              <el-table-column prop="userId" label="用户userID"></el-table-column>
+              <el-table-column prop="updatedAt" label="最近一次登录时间"></el-table-column>
+              <el-table-column prop="loginOutTime" label="最近一次退出登录时间"></el-table-column>
+              <el-table-column label="操作">
+                <template slot-scope="scope">
+                  <el-button type="text" @click="removeAccount(scope.row)">删除</el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 平板权益 -->
+          <div v-show="currentTab === 'padRight'">
+            <el-button type="primary" @click="addRightDlg.visible = true">添加权益</el-button>
+            <el-table :data="rightsOfDetail" size="mini" style="margin-top: 10px">
+              <el-table-column prop="sn" label="SN码"></el-table-column>
+              <el-table-column prop="type" label="权益类型"></el-table-column>
+              <el-table-column prop="days" label="权益时长">
+                <template slot-scope="scope">{{ scope.row.days }}天</template>
+              </el-table-column>
+              <el-table-column prop="status" label="状态"></el-table-column>
+              <el-table-column prop="startTime" label="开始时间"></el-table-column>
+              <el-table-column prop="endTime" label="结束时间"></el-table-column>
+            </el-table>
+          </div>
+
+          <!-- 操作日志（新增） -->
+          <div v-show="currentTab === 'log'" id="log-tab-body">
+            <div class="log-banner" id="log-banner">
+              <el-alert type="info" :closable="false" show-icon
+                title="审计起始时间：2026-08-10 00:00。此前的历史记录基于可识别数据回填，可能不完整。"></el-alert>
+            </div>
+            <div class="log-filter">
+              <el-select v-model="logFilter.type" placeholder="操作类型" size="small" clearable style="width: 150px">
+                <el-option v-for="t in logTypes" :key="t" :label="t" :value="t"></el-option>
+              </el-select>
+              <el-select v-model="logFilter.result" placeholder="执行结果" size="small" clearable style="width: 120px">
+                <el-option label="成功" value="成功"></el-option>
+                <el-option label="失败" value="失败"></el-option>
+              </el-select>
+              <el-date-picker v-model="logFilter.range" type="daterange" size="small"
+                range-separator="至" start-placeholder="开始日期" end-placeholder="结束日期"
+                value-format="yyyy-MM-dd" style="width: 380px"></el-date-picker>
+            </div>
+            <el-table :data="filteredLogs" size="mini" border id="log-table">
+              <el-table-column prop="time" label="操作时间" width="150"></el-table-column>
+              <el-table-column prop="operator" label="操作人" width="90"></el-table-column>
+              <el-table-column label="操作类型" width="110">
+                <template slot-scope="scope">
+                  <el-tag size="mini" :type="scope.row.type === '更正记录' ? 'warning' : ''">{{ scope.row.type }}</el-tag>
+                </template>
+              </el-table-column>
+              <el-table-column label="操作内容" min-width="320">
+                <template slot-scope="scope">
+                  <div>{{ scope.row.content }}</div>
+                  <div v-if="scope.row.oldSn" style="color: #909399">
+                    原SN：{{ scope.row.oldSn }} → 目标SN：{{ scope.row.newSn }}｜转移场景：{{ scope.row.scene }}
+                  </div>
+                </template>
+              </el-table-column>
+              <el-table-column prop="reason" label="操作原因" min-width="150" show-overflow-tooltip></el-table-column>
+              <el-table-column label="执行结果" width="120">
+                <template slot-scope="scope">
+                  <el-tag size="mini" :type="scope.row.result === '成功' ? 'success' : 'danger'">{{ scope.row.result }}</el-tag>
+                  <div v-if="scope.row.failReason" class="cell-fail">{{ scope.row.failReason }}</div>
+                </template>
+              </el-table-column>
+            </el-table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ========== 转移授权弹窗 ========== -->
+  <el-dialog class="transfer-auth-dialog" title="授权转移" :visible.sync="transfer.visible" width="600px"
+    :close-on-click-modal="false" :lock-scroll="false">
+    <div id="dlg-transfer" data-diff-page="转移授权弹窗">
+      <el-form label-width="100px" size="small">
+        <el-form-item label="撤销人：">{{ user.name }}</el-form-item>
+        <el-form-item label="撤销SN：">{{ transfer.sn }}</el-form-item>
+        <el-form-item label="转移场景：" class="is-required" id="transfer-scene">
+          <el-radio-group v-model="transfer.scene">
+            <el-radio v-for="s in scenes" :key="s.key" :label="s.key">{{ s.label }}</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <div class="transfer-hint" :class="{ warn: transferOver }" id="transfer-hint">{{ transferHint }}</div>
+      <el-form label-width="100px" size="small">
+        <el-form-item label="转移后SN：" class="is-required">
+          <el-input v-model.trim="transfer.targetSn" placeholder="请输入SN"></el-input>
+        </el-form-item>
+        <el-form-item label="转移原因：" :class="{ 'is-required': transferOver }" id="transfer-reason">
+          <el-input type="textarea" :autosize="{ minRows: 2, maxRows: 4 }" v-model="transfer.reason"
+            :placeholder="transferOver ? '已超出场景建议上限，原因必填' : '选填，超出场景建议上限时必填'"></el-input>
+        </el-form-item>
+        <el-form-item label="可转移权益："></el-form-item>
+      </el-form>
+      <el-table :data="transfer.authList" max-height="200" size="mini" border id="transfer-auth-table">
+        <el-table-column label="课程名称" prop="name"></el-table-column>
+        <el-table-column label="权益类型" width="90">
+          <template slot-scope="scope">{{ authTypeText(scope.row.targetType) }}</template>
+        </el-table-column>
+        <el-table-column label="可转移时长" width="120">
+          <template slot-scope="scope">{{ scope.row.days }}天</template>
+        </el-table-column>
+      </el-table>
+    </div>
+    <span slot="footer" class="dialog-footer">
+      <el-button @click="transfer.visible = false">取消</el-button>
+      <el-button type="primary" @click="handleTransferConfirm">确认转移</el-button>
+    </span>
+  </el-dialog>
+
+  <!-- ========== 超限确认弹窗（新增） ========== -->
+  <el-dialog title="超出场景建议上限" :visible.sync="overlimit.visible" width="480px" :close-on-click-modal="false" :lock-scroll="false">
+    <div id="dlg-overlimit" data-diff-page="超限确认弹窗">
+      <div class="dialog-kv"><div class="k">当前累计：</div><div>该权益链已累计转移 {{ overlimitInfo.count }} 次</div></div>
+      <div class="dialog-kv"><div class="k">建议上限：</div><div>「{{ overlimitInfo.sceneLabel }}」场景建议不超过 {{ overlimitInfo.limitText }}</div></div>
+      <div class="dialog-kv"><div class="k">转移原因：</div><div>{{ transfer.reason }}</div></div>
+      <el-alert type="warning" :closable="false" show-icon
+        title="继续转移将超出规则建议范围，本次操作与原因将完整记入操作日志并可追责。"></el-alert>
+    </div>
+    <span slot="footer">
+      <el-button @click="overlimit.visible = false">放弃</el-button>
+      <el-button type="warning" @click="doTransfer">仍要转移</el-button>
+    </span>
+  </el-dialog>
+
+  <!-- ========== 撤销原因弹窗 ========== -->
+  <el-dialog title="撤销原因" :visible.sync="cancelDlg.visible" width="650px" :close-on-click-modal="false">
+    <el-form label-width="100px" size="small">
+      <el-form-item label="撤销人：">{{ user.name }}</el-form-item>
+      <el-form-item label="撤销原因：" class="is-required">
+        <el-input type="textarea" :autosize="{ minRows: 4, maxRows: 6 }" v-model="cancelDlg.remarks"
+          placeholder="请输入撤销原因等相关信息"></el-input>
+      </el-form-item>
+    </el-form>
+    <span slot="footer">
+      <el-button @click="cancelDlg.visible = false">取消</el-button>
+      <el-button type="primary" @click="submitCancel">提交</el-button>
+    </span>
+  </el-dialog>
+
+  <!-- ========== 增加授权弹窗 ========== -->
+  <el-dialog :title="addVipDlg.targetType === 'vip' ? '增加会员时长' : '增加培优课程包'" :visible.sync="addVipDlg.visible" width="520px" :close-on-click-modal="false">
+    <el-form label-width="100px" size="small">
+      <el-form-item label="SN：">{{ detailSn }}</el-form-item>
+      <el-form-item label="时长（天）：" class="is-required">
+        <el-input-number v-model="addVipDlg.days" :min="1" :max="7300"></el-input-number>
+      </el-form-item>
+      <el-form-item label="原因：" class="is-required">
+        <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 5 }" v-model="addVipDlg.reason" placeholder="请输入增加授权的原因"></el-input>
+      </el-form-item>
+    </el-form>
+    <span slot="footer">
+      <el-button @click="addVipDlg.visible = false">取消</el-button>
+      <el-button type="primary" @click="submitAddVip">确定</el-button>
+    </span>
+  </el-dialog>
+
+  <!-- ========== 添加权益弹窗 ========== -->
+  <el-dialog title="添加权益" :visible.sync="addRightDlg.visible" width="520px" :close-on-click-modal="false">
+    <el-form label-width="100px" size="small">
+      <el-form-item label="SN：">{{ detailSn }}</el-form-item>
+      <el-form-item label="权益类型：" class="is-required">
+        <el-select v-model="addRightDlg.type">
+          <el-option label="care+ 碎屏保" value="care+ 碎屏保"></el-option>
+          <el-option label="延保服务" value="延保服务"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="时长（天）：" class="is-required">
+        <el-input-number v-model="addRightDlg.days" :min="1" :max="3650"></el-input-number>
+      </el-form-item>
+      <el-form-item label="原因：" class="is-required">
+        <el-input type="textarea" :autosize="{ minRows: 3, maxRows: 5 }" v-model="addRightDlg.reason" placeholder="请输入添加权益的原因"></el-input>
+      </el-form-item>
+    </el-form>
+    <span slot="footer">
+      <el-button @click="addRightDlg.visible = false">取消</el-button>
+      <el-button type="primary" @click="submitAddRight">确定</el-button>
+    </span>
+  </el-dialog>
+</div>
+
+<script src="https://unpkg.com/vue@2.7.16/dist/vue.min.js"></script>
+<script src="https://unpkg.com/element-ui@2.15.14/lib/index.js"></script>
+<script>
+var app = new Vue({
+  el: '#app',
+  data: function () {
+    return {
+      view: 'list',
+      keyword: '',
+      filteredSn: '',
+      currentPage: 1,
+      pageSize: 10,
+      user: { name: '李客服' },
+      perm: { page: true, list: true, transfer: true },
+      tabMap: [
+        { title: '基本信息', id: 'info' },
+        { title: '内容权限', id: 'permission' },
+        { title: '相关订单', id: 'order' },
+        { title: '登录账号', id: 'account' },
+        { title: '平板权益', id: 'padRight' },
+        { title: '操作日志', id: 'log' }
+      ],
+      paramsData: [
+        { title: '会员时长', subtitle: '增加会员时长', targetType: 'vip' },
+        { title: '培优课（原专项课）', subtitle: '增加培优课程包', targetType: 'specialCourse' }
+      ],
+      scenes: [
+        { key: 'tradeIn', label: '官方以旧换新', limit: 3 },
+        { key: 'addNew', label: '官方加购新机', limit: 3 },
+        { key: 'toNonFixed', label: '转至非一口价平板', limit: 1, requireVirgin: true },
+        { key: 'secondLine', label: '二线特殊处理', limit: null }
+      ],
+      chains: { c1: { count: 0 }, c2: { count: 2 }, c3: { count: 3 }, c5: { count: 1 } },
+      devices: [
+        { sn: 'SN1000001', isFixed: true, isSchoolFixed: false, chain: 'c1', onionId: '8001001', createdAt: '2025-03-12 10:20:00', activeTime: '2025-03-12 10:05:00' },
+        { sn: 'SN2000002', isFixed: true, isSchoolFixed: false, chain: 'c2', onionId: '8002002', createdAt: '2024-11-05 14:30:00', activeTime: '2024-11-05 14:02:00' },
+        { sn: 'SN3000003', isFixed: true, isSchoolFixed: false, chain: 'c3', onionId: '8003003', createdAt: '2024-06-18 09:12:00', activeTime: '2024-06-18 09:01:00' },
+        { sn: 'SN4000004', isFixed: false, isSchoolFixed: true, chain: null, onionId: '8004004', createdAt: '2025-09-01 16:45:00', activeTime: '2025-09-01 16:20:00' },
+        { sn: 'SN5000005', isFixed: true, isSchoolFixed: true, chain: 'c5', onionId: '8005005', createdAt: '2025-01-22 11:00:00', activeTime: '2025-01-22 10:40:00' },
+        { sn: 'SN6000006', isFixed: false, isSchoolFixed: false, chain: 'c2', onionId: '8006006', createdAt: '2025-05-30 13:08:00', activeTime: '2025-05-30 12:50:00' },
+        { sn: 'SN7000007', isFixed: false, isSchoolFixed: false, chain: null, onionId: '8007007', createdAt: '2026-02-14 10:10:00', activeTime: '2026-02-14 10:00:00' }
+      ],
+      detailSn: '',
+      currentTab: 'info',
+      authRecordsBySn: {
+        'SN2000002': [
+          { targetType: 'vip', name: '同步课会员（一口价）', sourceType: '一口价订单', sourceId: 'OD2024110500123', startTime: '2024-11-05', endTime: '2044-11-05', duration: '7300天', remainDays: '6650天', state: 'using', createdBy: '系统', createdAt: '2024-11-05', createReason: '一口价订单发放', cancelBy: '', cancelAt: '', cancelReason: '' },
+          { targetType: 'vip', name: '会员时长（客服补发）', sourceType: 'shadow', sourceId: 'shadow-李客服', startTime: '2026-08-13', endTime: '2027-08-13', duration: '365天', remainDays: '358天', state: 'using', createdBy: '李客服', createdAt: '2026-08-13', createReason: '客诉补偿', cancelBy: '', cancelAt: '', cancelReason: '' },
+          { targetType: 'specialCourse', name: '初中数学培优A', sourceType: 'shadow', sourceId: 'shadow-李客服', startTime: '2026-08-10', endTime: '2027-08-10', duration: '365天', remainDays: '—', state: 'canceled', createdBy: '李客服', createdAt: '2026-08-10', createReason: '活动发放', cancelBy: '李客服', cancelAt: '2026-08-14', cancelReason: '误操作发放' },
+          { targetType: 'specialCourse', name: '初中物理培优B', sourceType: '一口价订单', sourceId: 'OD2024110500123', startTime: '2024-11-05', endTime: '2044-11-05', duration: '7300天', remainDays: '6650天', state: 'using', createdBy: '系统', createdAt: '2024-11-05', createReason: '一口价订单发放', cancelBy: '', cancelAt: '', cancelReason: '' }
+        ],
+        'SN5000005': [
+          { targetType: 'vip', name: '同步课会员（一口价）', sourceType: '一口价订单', sourceId: 'OD2025012200456', startTime: '2025-01-22', endTime: '2045-01-22', duration: '7300天', remainDays: '6870天', state: 'using', createdBy: '系统', createdAt: '2025-01-22', createReason: '一口价订单发放', cancelBy: '', cancelAt: '', cancelReason: '' }
+        ]
+      },
+      accountsBySn: {
+        'SN2000002': [
+          { userName: '小明', onionId: '8002002', userId: 'u_66aa01', updatedAt: '2026-08-16 19:22:00', loginOutTime: '2026-08-16 21:40:00' },
+          { userName: '小红', onionId: '8009009', userId: 'u_66aa02', updatedAt: '2026-07-30 18:11:00', loginOutTime: '2026-07-30 20:05:00' }
+        ]
+      },
+      ordersBySn: {
+        'SN2000002': [
+          { id: 'OD2024110500123', goodName: '洋葱学园平板一口价套装（P30）', amount: '¥4,999.00', payTime: '2024-11-05 14:00:12' }
+        ]
+      },
+      rightsBySn: {
+        'SN2000002': [
+          { sn: 'SN2000002', type: 'care+ 碎屏保', days: 365, status: '生效中', startTime: '2026-08-15', endTime: '2027-08-15' }
+        ]
+      },
+      logs: [
+        { time: '2026-08-12 10:23:11', operator: '王小美', type: '转移授权', sn: 'SN2000002', oldSn: 'SNB000000', newSn: 'SN2000002', scene: '官方以旧换新', content: '整机一口价权益转移（同步课会员、初中物理培优B 等 2 项）', reason: '屏幕损坏换新', result: '成功', failReason: '' },
+        { time: '2026-08-13 15:02:45', operator: '李客服', type: '增加授权', sn: 'SN2000002', oldSn: '', newSn: '', scene: '', content: '会员时长 +365天（剩余120天 → 剩余485天）', reason: '客诉补偿', result: '成功', failReason: '' },
+        { time: '2026-08-14 09:40:02', operator: '李客服', type: '撤销授权', sn: 'SN2000002', oldSn: '', newSn: '', scene: '', content: '培优课「初中数学培优A」（使用中 → 已撤销）', reason: '误操作发放', result: '成功', failReason: '' },
+        { time: '2026-08-15 11:18:30', operator: '王小美', type: '转移授权', sn: 'SN2000002', oldSn: 'SN2000002', newSn: 'SN0000000', scene: '官方加购新机', content: '整机一口价权益转移', reason: '加购新机', result: '失败', failReason: '设备服务执行超时' },
+        { time: '2026-08-15 11:25:07', operator: '李客服', type: '添加平板权益', sn: 'SN2000002', oldSn: '', newSn: '', scene: '', content: 'care+ 碎屏保 365天', reason: '随单赠送补录', result: '成功', failReason: '' },
+        { time: '2026-08-16 14:05:59', operator: '张主管', type: '更正记录', sn: 'SN2000002', oldSn: '', newSn: '', scene: '', content: '针对 2026-08-14 撤销授权记录的更正：撤销原因应为「用户申请退课」', reason: '原因录入有误', result: '成功', failReason: '' },
+        { time: '2026-08-17 16:22:41', operator: '李客服', type: '移除登录账号', sn: 'SN2000002', oldSn: '', newSn: '', scene: '', content: '移除登录账号 洋葱ID 8010010', reason: '设备转售清理', result: '成功', failReason: '' }
+      ],
+      logTypes: ['转移授权', '撤销授权', '增加授权', '添加平板权益', '移除登录账号', '更正记录'],
+      logFilter: { type: '', result: '', range: null },
+      /* 初始为 true 触发 el-dialog 首次渲染，mounted 中立即关闭；内容保留在 DOM 供标注引擎读取 */
+      transfer: { visible: true, sn: '', scene: '', targetSn: '', reason: '', authList: [] },
+      overlimit: { visible: true },
+      cancelDlg: { visible: false, row: null, remarks: '' },
+      addVipDlg: { visible: false, targetType: 'vip', days: 365, reason: '' },
+      addRightDlg: { visible: false, type: 'care+ 碎屏保', days: 365, reason: '' }
+    };
+  },
+  mounted: function () {
+    var self = this;
+    this.$nextTick(function () {
+      self.transfer.visible = false;
+      self.overlimit.visible = false;
+    });
+  },
+  computed: {
+    listData: function () {
+      var kw = this.filteredSn;
+      if (!kw) return this.devices;
+      return this.devices.filter(function (d) { return d.sn.indexOf(kw) >= 0; });
+    },
+    pagedList: function () {
+      var start = (this.currentPage - 1) * this.pageSize;
+      return this.listData.slice(start, start + this.pageSize);
+    },
+    detailDevice: function () {
+      var sn = this.detailSn;
+      return this.devices.filter(function (d) { return d.sn === sn; })[0] || {};
+    },
+    ordersOfDetail: function () { return this.ordersBySn[this.detailSn] || []; },
+    accountsOfDetail: function () { return this.accountsBySn[this.detailSn] || []; },
+    rightsOfDetail: function () { return this.rightsBySn[this.detailSn] || []; },
+    filteredLogs: function () {
+      var sn = this.detailSn, f = this.logFilter;
+      return this.logs.filter(function (l) {
+        if (l.sn !== sn && l.oldSn !== sn && l.newSn !== sn) return false;
+        if (f.type && l.type !== f.type) return false;
+        if (f.result && l.result !== f.result) return false;
+        if (f.range && f.range.length === 2) {
+          var day = l.time.slice(0, 10);
+          if (day < f.range[0] || day > f.range[1]) return false;
+        }
+        return true;
+      });
+    },
+    transferScene: function () {
+      var key = this.transfer.scene;
+      return this.scenes.filter(function (s) { return s.key === key; })[0] || null;
+    },
+    transferChainCount: function () {
+      var dev = this.findDevice(this.transfer.sn);
+      if (!dev || !dev.chain || !this.chains[dev.chain]) return 0;
+      return this.chains[dev.chain].count;
+    },
+    transferOver: function () {
+      var s = this.transferScene;
+      if (!s || s.limit === null) return false;
+      if (s.requireVirgin) return this.transferChainCount >= 1;
+      return this.transferChainCount >= s.limit;
+    },
+    transferHint: function () {
+      var count = this.transferChainCount;
+      var s = this.transferScene;
+      if (!s) return '当前权益链累计转移 ' + count + ' 次。请选择转移场景后查看该场景的建议上限。';
+      if (s.limit === null) return '当前权益链累计转移 ' + count + ' 次。「二线特殊处理」不设上限，次数仅供参考。';
+      var limitText = s.requireVirgin ? '1 次（且要求该权益链此前未发生过转移）' : s.limit + ' 次';
+      var base = '当前权益链累计转移 ' + count + ' 次｜「' + s.label + '」建议上限 ' + limitText + '。';
+      if (this.transferOver) return base + ' 已超出建议范围：继续转移需填写原因并二次确认，操作将记入日志。';
+      return base + ' 规则仅提示，不做强制拦截。';
+    },
+    overlimitInfo: function () {
+      var s = this.transferScene || {};
+      return {
+        count: this.transferChainCount,
+        sceneLabel: s.label || '',
+        limitText: s.requireVirgin ? '1 次（链上此前无转移）' : (s.limit || 0) + ' 次'
+      };
+    }
+  },
+  methods: {
+    findDevice: function (sn) {
+      return this.devices.filter(function (d) { return d.sn === sn; })[0] || null;
+    },
+    chainCountText: function (row) {
+      if (!row.chain || !this.chains[row.chain]) return '—';
+      var c = this.chains[row.chain].count;
+      return c > 0 ? String(c) : '—';
+    },
+    nowText: function () {
+      var d = new Date();
+      var p = function (n) { return n < 10 ? '0' + n : '' + n; };
+      return d.getFullYear() + '-' + p(d.getMonth() + 1) + '-' + p(d.getDate()) + ' ' + p(d.getHours()) + ':' + p(d.getMinutes()) + ':' + p(d.getSeconds());
+    },
+    goList: function () { this.view = 'list'; },
+    oldMenuTip: function () {
+      this.$message.warning('「平板管理」旧页面已下线：菜单入口、无SN详情路由与 shadow_padManage_device_view 权限编码均已废弃，SN 查询请使用本页搜索。');
+    },
+    otherMenuTip: function () { this.$message.info('「一口价平板-补发授权管理」不在本需求范围，原型未包含。'); },
+    search: function () {
+      var kw = this.keyword.trim();
+      if (!this.perm.list) {
+        if (!kw) { this.$message.warning('请输入完整 SN 码进行精确查询'); return; }
+        var dev = this.findDevice(kw);
+        if (dev) { this.openDetail(dev.sn); } else { this.$message.error('SN 不存在'); }
+        return;
+      }
+      this.filteredSn = kw;
+      this.currentPage = 1;
+      if (kw && this.listData.length === 0) this.$message.warning('未查询到匹配设备');
+    },
+    openDetail: function (sn) {
+      this.detailSn = sn;
+      this.currentTab = 'info';
+      this.view = 'detail';
+    },
+    stateText: function (s) {
+      return { using: '使用中', canceled: '已撤销', used: '已使用', unused: '未使用', freeze: '冻结' }[s] || s;
+    },
+    authTypeText: function (t) {
+      return { vip: '同步课', specialCourse: '培优课', schoolVip: '智课' }[t] || t;
+    },
+    authRecordsOf: function (targetType) {
+      var list = this.authRecordsBySn[this.detailSn] || [];
+      return list.filter(function (r) { return r.targetType === targetType; });
+    },
+    /* ---------- 转移授权 ---------- */
+    openTransfer: function (row) {
+      this.transfer.visible = true;
+      this.transfer.sn = row.sn;
+      this.transfer.scene = '';
+      this.transfer.targetSn = '';
+      this.transfer.reason = '';
+      var authList = [
+        { name: '同步课会员（一口价）', targetType: 'vip', days: 6650 },
+        { name: '初中物理培优B', targetType: 'specialCourse', days: 6650 }
+      ];
+      if (row.isSchoolFixed) authList.push({ name: '智课一口价课程权益', targetType: 'schoolVip', days: 6870 });
+      this.transfer.authList = authList;
+    },
+    openTransferBySn: function (sn) {
+      var dev = this.findDevice(sn);
+      if (dev) this.openTransfer(dev);
+    },
+    handleTransferConfirm: function () {
+      var t = this.transfer;
+      if (!t.scene) { this.$message.error('请选择转移场景'); return; }
+      if (!t.targetSn) { this.$message.error('请输入转移后SN'); return; }
+      if (t.targetSn === t.sn) { this.$message.error('转移后SN不能与原SN相同'); return; }
+      if (this.transferOver) {
+        if (!t.reason.trim()) { this.$message.error('已超出场景建议上限，转移原因必填'); return; }
+        this.overlimit.visible = true;
+        return;
+      }
+      this.doTransfer();
+    },
+    doTransfer: function () {
+      var t = this.transfer;
+      var scene = this.transferScene;
+      var dev = this.findDevice(t.sn);
+      if (t.targetSn === 'SN0000000') {
+        this.logs.unshift({
+          time: this.nowText(), operator: this.user.name, type: '转移授权', sn: t.sn,
+          oldSn: t.sn, newSn: t.targetSn, scene: scene.label,
+          content: '整机一口价权益转移', reason: t.reason || '—', result: '失败', failReason: '设备服务执行超时'
+        });
+        this.overlimit.visible = false;
+        this.$message.error('转移失败：设备服务执行超时（已记录失败日志，转移次数不累计）');
+        return;
+      }
+      var chainId = dev.chain;
+      if (!chainId || !this.chains[chainId]) {
+        chainId = 'c-' + Date.now();
+        this.$set(this.chains, chainId, { count: 0 });
+        dev.chain = chainId;
+      }
+      this.chains[chainId].count++;
+      var target = this.findDevice(t.targetSn);
+      if (!target) {
+        target = { sn: t.targetSn, isFixed: false, isSchoolFixed: dev.isSchoolFixed, chain: null, onionId: '—', createdAt: this.nowText(), activeTime: '—' };
+        this.devices.push(target);
+      }
+      target.chain = chainId;
+      if (scene.key !== 'toNonFixed') target.isFixed = true;
+      this.logs.unshift({
+        time: this.nowText(), operator: this.user.name, type: '转移授权', sn: t.sn,
+        oldSn: t.sn, newSn: t.targetSn, scene: scene.label,
+        content: '整机一口价权益转移（' + this.transfer.authList.length + ' 项，按剩余时长原样转移）',
+        reason: t.reason || '—', result: '成功', failReason: ''
+      });
+      this.overlimit.visible = false;
+      this.transfer.visible = false;
+      this.$message.success('转移成功，该权益链累计转移 ' + this.chains[chainId].count + ' 次');
+    },
+    /* ---------- 撤销授权 ---------- */
+    openCancelDlg: function (row) {
+      this.cancelDlg.visible = true;
+      this.cancelDlg.row = row;
+      this.cancelDlg.remarks = '';
+    },
+    submitCancel: function () {
+      if (!this.cancelDlg.remarks.trim()) { this.$message.error('撤销原因不能为空'); return; }
+      var row = this.cancelDlg.row;
+      row.state = 'canceled';
+      row.cancelBy = this.user.name;
+      row.cancelAt = this.nowText().slice(0, 10);
+      row.cancelReason = this.cancelDlg.remarks;
+      this.logs.unshift({
+        time: this.nowText(), operator: this.user.name, type: '撤销授权', sn: this.detailSn,
+        oldSn: '', newSn: '', scene: '',
+        content: '「' + row.name + '」（使用中 → 已撤销）',
+        reason: this.cancelDlg.remarks, result: '成功', failReason: ''
+      });
+      this.cancelDlg.visible = false;
+      this.$message.success('已撤销（操作已记入日志）');
+    },
+    /* ---------- 增加授权 ---------- */
+    openAddVip: function (targetType) {
+      this.addVipDlg.visible = true;
+      this.addVipDlg.targetType = targetType;
+      this.addVipDlg.days = 365;
+      this.addVipDlg.reason = '';
+    },
+    submitAddVip: function () {
+      if (!this.addVipDlg.reason.trim()) { this.$message.error('原因不能为空'); return; }
+      var isVip = this.addVipDlg.targetType === 'vip';
+      var name = isVip ? '会员时长（客服补发）' : '培优课程包（客服补发）';
+      var list = this.authRecordsBySn[this.detailSn];
+      if (!list) { this.$set(this.authRecordsBySn, this.detailSn, []); list = this.authRecordsBySn[this.detailSn]; }
+      list.push({
+        targetType: this.addVipDlg.targetType, name: name, sourceType: 'shadow', sourceId: 'shadow-' + this.user.name,
+        startTime: this.nowText().slice(0, 10), endTime: '—', duration: this.addVipDlg.days + '天', remainDays: this.addVipDlg.days + '天',
+        state: 'using', createdBy: this.user.name, createdAt: this.nowText().slice(0, 10), createReason: this.addVipDlg.reason,
+        cancelBy: '', cancelAt: '', cancelReason: ''
+      });
+      this.logs.unshift({
+        time: this.nowText(), operator: this.user.name, type: '增加授权', sn: this.detailSn,
+        oldSn: '', newSn: '', scene: '',
+        content: (isVip ? '会员时长' : '培优课程包') + ' +' + this.addVipDlg.days + '天',
+        reason: this.addVipDlg.reason, result: '成功', failReason: ''
+      });
+      this.addVipDlg.visible = false;
+      this.$message.success('已增加授权（操作已记入日志）');
+    },
+    /* ---------- 添加平板权益 ---------- */
+    submitAddRight: function () {
+      if (!this.addRightDlg.reason.trim()) { this.$message.error('原因不能为空'); return; }
+      var list = this.rightsBySn[this.detailSn];
+      if (!list) { this.$set(this.rightsBySn, this.detailSn, []); list = this.rightsBySn[this.detailSn]; }
+      list.push({
+        sn: this.detailSn, type: this.addRightDlg.type, days: this.addRightDlg.days, status: '生效中',
+        startTime: this.nowText().slice(0, 10), endTime: '—'
+      });
+      this.logs.unshift({
+        time: this.nowText(), operator: this.user.name, type: '添加平板权益', sn: this.detailSn,
+        oldSn: '', newSn: '', scene: '',
+        content: this.addRightDlg.type + ' ' + this.addRightDlg.days + '天',
+        reason: this.addRightDlg.reason, result: '成功', failReason: ''
+      });
+      this.addRightDlg.visible = false;
+      this.$message.success('已添加权益（操作已记入日志）');
+    },
+    /* ---------- 移除登录账号 ---------- */
+    removeAccount: function (row) {
+      var self = this;
+      this.$confirm('确定删除登录账号「' + row.userName + '（' + row.onionId + '）」吗？', '提示', {
+        confirmButtonText: '确定', cancelButtonText: '取消', type: 'warning'
+      }).then(function () {
+        var list = self.accountsBySn[self.detailSn] || [];
+        var idx = list.indexOf(row);
+        if (idx >= 0) list.splice(idx, 1);
+        self.logs.unshift({
+          time: self.nowText(), operator: self.user.name, type: '移除登录账号', sn: self.detailSn,
+          oldSn: '', newSn: '', scene: '',
+          content: '移除登录账号 洋葱ID ' + row.onionId,
+          reason: '—', result: '成功', failReason: ''
+        });
+        self.$message.success('已删除（操作已记入日志）');
+      }).catch(function () {});
+    },
+    /* ---------- 演示状态 ---------- */
+    applyPermView: function (v) {
+      if (v === 'full') this.perm = { page: true, list: true, transfer: true };
+      else if (v === 'listOnly') this.perm = { page: true, list: true, transfer: false };
+      else if (v === 'pageOnly') this.perm = { page: true, list: false, transfer: false };
+    }
+  }
+});
+
+window.DIFF_HOOKS = {
+  locate: function (pageId) {
+    app.overlimit.visible = false;
+    app.cancelDlg.visible = false;
+    app.addVipDlg.visible = false;
+    app.addRightDlg.visible = false;
+    if (pageId === 'view-list') {
+      app.transfer.visible = false;
+      app.view = 'list';
+    } else if (pageId === 'view-detail') {
+      app.transfer.visible = false;
+      app.openDetail('SN2000002');
+      app.currentTab = 'log';
+    } else if (pageId === 'dlg-transfer') {
+      app.view = 'list';
+      app.openTransferBySn('SN2000002');
+    } else if (pageId === 'dlg-overlimit') {
+      app.view = 'list';
+      app.openTransferBySn('SN3000003');
+      app.transfer.scene = 'tradeIn';
+      app.transfer.targetSn = 'SN7000007';
+      app.transfer.reason = '演示：超限场景需人工确认';
+      app.$nextTick(function () { app.overlimit.visible = true; });
+    }
+  },
+  setDemoState: function (controlId, value) {
+    if (controlId === 'permView') app.applyPermView(value);
+  }
+};
+</script>
+
+<script>
+window.DIFF_CHANGESET = {
+  meta: {
+    sddTitle: "SDD-平板操作日志与转移授权追溯",
+    sddUrl: "",
+    sddType: "feishu",
+    demoControls: [
+      {
+        id: "permView",
+        label: "权限视角",
+        default: "full",
+        options: [
+          { value: "full", label: "完整权限" },
+          { value: "listOnly", label: "无转移权限" },
+          { value: "pageOnly", label: "仅页面权限" }
+        ]
+      }
+    ]
+  },
+  changes: [
+    {
+      id: "chg-menu-rename",
+      level: "field", type: "copy",
+      page: "view-list", module: "页面与菜单",
+      target: "#page-heading",
+      title: "「一口价平板」更名为「平板管理」",
+      desc: "菜单与页面标题统一更名，承接原平板管理的定位。",
+      before: "菜单「一口价平板」，页面标题「平板一口价管理」",
+      after: "菜单与页面标题统一为「平板管理」"
+    },
+    {
+      id: "chg-menu-offline",
+      level: "page", type: "remove",
+      page: "view-list", module: "页面与菜单",
+      target: "#menu-item-old",
+      title: "旧「平板管理」页面整体下线",
+      desc: "菜单入口、无SN详情路由与 shadow_padManage_device_view 权限编码全部废弃，手输SN查询由本页搜索承接。",
+      before: "独立「平板管理」页：手输SN查详情，权限编码 shadow_padManage_device_view",
+      after: "无此页面（点击旧菜单项可见下线提示），能力并入更名后的「平板管理」"
+    },
+    {
+      id: "chg-perm-migrate",
+      level: "module", type: "flow",
+      page: "view-list", module: "页面与菜单",
+      target: "#menu-item-old",
+      title: "存量账号权限迁移",
+      desc: "上线前脚本导出「仅有 shadow_padManage_device_view」的账号清单，人工审批后批量补授页面基础权限；严禁连带授予列表数据权限和转移按钮权限，上线后抽查校验。",
+      before: "无此流程（两页面权限相互独立）",
+      after: "旧页面账号平移获得新页「SN查询+详情查看」能力，能力零扩张"
+    },
+    {
+      id: "chg-perm-3tier",
+      level: "module", type: "logic",
+      page: "view-list", module: "权限模型",
+      target: "#list-search",
+      title: "页面能力按三层权限拆分",
+      desc: "页面基础权限（进入页面+SN精确查询+详情查看，新增编码）、列表数据权限（shadow_padFixedPrice_device_list）、转移按钮权限（shadow_padFixedPrice_device_transfer）三层独立，全部补齐服务端接口校验，不再只靠前端隐藏。",
+      before: "页面访问 = device_list 或 padManage_device_view 二者取或；转移按钮仅前端隐藏，无服务端校验",
+      after: "三层权限独立控制且服务端校验；无列表权限时页面呈现「SN查询」形态",
+      examples: [
+        { case: "仅页面权限", input: "右侧「权限视角」切到「仅页面权限」", result: "列表隐藏，仅保留SN搜索框；输入 SN2000002 查询直接进入详情页" },
+        { case: "无转移权限", input: "「权限视角」切到「无转移权限」", result: "列表可见，所有行的「转移授权」按钮消失" },
+        { case: "完整权限", input: "「权限视角」切回「完整权限」", result: "列表与转移按钮全部可见" }
+      ]
+    },
+    {
+      id: "chg-list-count",
+      level: "field", type: "new",
+      page: "view-list", module: "设备列表",
+      target: "#view-list .col-count-th",
+      title: "新增「转移次数」列",
+      desc: "展示设备所在权益链的累计成功转移次数；链上所有设备（含接收过权益的非一口价平板）展示同一数字，从未参与转移的设备展示「—」。失败尝试不计数。",
+      before: "无此字段（转移次数无处可查）",
+      after: "列表新增「转移次数」列，按权益链累计",
+      examples: [
+        { case: "链上一口价设备", input: "查看 SN2000002 行", result: "转移次数显示 2（A→B→C 同链累计）" },
+        { case: "链上非一口价设备", input: "查看 SN6000006 行（是否一口价=否）", result: "同链设备，转移次数同样显示 2" },
+        { case: "未参与转移", input: "查看 SN1000001 行", result: "转移次数显示「—」" }
+      ]
+    },
+    {
+      id: "chg-list-search",
+      level: "field", type: "logic",
+      page: "view-list", module: "设备列表",
+      target: "#list-search",
+      title: "搜索承接原「平板管理」手输SN查询",
+      desc: "列表搜索可查询原平板管理页可查的全部SN，包括非一口价、纯智课设备。",
+      before: "非一口价设备主要经旧「平板管理」页手输SN查询",
+      after: "统一由本页搜索承接，可查全部SN",
+      examples: [
+        { case: "纯智课设备", input: "搜索框输入 SN4000004 并查询", result: "列表命中该设备（是否一口价=否，是否智课一口价=是），可进详情" },
+        { case: "SN不存在", input: "搜索框输入 SN9999999 并查询", result: "列表为空并提示「未查询到匹配设备」" }
+      ]
+    },
+    {
+      id: "chg-transfer-hard",
+      level: "field", type: "logic",
+      page: "view-list", module: "设备列表",
+      target: "#view-list .col-actions-th",
+      title: "转移准入为硬规则：必须是普通一口价平板",
+      desc: "准入条件为 isFixed=true，智课属性不参与判断：双属性（普通+智课）可转，纯智课不可转。前端不出按钮，服务端校验直接拒绝，不留人工突破口；这是本需求唯一的硬拦截规则。",
+      before: "按钮展示条件同为 isFixed=true，但无服务端校验",
+      after: "前端条件不变，服务端补齐硬校验",
+      examples: [
+        { case: "纯智课设备", input: "查看 SN4000004 行（仅智课一口价）", result: "无「转移授权」按钮，直连接口也会被服务端拒绝" },
+        { case: "双属性设备", input: "查看 SN5000005 行（普通+智课一口价）", result: "有「转移授权」按钮，可正常转移" }
+      ]
+    },
+    {
+      id: "chg-transfer-scene",
+      level: "field", type: "new",
+      page: "dlg-transfer", module: "转移弹窗",
+      target: "#transfer-scene",
+      title: "「转换类型」改为必选「转移场景」",
+      desc: "系统无法自动判断转移背景，由客服必选四种场景之一：官方以旧换新、官方加购新机、转至非一口价平板、二线特殊处理。场景随日志记录。",
+      before: "「转换类型」仅一个固定单选「SN转换」，无业务含义",
+      after: "必选「转移场景」四选一，作为次数规则匹配与日志追溯依据",
+      examples: [
+        { case: "未选场景", input: "不选场景直接点「确认转移」", result: "提示「请选择转移场景」（前端校验，不记日志）" }
+      ]
+    },
+    {
+      id: "chg-transfer-hint",
+      level: "field", type: "logic",
+      page: "dlg-transfer", module: "转移弹窗",
+      target: "#transfer-hint",
+      title: "链累计次数与场景上限提示（仅提示不拦截）",
+      desc: "按权益链累计成功次数匹配场景建议上限：以旧换新3次、加购新机3次、转至非一口价1次且要求链上此前无转移、二线特殊处理无上限。超限仅提示并要求原因+二次确认，客服仍可继续。",
+      before: "无任何次数展示与规则提示",
+      after: "弹窗内实时展示「当前累计次数｜场景建议上限」，超限转为警示样式",
+      examples: [
+        { case: "正常范围", input: "SN2000002 打开弹窗，场景选「官方以旧换新」", result: "提示「累计 2 次｜建议上限 3 次，规则仅提示」" },
+        { case: "超出上限", input: "SN3000003 打开弹窗，场景选「官方以旧换新」", result: "警示「累计 3 次已超建议上限，需填原因并二次确认」" },
+        { case: "转至非一口价", input: "SN2000002 弹窗内场景选「转至非一口价平板」", result: "警示：该场景要求链上此前未发生过转移，当前已 2 次" },
+        { case: "二线特殊处理", input: "SN3000003 弹窗内场景选「二线特殊处理」", result: "提示「不设上限，次数仅供参考」，不出警示" }
+      ]
+    },
+    {
+      id: "chg-transfer-reason",
+      level: "field", type: "logic",
+      page: "dlg-transfer", module: "转移弹窗",
+      target: "#transfer-reason",
+      title: "新增「转移原因」：正常选填、超限必填",
+      desc: "正常范围内原因选填；规则提示超限后继续操作时原因必填，用于超限追责。",
+      before: "无此字段",
+      after: "新增原因输入框，必填态随超限状态切换",
+      examples: [
+        { case: "超限未填原因", input: "SN3000003 选「官方以旧换新」，目标SN填 SN7000007，原因留空点「确认转移」", result: "提示「已超出场景建议上限，转移原因必填」（前端校验，不记日志）" },
+        { case: "超限已填原因", input: "同上并填写原因「用户设备连续故障」", result: "弹出超限确认弹窗，确认后可继续转移" }
+      ]
+    },
+    {
+      id: "chg-transfer-dual",
+      level: "field", type: "enum",
+      page: "dlg-transfer", module: "转移弹窗",
+      target: "#transfer-auth-table",
+      title: "双属性设备整机全部权益随转",
+      desc: "既是普通一口价又是智课一口价的设备，转移时整机全部权益（含智课一口价权益）一并迁至新设备，不做权益拆分勾选。",
+      before: "可转移权益仅列同步课/培优课两类",
+      after: "双属性设备的权益表额外包含智课权益行，随整机转移",
+      examples: [
+        { case: "双属性设备", input: "从 SN5000005 行点「转移授权」", result: "可转移权益表包含「智课一口价课程权益（权益类型：智课）」行" },
+        { case: "普通一口价", input: "从 SN2000002 行点「转移授权」", result: "权益表仅同步课/培优课，无智课行" }
+      ]
+    },
+    {
+      id: "chg-overlimit-dialog",
+      level: "page", type: "new",
+      page: "dlg-overlimit", module: "超限确认",
+      target: "#dlg-overlimit",
+      title: "新增超限二次确认弹窗",
+      desc: "展示当前链累计次数、场景建议上限、已填原因与风险提示；确认后仍可执行转移，保留人工突破规则的能力，操作全量记日志。",
+      before: "无此弹窗（也无任何超限拦截或提示）",
+      after: "超限时插入二次确认环节，「仍要转移」可继续执行",
+      examples: [
+        { case: "确认执行", input: "超限弹窗中点「仍要转移」（目标SN SN7000007）", result: "转移成功，链累计次数 +1，日志新增成功记录（含场景与原因）" },
+        { case: "放弃", input: "超限弹窗中点「放弃」", result: "回到转移弹窗，不产生任何日志与计数" }
+      ]
+    },
+    {
+      id: "chg-log-tab",
+      level: "module", type: "new",
+      page: "view-detail", module: "操作日志",
+      target: "#log-tab-body",
+      title: "详情页新增「操作日志」Tab",
+      desc: "支持按操作类型、执行结果、时间范围筛选；字段含操作时间/操作人/操作类型/操作内容（前后对照）/操作原因/执行结果，转移记录额外含原SN、目标SN、转移场景。Tab 可见性跟随详情页权限，不单设权限编码。",
+      before: "无此模块（所有操作无日志可查）",
+      after: "详情页第 6 个 Tab，设备维度全量操作日志",
+      examples: [
+        { case: "按类型筛选", input: "操作类型选「转移授权」", result: "仅显示 2 条转移记录（1 成功 1 失败）" },
+        { case: "按结果筛选", input: "执行结果选「失败」", result: "仅显示 2026-08-15 转移失败记录（设备服务执行超时）" }
+      ]
+    },
+    {
+      id: "chg-log-scope",
+      level: "module", type: "logic",
+      page: "view-detail", module: "操作日志",
+      target: "#log-table",
+      title: "设备级全部写操作由服务端统一记日志",
+      desc: "转移授权、撤销授权、增加授权、添加平板权益、移除登录账号全部入日志，由服务端在接口受理后统一生成，覆盖所有调用入口；「补发授权管理」全局课程配置不纳入本期。",
+      before: "所有操作均无日志",
+      after: "五类写操作全量入日志",
+      examples: [
+        { case: "撤销授权入日志", input: "详情页「内容权限」Tab 撤销「会员时长（客服补发）」并填原因「测试撤销」", result: "「操作日志」Tab 顶部新增一条撤销授权记录，含前后状态与原因" },
+        { case: "转移入日志", input: "列表页对 SN1000001 转移（场景任选，目标SN SN8000008）", result: "成功后 SN1000001 与 SN8000008 的详情日志中均可见该记录" }
+      ]
+    },
+    {
+      id: "chg-log-fail",
+      level: "field", type: "logic",
+      page: "view-detail", module: "操作日志",
+      target: "#log-table",
+      title: "失败日志口径：仅执行期异常记录",
+      desc: "校验失败（前端表单或服务端业务校验）不记日志，因为结果会直接反馈操作人；仅校验通过进入执行后的异常记失败日志，失败不计入转移次数。",
+      before: "无日志（也无失败口径）",
+      after: "执行异常记失败日志（含失败原因），校验失败不记录",
+      examples: [
+        { case: "执行异常", input: "对 SN2000002 转移，目标SN填 SN0000000（模拟设备服务超时）", result: "提示转移失败，日志新增失败记录，转移次数不变" },
+        { case: "校验失败", input: "转移弹窗不填目标SN点「确认转移」", result: "仅前端提示「请输入转移后SN」，日志无新增" }
+      ]
+    },
+    {
+      id: "chg-log-immutable",
+      level: "field", type: "logic",
+      page: "view-detail", module: "操作日志",
+      target: "#log-table",
+      title: "日志不可改删，纠错走「更正记录」",
+      desc: "日志永久保留、不允许修改和删除；录入错误通过新增一条「更正记录」完成纠错，原记录保持原样。本期不做导出。",
+      before: "无日志（无完整性约束）",
+      after: "日志只增不改，更正以独立记录类型呈现（橙色标签）",
+      examples: [
+        { case: "更正记录", input: "查看 SN2000002 日志中 2026-08-16 张主管的记录", result: "类型为「更正记录」，指向 8-14 撤销记录并给出正确原因，原记录未被修改" }
+      ]
+    },
+    {
+      id: "chg-log-backfill",
+      level: "field", type: "copy",
+      page: "view-detail", module: "操作日志",
+      target: "#log-banner",
+      title: "审计起始时间与历史完整性提示",
+      desc: "页面明确展示审计起始时间；起始时间前的历史转移记录尽力回填，并提示可能不完整。",
+      before: "无此提示",
+      after: "日志 Tab 顶部常驻提示条：审计起始 2026-08-10，此前记录可能不完整"
+    }
+  ]
+};
+</script>
+
+<script>
+/* ============ 原型变更标注引擎 proto-note（零依赖，可整段复用） ============
+   布局参考：固定右侧深色批注栏 + 页面编号锚点 + canvas 连线（axure 批注风格）
+   规则：默认不显示任何标注；按模块勾选显示；只联动 SDD（不展示 PRD） */
+(function () {
+  const CS = window.DIFF_CHANGESET;
+  if (!CS || !CS.changes || !CS.changes.length) return;
+
+  const TYPE_LABEL = { new: "新增", modify: "修改", copy: "文案", enum: "口径", logic: "逻辑", flow: "流程", remove: "删除" };
+  const LEVEL_LABEL = { page: "页面级", module: "模块级", field: "字段级" };
+  const LS_KEY = "diff-annotator-v3:" + location.pathname;
+  const PANEL_W = 360;
+
+  CS.changes.forEach((c, i) => { c._no = String(i + 1).padStart(2, "0"); });
+
+  /* ---------- 状态 ---------- */
+  const moduleKeys = [];
+  const byModule = {};
+  CS.changes.forEach(c => {
+    const key = c.page + "::" + c.module;
+    if (!byModule[key]) { byModule[key] = []; moduleKeys.push(key); }
+    byModule[key].push(c);
+  });
+  const byTarget = {};
+  CS.changes.forEach(c => { (byTarget[c.target] = byTarget[c.target] || []).push(c); });
+  const keyOf = c => c.page + "::" + c.module;
+
+  let state = { open: true, enabled: {}, demo: {} };
+  try { state = Object.assign(state, JSON.parse(localStorage.getItem(LS_KEY) || "{}")); } catch (e) {}
+  state.enabled = state.enabled || {};
+  state.demo = state.demo || {};
+  moduleKeys.forEach(k => { if (!(k in state.enabled)) state.enabled[k] = false; });
+  const demoControls = Array.isArray(CS.meta.demoControls) ? CS.meta.demoControls : [];
+  demoControls.forEach(control => {
+    if (!(control.id in state.demo)) {
+      const firstOption = Array.isArray(control.options) ? control.options[0] : null;
+      state.demo[control.id] = control.default ?? (firstOption && firstOption.value);
+    }
+  });
+  const persist = () => { try { localStorage.setItem(LS_KEY, JSON.stringify(state)); } catch (e) {} };
+  const isOn = c => state.enabled[keyOf(c)];
+
+  function pageName(pid) {
+    const el = document.getElementById(pid);
+    return (el && el.getAttribute("data-diff-page")) || pid;
+  }
+
+  /* ---------- 样式 ---------- */
+  const style = document.createElement("style");
+  style.setAttribute("data-da", "1");
+  style.textContent = `
+  :root { --da-navy:#071d2f; --da-blue:#1479d1; --da-blue-soft:#2c93e8; --da-sky:#72c4ff; --da-panel-w:${PANEL_W}px; }
+  html.da-open { overflow-x:auto !important; }
+  body.da-open { padding-right:0 !important; overflow-x:visible !important; }
+  .da-scroll-spacer { position:absolute; top:0; width:var(--da-panel-w); height:1px; pointer-events:none; visibility:hidden; }
+
+  .da-launch { position:fixed; top:14px; right:14px; z-index:1200; display:inline-flex; align-items:center; gap:8px;
+    background:var(--da-navy); color:#fff; border:0; border-radius:999px; padding:9px 16px; font-size:13px; font-weight:600;
+    cursor:pointer; box-shadow:0 6px 20px rgba(7,29,47,.28); }
+  .da-launch .da-launch-n { color:var(--da-sky); font-weight:700; }
+
+  .da-panel { position:fixed; z-index:1100; top:0; right:0; bottom:0; width:var(--da-panel-w); overflow-y:auto;
+    color:rgba(255,255,255,.78); border-left:1px solid rgba(255,255,255,.08);
+    background:radial-gradient(circle at 100% 0, rgba(44,147,232,.16), transparent 20rem), var(--da-navy);
+    box-shadow:-18px 0 50px rgba(7,29,47,.12); font-size:12px; scrollbar-width:thin; scrollbar-color:rgba(255,255,255,.2) transparent; }
+  .da-panel-inner { padding:20px 20px 40px; }
+  .da-top { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px; }
+  .da-top h2 { margin:0; color:#fff; font-size:17px; font-weight:740; letter-spacing:-.01em; }
+  .da-top h2 small { margin-left:6px; color:var(--da-sky); font-size:12px; font-weight:700; }
+  .da-top-actions { display:flex; align-items:center; gap:8px; }
+  .da-sdd-doc { color:var(--da-sky); font-size:11px; font-weight:650; text-decoration:none; white-space:nowrap; }
+  .da-sdd-doc:hover { text-decoration:underline; }
+  .da-hide { width:28px; height:28px; flex:0 0 auto; border:1px solid rgba(255,255,255,.14); border-radius:8px;
+    color:#fff; background:rgba(255,255,255,.06); font-size:14px; line-height:1; cursor:pointer; }
+  .da-hide:hover { background:rgba(255,255,255,.12); }
+
+  .da-demo { margin-bottom:12px; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:11px; background:rgba(255,255,255,.045); }
+  .da-demo-title { margin-bottom:8px; color:#fff; font-size:12px; font-weight:700; }
+  .da-demo-row + .da-demo-row { margin-top:9px; }
+  .da-demo-label { display:block; margin-bottom:5px; color:rgba(255,255,255,.45); font-size:10px; font-weight:650; }
+  .da-segments { display:flex; padding:2px; border:1px solid rgba(255,255,255,.1); border-radius:8px; background:rgba(5,17,28,.4); }
+  .da-segment { min-width:0; flex:1; min-height:28px; border:0; border-radius:6px; color:rgba(255,255,255,.58);
+    background:transparent; font-size:11px; cursor:pointer; }
+  .da-segment:hover { color:#fff; }
+  .da-segment.da-selected { color:#fff; background:rgba(44,147,232,.42); box-shadow:0 1px 5px rgba(0,0,0,.16); }
+
+  .da-mods { margin-bottom:20px; padding:12px; border:1px solid rgba(255,255,255,.1); border-radius:11px; background:rgba(255,255,255,.045); }
+  .da-mods-head { display:flex; align-items:center; justify-content:space-between; margin-bottom:6px; }
+  .da-mods-head span { color:#fff; font-size:12px; font-weight:700; }
+  .da-bulk { display:flex; gap:10px; }
+  .da-bulk button { border:0; background:none; padding:0; color:rgba(255,255,255,.5); font-size:11px; cursor:pointer; }
+  .da-bulk button:hover { color:var(--da-sky); }
+  .da-mod-group { margin-top:8px; }
+  .da-mod-group-name { margin-bottom:2px; color:rgba(255,255,255,.4); font-size:10px; font-weight:650; letter-spacing:.04em; }
+  .da-mod { display:flex; align-items:center; gap:8px; padding:5px 6px; border-radius:7px; cursor:pointer; }
+  .da-mod:hover { background:rgba(255,255,255,.06); }
+  .da-mod input { margin:0; flex:0 0 auto; accent-color:var(--da-blue-soft); cursor:pointer; }
+  .da-mod-name { flex:1; min-width:0; color:rgba(255,255,255,.86); font-size:12px; font-weight:550; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .da-mod-types { flex:0 0 auto; color:rgba(255,255,255,.34); font-size:10px; }
+
+  .da-note-section { margin-bottom:18px; }
+  .da-note-heading { display:flex; align-items:center; gap:9px; margin-bottom:10px; color:#fff; font-size:12px; font-weight:700; }
+  .da-note-heading::after { height:1px; flex:1; background:rgba(255,255,255,.1); content:""; }
+  .da-empty { padding:10px 2px; color:rgba(255,255,255,.35); font-size:11px; }
+
+  .da-note { position:relative; scroll-margin-top:16px; margin-bottom:9px; padding:12px 13px; border:1px solid rgba(255,255,255,.1);
+    border-radius:11px; background:rgba(255,255,255,.045); cursor:pointer;
+    transition:border-color .18s ease, background .18s ease, transform .18s ease; }
+  .da-note::before { content:""; position:absolute; top:23px; left:-15px; width:14px; height:1px;
+    background:rgba(114,196,255,.32); transition:background .16s ease, box-shadow .16s ease; }
+  .da-note::after { content:""; position:absolute; top:20px; left:-19px; width:7px; height:7px; border-radius:50%;
+    border:1px solid rgba(114,196,255,.55); background:var(--da-navy); transition:background .16s ease, box-shadow .16s ease; }
+  .da-note:hover, .da-note.da-active { border-color:rgba(114,196,255,.65); background:rgba(44,147,232,.13); transform:translateX(-3px); }
+  .da-note.da-active::before { background:#72c4ff; box-shadow:0 0 12px rgba(44,147,232,.62); }
+  .da-note.da-active::after { background:#72c4ff; box-shadow:0 0 0 4px rgba(44,147,232,.18); }
+  .da-note-head { display:flex; align-items:center; gap:9px; margin-bottom:6px; color:#fff; font-size:12px; font-weight:700; }
+  .da-no { display:inline-grid; width:22px; height:22px; flex:0 0 auto; place-items:center; border:1px solid rgba(114,196,255,.3);
+    border-radius:50%; color:#8fd1ff; background:rgba(44,147,232,.09); font-size:9px; font-weight:800; }
+  .da-note.da-active .da-no { color:var(--da-navy); border-color:#bfe6ff; background:#bfe6ff; }
+  .da-note-kind { flex:0 0 auto; margin-left:auto; color:rgba(255,255,255,.35); font-size:10px; font-weight:500; }
+  .da-note p { margin:0; color:rgba(255,255,255,.62); font-size:11px; line-height:1.75; }
+  .da-note-ba { margin-top:8px; padding:7px 9px; border-radius:7px; background:rgba(5,17,28,.52); font-size:10px; line-height:1.7; color:rgba(255,255,255,.55); }
+  .da-note-ba b { color:#bfe6ff; font-weight:650; }
+  .da-examples { margin-top:8px; overflow:hidden; border:1px solid rgba(114,196,255,.15); border-radius:7px; background:rgba(5,17,28,.34); }
+  .da-example { display:grid; grid-template-columns:58px minmax(0,1fr); gap:4px 8px; padding:7px 9px; font-size:10px; line-height:1.55; }
+  .da-example + .da-example { border-top:1px solid rgba(255,255,255,.07); }
+  .da-example-case { grid-row:1 / span 2; color:#bfe6ff; font-weight:650; }
+  .da-example-input { min-width:0; color:#fff; font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; overflow-wrap:anywhere; }
+  .da-example-result { color:rgba(255,255,255,.5); }
+  .da-example-result::before { content:"→ "; color:rgba(114,196,255,.55); }
+  .da-note-sdd { display:inline-flex; align-items:center; gap:5px; margin-top:9px; color:var(--da-sky); font-size:10.5px;
+    font-weight:650; text-decoration:none; }
+  .da-note-sdd:hover { text-decoration:underline; }
+
+  .da-anchors { position:absolute; left:0; top:0; width:0; height:0; z-index:1050; pointer-events:none; }
+  .da-anchor { position:absolute; display:grid; width:22px; height:22px; place-items:center; border:1px solid rgba(20,121,209,.28);
+    border-radius:50%; color:var(--da-blue); background:#eff8ff; font-size:9px; font-weight:800; cursor:pointer;
+    pointer-events:auto; box-shadow:0 2px 8px rgba(7,29,47,.14); transition:transform .15s ease, background .15s ease; }
+  .da-anchor:hover { transform:scale(1.1); }
+  .da-anchor.da-active { color:#fff; border-color:var(--da-blue-soft); background:var(--da-blue);
+    box-shadow:0 0 0 4px rgba(44,147,232,.16), 0 5px 14px rgba(20,121,209,.24); transform:scale(1.08); }
+
+  .da-outlined { outline:1.5px dashed rgba(20,121,209,.45) !important; outline-offset:2px; }
+  @keyframes da-pulse { 0% { box-shadow:0 0 0 0 rgba(44,147,232,.4); } 100% { box-shadow:0 0 0 14px rgba(44,147,232,0); } }
+  .da-pulsing { animation:da-pulse .9s ease-out 2; }
+
+  .da-wires { position:fixed; inset:0; z-index:1040; width:100vw; height:100vh; pointer-events:none; }
+
+  @media print { .da-panel, .da-anchors, .da-wires, .da-launch, .da-scroll-spacer { display:none !important; }
+    html.da-open { overflow-x:visible !important; } body.da-open { padding-right:0 !important; } }
+  `;
+  document.head.appendChild(style);
+
+  /* ---------- DOM 骨架 ---------- */
+  const launcher = document.createElement("button");
+  launcher.className = "da-launch";
+  launcher.setAttribute("data-da", "1");
+  launcher.innerHTML = '变更导览 <span class="da-launch-n">' + CS.changes.length + "</span>";
+  document.body.appendChild(launcher);
+
+  const panel = document.createElement("aside");
+  panel.className = "da-panel";
+  panel.setAttribute("data-da", "1");
+  document.body.appendChild(panel);
+
+  // 在业务页面真实右边缘后追加与批注栏等宽的滚动缓冲区。
+  // 它只扩展 scrollWidth，不改变、压缩或重排原页面。
+  const scrollSpacer = document.createElement("div");
+  scrollSpacer.className = "da-scroll-spacer";
+  scrollSpacer.setAttribute("data-da", "1");
+  document.body.appendChild(scrollSpacer);
+
+  const anchorLayer = document.createElement("div");
+  anchorLayer.className = "da-anchors";
+  anchorLayer.setAttribute("data-da", "1");
+  document.body.appendChild(anchorLayer);
+
+  const wires = document.createElement("canvas");
+  wires.className = "da-wires";
+  wires.setAttribute("data-da", "1");
+  document.body.appendChild(wires);
+  const wctx = wires.getContext("2d");
+
+  let activeId = null;   // 悬停中的变更
+  let pinnedId = null;   // 点击固定的变更（再次点击取消）
+
+  /* ---------- 面板渲染 ---------- */
+  const pages = [];
+  const modsByPage = {};
+  moduleKeys.forEach(k => {
+    const p = k.split("::")[0];
+    if (!modsByPage[p]) { modsByPage[p] = []; pages.push(p); }
+    modsByPage[p].push(k);
+  });
+
+  function renderPanel() {
+    let html = '<div class="da-panel-inner">';
+    html += '<div class="da-top"><h2>变更导览<small>' + CS.changes.length + "</small></h2><div class=\"da-top-actions\">";
+    if (CS.meta.sddUrl) html += '<a class="da-sdd-doc" target="_blank" href="' + CS.meta.sddUrl + '">' + (CS.meta.sddTitle || "SDD") + " ↗</a>";
+    html += '<button class="da-hide" title="收起">✕</button></div></div>';
+
+    if (demoControls.length && window.DIFF_HOOKS && typeof window.DIFF_HOOKS.setDemoState === "function") {
+      html += '<section class="da-demo"><div class="da-demo-title">演示状态</div>';
+      demoControls.forEach(control => {
+        html += '<div class="da-demo-row"><span class="da-demo-label">' + control.label + '</span><div class="da-segments">';
+        (control.options || []).forEach(option => {
+          const selected = state.demo[control.id] === option.value;
+          html += '<button class="da-segment' + (selected ? " da-selected" : "") + '" data-demo-control="' + control.id +
+            '" data-demo-value="' + option.value + '">' + option.label + "</button>";
+        });
+        html += "</div></div>";
+      });
+      html += "</section>";
+    }
+
+    html += '<div class="da-mods"><div class="da-mods-head"><span>模块</span><span class="da-bulk"><button data-all="on">全部显示</button><button data-all="off">全部隐藏</button></span></div>';
+    pages.forEach(p => {
+      html += '<div class="da-mod-group"><div class="da-mod-group-name">' + pageName(p) + "</div>";
+      modsByPage[p].forEach(k => {
+        const mod = k.split("::")[1];
+        const types = [...new Set(byModule[k].map(c => TYPE_LABEL[c.type] || "变更"))].join("·");
+        html += '<label class="da-mod" data-key="' + k + '"><input type="checkbox"' + (state.enabled[k] ? " checked" : "") + ">";
+        html += '<span class="da-mod-name">' + mod + '</span><span class="da-mod-types">' + types + "</span></label>";
+      });
+      html += "</div>";
+    });
+    html += "</div>";
+
+    const anyOn = CS.changes.some(isOn);
+    if (!anyOn) {
+      html += '<div class="da-empty">勾选模块后展示对应标注与连线</div>';
+    } else {
+      pages.forEach(p => {
+        const list = CS.changes.filter(c => c.page === p && isOn(c));
+        if (!list.length) return;
+        html += '<section class="da-note-section"><h3 class="da-note-heading">' + pageName(p) + "</h3>";
+        list.forEach(c => {
+          html += '<article class="da-note" id="da-note-' + c.id + '" data-chg="' + c.id + '">';
+          html += '<div class="da-note-head"><span class="da-no">' + c._no + '</span><span>' + c.title + '</span>';
+          html += '<span class="da-note-kind">' + (TYPE_LABEL[c.type] || "变更") + " · " + (LEVEL_LABEL[c.level] || "") + "</span></div>";
+          html += "<p>" + c.desc + "</p>";
+          if (c.before && c.after) html += '<div class="da-note-ba"><b>前</b>　' + c.before + '<br><b>后</b>　' + c.after + "</div>";
+          if (Array.isArray(c.examples) && c.examples.length) {
+            html += '<div class="da-examples">';
+            c.examples.forEach(example => {
+              html += '<div class="da-example"><span class="da-example-case">' + example.case + '</span>' +
+                '<code class="da-example-input">' + example.input + '</code>' +
+                '<span class="da-example-result">' + example.result + "</span></div>";
+            });
+            html += "</div>";
+          }
+          if (c.sdd && CS.meta.sddUrl && c.sdd.blockId) {
+            html += '<a class="da-note-sdd" target="_blank" href="' + CS.meta.sddUrl + "#" + c.sdd.blockId + '">SDD · ' + c.sdd.section + " ↗</a>";
+          } else if (c.sdd && c.sdd.section) {
+            html += '<span class="da-note-sdd" style="color:rgba(255,255,255,.4)">SDD · ' + c.sdd.section + "</span>";
+          }
+          html += "</article>";
+        });
+        html += "</section>";
+      });
+    }
+    html += "</div>";
+    panel.innerHTML = html;
+    bindPanel();
+  }
+
+  function bindPanel() {
+    panel.querySelector(".da-hide").addEventListener("click", () => setOpen(false));
+    panel.querySelectorAll("[data-demo-control]").forEach(button => {
+      button.addEventListener("click", () => {
+        const controlId = button.getAttribute("data-demo-control");
+        const value = button.getAttribute("data-demo-value");
+        state.demo[controlId] = value;
+        persist();
+        window.DIFF_HOOKS.setDemoState(controlId, value);
+        renderPanel();
+        setTimeout(scheduleUpdate, 80);
+      });
+    });
+    panel.querySelectorAll(".da-mod input").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const k = cb.closest(".da-mod").getAttribute("data-key");
+        state.enabled[k] = cb.checked;
+        if (pinnedId && !isOn(CS.changes.find(x => x.id === pinnedId))) pinnedId = null;
+        persist();
+        renderPanel();
+        syncAnnotations();
+        applyActive();
+        if (cb.checked) locateModule(k);
+      });
+    });
+    panel.querySelectorAll("[data-all]").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const on = btn.getAttribute("data-all") === "on";
+        moduleKeys.forEach(k => { state.enabled[k] = on; });
+        if (!on) pinnedId = null;
+        persist(); renderPanel(); syncAnnotations(); applyActive();
+      });
+    });
+    panel.querySelectorAll(".da-note").forEach(card => {
+      const id = card.getAttribute("data-chg");
+      card.addEventListener("mouseenter", () => setActive(id));
+      card.addEventListener("mouseleave", () => clearActive(id));
+      card.addEventListener("click", e => {
+        if (e.target.closest("a")) return;
+        const c = CS.changes.find(x => x.id === id);
+        if (!c) return;
+        pinnedId = id;
+        applyActive();
+        locateChange(c);
+      });
+    });
+    panel.addEventListener("scroll", scheduleUpdate, { passive: true });
+  }
+
+  /* ---------- 锚点浮层 ---------- */
+  const anchorEls = {};   // change.id -> { el, last:{x,y,shown} }
+  CS.changes.forEach(c => {
+    const a = document.createElement("button");
+    a.className = "da-anchor";
+    a.setAttribute("data-da", "1");
+    a.textContent = c._no;
+    a.style.display = "none";
+    a.addEventListener("mouseenter", () => setActive(c.id));
+    a.addEventListener("mouseleave", () => clearActive(c.id));
+    a.addEventListener("click", () => {
+      togglePin(c.id);
+      if (pinnedId === c.id) {
+        const card = document.getElementById("da-note-" + c.id);
+        if (card) card.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    });
+    anchorLayer.appendChild(a);
+    anchorEls[c.id] = { el: a, last: { x: -1, y: -1, shown: false } };
+  });
+
+  function targetVisible(el, rect) {
+    if (!el.getClientRects().length) return false;
+    // 遮挡检测（仅当取样点在视口内才有意义）：取样点若不属于目标元素（如被弹窗蒙层盖住），视为不可见。
+    // 目标滚出视口时不做钳制、不强行隐藏——锚点随文档自然滚出即可。
+    const inViewport = (x, y) => x >= 0 && x <= innerWidth && y >= 0 && y <= innerHeight;
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    if (inViewport(cx, cy)) {
+      const top = document.elementFromPoint(cx, cy);
+      if (top && (el === top || el.contains(top) || top.contains(el))) return true;
+      const sx = rect.left + 10, sy = rect.top + 10;
+      if (inViewport(sx, sy)) {
+        const top2 = document.elementFromPoint(sx, sy);
+        return !!(top2 && (el === top2 || el.contains(top2) || top2.contains(el)));
+      }
+      return false;
+    }
+    return true;
+  }
+
+  function syncAnnotations() {
+    Object.keys(byTarget).forEach(t => {
+      const el = document.querySelector(t);
+      if (!el) return;
+      const on = byTarget[t].some(isOn) && state.open;
+      el.classList.toggle("da-outlined", on);
+    });
+    scheduleUpdate();
+  }
+
+  function updateOverlay() {
+    // 锚点钉在目标左上角，使用文档坐标（以锚点层自身为基准），随页面原生滚动——
+    // 杜绝 fixed 浮层"滚动事件追帧"造成的抖动漂移，也不做视口钳制（滚出即自然滚出）
+    const layerRect = anchorLayer.getBoundingClientRect();
+    Object.keys(byTarget).forEach(t => {
+      const el = document.querySelector(t);
+      const rect = el ? el.getBoundingClientRect() : null;
+      const visible = el && state.open && rect && targetVisible(el, rect);
+      byTarget[t].forEach((c, slot) => {
+        const rec = anchorEls[c.id];
+        const show = visible && isOn(c);
+        if (!show) {
+          if (rec.last.shown) { rec.el.style.display = "none"; rec.last.shown = false; }
+          return;
+        }
+        const x = Math.max(rect.left - 11, 2) + slot * 25 - layerRect.left;
+        const y = rect.top - 11 - layerRect.top;
+        if (!rec.last.shown) { rec.el.style.display = "grid"; rec.last.shown = true; }
+        if (rec.last.x !== x || rec.last.y !== y) {
+          rec.el.style.left = x + "px";
+          rec.el.style.top = y + "px";
+          rec.last.x = x; rec.last.y = y;
+        }
+      });
+    });
+    drawWires();
+  }
+
+  /* ---------- 连线 ---------- */
+  function setWireSize() {
+    const ratio = Math.min(devicePixelRatio || 1, 2);
+    const w = Math.max(1, Math.round(innerWidth * ratio));
+    const h = Math.max(1, Math.round(innerHeight * ratio));
+    if (wires.width !== w || wires.height !== h) { wires.width = w; wires.height = h; }
+    wctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+  }
+
+  function wirePath(sx, sy, ex, ey, active) {
+    const gap = Math.max(38, ex - sx);
+    wctx.save();
+    wctx.beginPath();
+    wctx.moveTo(sx, sy);
+    wctx.bezierCurveTo(sx + Math.min(120, gap * 0.42), sy, ex - Math.min(82, gap * 0.28), ey, ex, ey);
+    wctx.lineWidth = active ? 2 : 1.3;
+    wctx.strokeStyle = active ? "rgba(44,147,232,.96)" : "rgba(44,147,232,.42)";
+    wctx.shadowColor = active ? "rgba(44,147,232,.7)" : "transparent";
+    wctx.shadowBlur = active ? 9 : 0;
+    wctx.stroke();
+    wctx.shadowBlur = 0;
+    wctx.beginPath(); wctx.arc(sx, sy, active ? 3.2 : 2.1, 0, Math.PI * 2);
+    wctx.fillStyle = active ? "#2c93e8" : "rgba(44,147,232,.5)"; wctx.fill();
+    wctx.beginPath(); wctx.arc(ex - 1, ey, active ? 3 : 2, 0, Math.PI * 2);
+    wctx.fillStyle = active ? "#72c4ff" : "rgba(114,196,255,.45)"; wctx.fill();
+    wctx.restore();
+  }
+
+  function drawWires() {
+    setWireSize();
+    wctx.clearRect(0, 0, innerWidth, innerHeight);
+    if (!state.open) return;
+    // 一个编号一条线：固定态优先于悬停态（滚动中误触发的 hover 不得篡改已选中的连线）
+    const id = pinnedId || activeId;
+    if (!id) return;
+    const c = CS.changes.find(x => x.id === id);
+    if (!c || !isOn(c)) return;
+    const rec = anchorEls[id];
+    if (!rec.last.shown) return;
+    // 起点取锚点实时视口坐标（锚点在文档流中，滚动时坐标必须现算，不能用缓存）
+    const ar = rec.el.getBoundingClientRect();
+    if (ar.bottom < 0 || ar.top > innerHeight) return; // 锚点滚出视口则不画线
+    const card = document.getElementById("da-note-" + id);
+    if (!card) return;
+    const cr = card.querySelector(".da-no").getBoundingClientRect();
+    if (cr.bottom < 40 || cr.top > innerHeight - 8) return;
+    wirePath(ar.right, ar.top + ar.height / 2, innerWidth - PANEL_W + 1, cr.top + cr.height / 2, true);
+  }
+
+  /* ---------- 高亮联动 ---------- */
+  function applyActive() {
+    // 固定态优先：钉住某编号后，悬停其他锚点不改变高亮与连线
+    const id = pinnedId || activeId;
+    CS.changes.forEach(c => {
+      anchorEls[c.id].el.classList.toggle("da-active", c.id === id);
+      const card = document.getElementById("da-note-" + c.id);
+      if (card) card.classList.toggle("da-active", c.id === id);
+    });
+    drawWires();
+  }
+  function setActive(id) { activeId = id; applyActive(); }
+  function clearActive(id) { if (activeId === id) { activeId = null; applyActive(); } }
+  function togglePin(id) {
+    pinnedId = pinnedId === id ? null : id;
+    applyActive();
+  }
+
+  /* ---------- 定位 ---------- */
+  function locateChange(c) {
+    if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.locate === "function") window.DIFF_HOOKS.locate(c.page);
+    else if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.showPage === "function") window.DIFF_HOOKS.showPage(c.page);
+    setTimeout(() => {
+      const el = document.querySelector(c.target);
+      if (!el) return;
+      el.scrollIntoView({ block: "center", behavior: "smooth" });
+      el.classList.remove("da-pulsing"); void el.offsetWidth; el.classList.add("da-pulsing");
+      setTimeout(() => el.classList.remove("da-pulsing"), 2000);
+      scheduleUpdate();
+    }, 160);
+  }
+  function locateModule(key) { locateChange(byModule[key][0]); }
+
+  /* ---------- 内容视口 ---------- */
+  function syncScrollSpace() {
+    if (!state.open) return;
+    // 先移除自身对 scrollWidth 的贡献，测出业务页面原始宽度，再补 PANEL_W。
+    scrollSpacer.style.display = "none";
+    const contentWidth = Math.max(document.documentElement.clientWidth, document.documentElement.scrollWidth);
+    scrollSpacer.style.left = contentWidth + "px";
+    scrollSpacer.style.display = "block";
+  }
+
+  /* ---------- 开关 ---------- */
+  function setOpen(open) {
+    state.open = open;
+    persist();
+    document.documentElement.classList.toggle("da-open", open);
+    document.body.classList.toggle("da-open", open);
+    panel.style.display = open ? "" : "none";
+    launcher.style.display = open ? "none" : "";
+    if (open) {
+      syncScrollSpace();
+    } else {
+      scrollSpacer.style.display = "none";
+      if (scrollX) window.scrollTo(0, scrollY);
+    }
+    syncAnnotations();
+  }
+  launcher.addEventListener("click", () => setOpen(true));
+
+  /* ---------- 更新调度 ---------- */
+  let frame = 0;
+  function scheduleUpdate() {
+    cancelAnimationFrame(frame);
+    frame = requestAnimationFrame(updateOverlay);
+  }
+  window.addEventListener("scroll", scheduleUpdate, { passive: true, capture: true });
+  window.addEventListener("resize", () => {
+    syncScrollSpace();
+    scheduleUpdate();
+  }, { passive: true });
+  document.addEventListener("click", e => {
+    if (e.target.closest("[data-da]")) return;
+    setTimeout(scheduleUpdate, 60);
+    setTimeout(scheduleUpdate, 360);
+  }, true);
+  const mo = new MutationObserver(records => {
+    if (records.every(r => r.target && r.target.closest && r.target.closest("[data-da]"))) return;
+    syncScrollSpace();
+    scheduleUpdate();
+  });
+  mo.observe(document.body, { attributes: true, attributeFilter: ["class", "style"], childList: true, subtree: true });
+
+  /* ---------- 初始 ---------- */
+  if (window.DIFF_HOOKS && typeof window.DIFF_HOOKS.setDemoState === "function") {
+    demoControls.forEach(control => window.DIFF_HOOKS.setDemoState(control.id, state.demo[control.id]));
+  }
+  renderPanel();
+  setOpen(state.open);
+  setTimeout(scheduleUpdate, 150);
+})();
+
+</script>
+</body>
+</html>
